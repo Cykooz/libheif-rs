@@ -12,6 +12,7 @@ sudo apt-get install libheif-dev
 ## Example of usage
 
 ```rust
+use failure;
 use libheif_rs::{Channel, Chroma, ColorSpace, HeifContext};
 
 fn main() -> Result<(), failure::Error> {
