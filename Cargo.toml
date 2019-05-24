@@ -7,17 +7,20 @@ description = "Safe wrapper to libheif-sys for parsing heif/heic files"
 keywords = ["heic", "heif", "libheif"]
 license = "MIT"
 repository = "https://github.com/cykooz/libheif-rs"
-documentation = "https://docs.rs/libheif-rs"
+documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
+
 
 [dependencies.libheif-sys]
-version = "1.4.0"
+version = "1.4"
 path = "../libheif-sys"
+
 
 [dependencies]
 failure = "0.1"
 num = "0.2"
 num-traits = "0.2"
 num-derive = "0.2"
+
 
 [dev-dependencies]
 kamadak-exif = "0.3"

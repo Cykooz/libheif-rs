@@ -30,7 +30,7 @@ impl Encoder {
         HeifError::from_heif_error(err)
     }
 
-    fn get_parameter_value(
+    fn parameter_value(
         &self,
         name: &str,
         parameter_type: EncoderParameterType,
@@ -127,17 +127,14 @@ impl Encoder {
         }
     }
 
-    pub fn get_parameter(
-        &mut self,
-        name: &str,
-    ) -> Result<Option<EncoderParameterValue>, HeifError> {
+    pub fn parameter(&mut self, name: &str) -> Result<Option<EncoderParameterValue>, HeifError> {
         if self.parameters.is_none() {
             self.fill_parameters()?;
         }
 
         match self.parameters.as_ref().unwrap().get(name) {
             Some(param_type) => {
-                let value = self.get_parameter_value(name, *param_type)?;
+                let value = self.parameter_value(name, *param_type)?;
                 Ok(Some(value))
             }
             None => Ok(None),
@@ -181,7 +178,7 @@ impl Default for EncodingOptions {
 }
 
 impl EncodingOptions {
-    pub(crate) fn get_heif_encoding_options(self) -> heif_encoding_options {
+    pub(crate) fn heif_encoding_options(self) -> heif_encoding_options {
         heif_encoding_options {
             version: self.version,
             save_alpha_channel: if self.save_alpha_channel { 1 } else { 0 },

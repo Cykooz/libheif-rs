@@ -5,20 +5,24 @@ use libheif_sys::*;
 pub enum ColorSpace {
     Undefined = heif_colorspace_heif_colorspace_undefined as isize,
     YCbCr = heif_colorspace_heif_colorspace_YCbCr as isize,
-    Rgb = heif_colorspace_heif_colorspace_RGB as isize,
+    RGB = heif_colorspace_heif_colorspace_RGB as isize,
     Monochrome = heif_colorspace_heif_colorspace_monochrome as isize,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub enum Chroma {
-    Undefined = 99,
-    Monochrome = 0,
-    C420 = 1,
-    C422 = 2,
-    C444 = 3,
-    InterleavedRgb = 10,
-    InterleavedRgba = 11,
+    Undefined = heif_chroma_heif_chroma_undefined as _,
+    Monochrome = heif_chroma_heif_chroma_monochrome as _,
+    C420 = heif_chroma_heif_chroma_420 as _,
+    C422 = heif_chroma_heif_chroma_422 as _,
+    C444 = heif_chroma_heif_chroma_444 as _,
+    InterleavedRgb = heif_chroma_heif_chroma_interleaved_RGB as _,
+    InterleavedRgba = heif_chroma_heif_chroma_interleaved_RGBA as _,
+    InterleavedHdrRgbBe = heif_chroma_heif_chroma_interleaved_RRGGBB_BE as _,
+    InterleavedHdrRgbaBe = heif_chroma_heif_chroma_interleaved_RRGGBBAA_BE as _,
+    InterleavedHdrRgbLe = heif_chroma_heif_chroma_interleaved_RRGGBB_LE as _,
+    InterleavedHdrRgbaLe = heif_chroma_heif_chroma_interleaved_RRGGBBAA_LE as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]

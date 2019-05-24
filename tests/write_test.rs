@@ -10,10 +10,10 @@ fn create_and_encode_image() -> Result<(), failure::Error> {
     let height = 480;
     let bit_depth = 24;
 
-    let mut image = Image::new(width, height, ColorSpace::Rgb, Chroma::InterleavedRgb)?;
+    let mut image = Image::new(width, height, ColorSpace::RGB, Chroma::InterleavedRgb)?;
     image.add_plane(Channel::Interleaved, width, height, bit_depth)?;
 
-    let (data, stride) = image.get_plane_mut(Channel::Interleaved);
+    let (data, stride) = image.plane_mut(Channel::Interleaved);
     for y in 0..height {
         let mut row_start = (y * stride) as usize;
         for x in 0..width {
@@ -26,7 +26,7 @@ fn create_and_encode_image() -> Result<(), failure::Error> {
     }
 
     let mut context = HeifContext::new()?;
-    let mut encoder = context.get_encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
 
     encoder.set_lossless(true)?;
     encoder.set_lossy_quality(100)?;
@@ -38,14 +38,14 @@ fn create_and_encode_image() -> Result<(), failure::Error> {
 
     // Check result of encoding by decode it
     let context = HeifContext::read_from_bytes(&buf)?;
-    let handle = context.get_primary_image_handle()?;
+    let handle = context.primary_image_handle()?;
     assert_eq!(handle.width(), width as u32);
     assert_eq!(handle.height(), height as u32);
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb, Chroma::InterleavedRgb)?;
-    assert_eq!(image.get_color_space(), ColorSpace::Rgb);
-    assert_eq!(image.get_chroma_format(), Chroma::InterleavedRgb);
+    let image = handle.decode(ColorSpace::RGB, Chroma::InterleavedRgb)?;
+    assert_eq!(image.color_space(), ColorSpace::RGB);
+    assert_eq!(image.chroma_format(), Chroma::InterleavedRgb);
     assert_eq!(image.width(Channel::Interleaved), width);
     assert_eq!(image.height(Channel::Interleaved), height);
 

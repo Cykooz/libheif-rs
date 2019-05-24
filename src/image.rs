@@ -44,7 +44,7 @@ impl Image {
         unsafe { heif_image_get_height(self.inner, channel as _) }
     }
 
-    pub fn get_bits_per_pixel(&self, channel: Channel) -> i32 {
+    pub fn bits_per_pixel(&self, channel: Channel) -> i32 {
         unsafe { heif_image_get_bits_per_pixel(self.inner, channel as _) }
     }
 
@@ -52,11 +52,11 @@ impl Image {
         unsafe { heif_image_has_channel(self.inner, channel as _) != 0 }
     }
 
-    pub fn get_chroma_format(&self) -> Chroma {
+    pub fn chroma_format(&self) -> Chroma {
         unsafe { mem::transmute(heif_image_get_chroma_format(self.inner)) }
     }
 
-    pub fn get_color_space(&self) -> ColorSpace {
+    pub fn color_space(&self) -> ColorSpace {
         unsafe { mem::transmute(heif_image_get_colorspace(self.inner)) }
     }
 
@@ -93,7 +93,7 @@ impl Image {
         HeifError::from_heif_error(err)
     }
 
-    pub fn get_plane_mut(&mut self, channel: Channel) -> (&mut [u8], i32) {
+    pub fn plane_mut(&mut self, channel: Channel) -> (&mut [u8], i32) {
         let mut stride: i32 = 1;
         let data = unsafe { heif_image_get_plane(self.inner, channel as _, &mut stride) };
         let height = self.height(channel) as usize;
@@ -102,7 +102,7 @@ impl Image {
         (bytes, stride)
     }
 
-    pub fn get_plane(&self, channel: Channel) -> (&[u8], i32) {
+    pub fn plane(&self, channel: Channel) -> (&[u8], i32) {
         let mut stride: i32 = 1;
         let data = unsafe { heif_image_get_plane_readonly(self.inner, channel as _, &mut stride) };
         let height = self.height(channel) as usize;

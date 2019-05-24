@@ -10,7 +10,7 @@ fn get_image_handler() -> Result<(), failure::Error> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
 
     // Get a handle to the primary image
-    let handle = ctx.get_primary_image_handle()?;
+    let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
     assert_eq!(handle.height(), 4032);
     assert_eq!(handle.ispe_width(), 4032);
@@ -21,7 +21,7 @@ fn get_image_handler() -> Result<(), failure::Error> {
     assert_eq!(handle.chroma_bits_per_pixel(), 8);
     assert!(!handle.has_depth_image());
     assert_eq!(handle.number_of_depth_images(), 0);
-    let ids = handle.get_list_of_depth_image_ids(1);
+    let ids = handle.list_of_depth_image_ids(1);
     assert_eq!(ids.len(), 0);
     Ok(())
 }
@@ -29,13 +29,13 @@ fn get_image_handler() -> Result<(), failure::Error> {
 #[test]
 fn get_thumbnail() -> Result<(), failure::Error> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
-    let handle = ctx.get_primary_image_handle()?;
+    let handle = ctx.primary_image_handle()?;
 
     // Thumbnails
     assert_eq!(handle.number_of_thumbnails(), 1);
-    let thumb_ids = handle.get_list_of_thumbnail_ids(2);
+    let thumb_ids = handle.list_of_thumbnail_ids(2);
     assert_eq!(thumb_ids.len(), 1);
-    let thumb_handle = handle.get_thumbnail(thumb_ids[0])?;
+    let thumb_handle = handle.thumbnail(thumb_ids[0])?;
     assert_eq!(thumb_handle.width(), 240);
     assert_eq!(thumb_handle.height(), 320);
     Ok(())
@@ -44,20 +44,20 @@ fn get_thumbnail() -> Result<(), failure::Error> {
 #[test]
 fn get_exif() -> Result<(), failure::Error> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
-    let handle = ctx.get_primary_image_handle()?;
+    let handle = ctx.primary_image_handle()?;
 
     // Metadata blocks
-    assert_eq!(handle.get_number_of_metadata_blocks(""), 1);
-    let meta_ids = handle.get_list_of_metadata_block_ids("", 2);
+    assert_eq!(handle.number_of_metadata_blocks(""), 1);
+    let meta_ids = handle.list_of_metadata_block_ids("", 2);
     assert_eq!(meta_ids.len(), 1);
-    let meta_type = handle.get_metadata_type(meta_ids[0]);
+    let meta_type = handle.metadata_type(meta_ids[0]);
     assert_eq!(meta_type, Some("Exif"));
-    let meta_content_type = handle.get_metadata_content_type(meta_ids[0]);
+    let meta_content_type = handle.metadata_content_type(meta_ids[0]);
     assert_eq!(meta_content_type, Some(""));
-    assert_eq!(handle.get_metadata_size(meta_ids[0]), 2030);
+    assert_eq!(handle.metadata_size(meta_ids[0]), 2030);
 
     // Exif
-    let exif = handle.get_metadata(meta_ids[0])?;
+    let exif = handle.metadata(meta_ids[0])?;
     assert_eq!(exif.len(), 2030);
     assert_eq!(exif[0..4], [0, 0, 0, 6]);
     let tiff_exif = &exif[10..]; // Skip header
@@ -71,12 +71,12 @@ fn get_exif() -> Result<(), failure::Error> {
 #[test]
 fn decode_and_scale_image() -> Result<(), failure::Error> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
-    let handle = ctx.get_primary_image_handle()?;
+    let handle = ctx.primary_image_handle()?;
 
     // Decode the image
     let src_img = handle.decode(ColorSpace::Undefined, Chroma::Undefined)?;
-    assert_eq!(src_img.get_color_space(), ColorSpace::YCbCr);
-    assert_eq!(src_img.get_chroma_format(), Chroma::C420);
+    assert_eq!(src_img.color_space(), ColorSpace::YCbCr);
+    assert_eq!(src_img.chroma_format(), Chroma::C420);
     assert_eq!(src_img.width(Channel::Y), 3024);
     assert_eq!(src_img.height(Channel::Y), 4032);
 
@@ -92,7 +92,7 @@ fn decode_and_scale_image() -> Result<(), failure::Error> {
 fn test_encoder() -> Result<(), failure::Error> {
     let ctx = HeifContext::new()?;
 
-    let mut encoder = ctx.get_encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = ctx.encoder_for_format(CompressionFormat::Hevc)?;
     assert!(encoder.name().starts_with("x265 HEVC encoder"));
 
     let mut params = encoder.parameters_names()?;
@@ -109,12 +109,12 @@ fn test_encoder() -> Result<(), failure::Error> {
     assert_eq!(params, expect);
 
     assert_eq!(
-        encoder.get_parameter("lossless")?,
+        encoder.parameter("lossless")?,
         Some(EncoderParameterValue::Bool(false))
     );
     encoder.set_lossless(true)?;
     assert_eq!(
-        encoder.get_parameter("lossless")?,
+        encoder.parameter("lossless")?,
         Some(EncoderParameterValue::Bool(true))
     );
 

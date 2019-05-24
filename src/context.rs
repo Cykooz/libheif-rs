@@ -111,18 +111,18 @@ impl HeifContext {
         HeifError::from_heif_error(err)
     }
 
-    pub fn get_number_of_top_level_images(&self) -> usize {
+    pub fn number_of_top_level_images(&self) -> usize {
         unsafe { heif_context_get_number_of_top_level_images(self.inner) as _ }
     }
 
-    pub fn get_primary_image_handle(&self) -> Result<ImageHandle, HeifError> {
+    pub fn primary_image_handle(&self) -> Result<ImageHandle, HeifError> {
         let mut handle = unsafe { mem::uninitialized() };
         let err = unsafe { heif_context_get_primary_image_handle(self.inner, &mut handle) };
         HeifError::from_heif_error(err)?;
         Ok(image_handle::heif_image_handle_2_rs_image_handle(handle))
     }
 
-    pub fn get_encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder, HeifError> {
+    pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder, HeifError> {
         let mut encoder = Box::new(unsafe { mem::uninitialized() });
         let err =
             unsafe { heif_context_get_encoder_for_format(self.inner, format as _, &mut *encoder) };
@@ -137,7 +137,7 @@ impl HeifContext {
         encoding_options: Option<EncodingOptions>,
     ) -> Result<(), HeifError> {
         let encoding_options_ptr = match encoding_options {
-            Some(options) => &(options.get_heif_encoding_options()),
+            Some(options) => &(options.heif_encoding_options()),
             None => ptr::null(),
         };
 

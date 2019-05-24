@@ -94,7 +94,7 @@ impl ImageHandle {
         unsafe { heif_image_handle_get_number_of_depth_images(self.inner) }
     }
 
-    pub fn get_list_of_depth_image_ids(&self, count: usize) -> Vec<ItemId> {
+    pub fn list_of_depth_image_ids(&self, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
         let res_count = unsafe {
             heif_image_handle_get_list_of_depth_image_IDs(
@@ -109,7 +109,7 @@ impl ImageHandle {
         item_ids
     }
 
-    pub fn get_depth_image_handle(&self, depth_image_id: ItemId) -> Result<ImageHandle, HeifError> {
+    pub fn depth_image_handle(&self, depth_image_id: ItemId) -> Result<ImageHandle, HeifError> {
         let mut out_depth_handler = unsafe { mem::uninitialized() };
         let err = unsafe {
             heif_image_handle_get_depth_image_handle(
@@ -138,7 +138,7 @@ impl ImageHandle {
         unsafe { heif_image_handle_get_number_of_thumbnails(self.inner) }
     }
 
-    pub fn get_list_of_thumbnail_ids(&self, count: usize) -> Vec<ItemId> {
+    pub fn list_of_thumbnail_ids(&self, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
         let res_count = unsafe {
             heif_image_handle_get_list_of_thumbnail_IDs(
@@ -153,7 +153,7 @@ impl ImageHandle {
         item_ids
     }
 
-    pub fn get_thumbnail(&self, thumbnail_id: ItemId) -> Result<ImageHandle, HeifError> {
+    pub fn thumbnail(&self, thumbnail_id: ItemId) -> Result<ImageHandle, HeifError> {
         let mut out_thumbnail_handler = unsafe { mem::uninitialized() };
         let err = unsafe {
             heif_image_handle_get_thumbnail(self.inner, thumbnail_id, &mut out_thumbnail_handler)
@@ -175,12 +175,12 @@ impl ImageHandle {
         }
     }
 
-    pub fn get_number_of_metadata_blocks(&self, type_filter: &str) -> i32 {
+    pub fn number_of_metadata_blocks(&self, type_filter: &str) -> i32 {
         let c_type_filter = Self::convert_type_filter(type_filter);
         unsafe { heif_image_handle_get_number_of_metadata_blocks(self.inner, c_type_filter) }
     }
 
-    pub fn get_list_of_metadata_block_ids(&self, type_filter: &str, count: usize) -> Vec<ItemId> {
+    pub fn list_of_metadata_block_ids(&self, type_filter: &str, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
         let c_type_filter = Self::convert_type_filter(type_filter);
         let res_count = unsafe {
@@ -197,23 +197,23 @@ impl ImageHandle {
         item_ids
     }
 
-    pub fn get_metadata_type(&self, metadata_id: ItemId) -> Option<&str> {
+    pub fn metadata_type(&self, metadata_id: ItemId) -> Option<&str> {
         let c_type = unsafe { heif_image_handle_get_metadata_type(self.inner, metadata_id) };
         cstr_to_str(c_type)
     }
 
-    pub fn get_metadata_content_type(&self, metadata_id: ItemId) -> Option<&str> {
+    pub fn metadata_content_type(&self, metadata_id: ItemId) -> Option<&str> {
         let c_type =
             unsafe { heif_image_handle_get_metadata_content_type(self.inner, metadata_id) };
         cstr_to_str(c_type)
     }
 
-    pub fn get_metadata_size(&self, metadata_id: ItemId) -> usize {
+    pub fn metadata_size(&self, metadata_id: ItemId) -> usize {
         unsafe { heif_image_handle_get_metadata_size(self.inner, metadata_id) }
     }
 
-    pub fn get_metadata(&self, metadata_id: ItemId) -> Result<Vec<u8>, HeifError> {
-        let size = self.get_metadata_size(metadata_id);
+    pub fn metadata(&self, metadata_id: ItemId) -> Result<Vec<u8>, HeifError> {
+        let size = self.metadata_size(metadata_id);
         if size == 0 {
             return Err(HeifError {
                 code: HeifErrorCode::UsageError,
