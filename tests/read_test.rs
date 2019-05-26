@@ -77,13 +77,13 @@ fn decode_and_scale_image() -> Result<(), failure::Error> {
     let src_img = handle.decode(ColorSpace::Undefined, Chroma::Undefined)?;
     assert_eq!(src_img.color_space(), ColorSpace::YCbCr);
     assert_eq!(src_img.chroma_format(), Chroma::C420);
-    assert_eq!(src_img.width(Channel::Y), 3024);
-    assert_eq!(src_img.height(Channel::Y), 4032);
+    assert_eq!(src_img.width(Channel::Y)?, 3024);
+    assert_eq!(src_img.height(Channel::Y)?, 4032);
 
     // Scale the image
     let img = src_img.scale(1024, 800, None)?;
-    assert_eq!(img.width(Channel::Y), 1024);
-    assert_eq!(img.height(Channel::Y), 800);
+    assert_eq!(img.width(Channel::Y)?, 1024);
+    assert_eq!(img.height(Channel::Y)?, 800);
 
     Ok(())
 }

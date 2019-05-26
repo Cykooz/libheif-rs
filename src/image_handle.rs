@@ -62,11 +62,11 @@ impl ImageHandle {
         unsafe { heif_image_handle_is_primary_image(self.inner) != 0 }
     }
 
-    pub fn luma_bits_per_pixel(&self) -> i32 {
+    pub fn luma_bits_per_pixel(&self) -> u8 {
         unsafe { heif_image_handle_get_luma_bits_per_pixel(self.inner) as _ }
     }
 
-    pub fn chroma_bits_per_pixel(&self) -> i32 {
+    pub fn chroma_bits_per_pixel(&self) -> u8 {
         unsafe { heif_image_handle_get_chroma_bits_per_pixel(self.inner) as _ }
     }
 
@@ -134,8 +134,8 @@ impl ImageHandle {
 
     // Thumbnails
 
-    pub fn number_of_thumbnails(&self) -> i32 {
-        unsafe { heif_image_handle_get_number_of_thumbnails(self.inner) }
+    pub fn number_of_thumbnails(&self) -> usize {
+        unsafe { heif_image_handle_get_number_of_thumbnails(self.inner) as _ }
     }
 
     pub fn list_of_thumbnail_ids(&self, count: usize) -> Vec<ItemId> {
