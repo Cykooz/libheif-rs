@@ -8,20 +8,29 @@ use libheif_rs::{
 fn create_and_encode_image() -> Result<(), failure::Error> {
     let width = 640;
     let height = 480;
-    let bit_depth = 24;
 
-    let mut image = Image::new(width, height, ColorSpace::RGB, Chroma::InterleavedRgb)?;
-    image.add_plane(Channel::Interleaved, width, height, bit_depth)?;
+    let mut image = Image::new(width, height, ColorSpace::RGB, Chroma::C444)?;
 
-    let (data, stride) = image.plane_mut(Channel::Interleaved)?;
+    image.create_plane(Channel::R, width, height, 8)?;
+    image.create_plane(Channel::G, width, height, 8)?;
+    image.create_plane(Channel::B, width, height, 8)?;
+
+    let planes = image.planes_mut();
+    let plane_r = planes.r.unwrap();
+    let stride = plane_r.stride;
+
+    let data_r = plane_r.data;
+    let data_g = planes.g.unwrap().data;
+    let data_b = planes.b.unwrap().data;
+
     for y in 0..height {
         let mut row_start = stride * y as usize;
         for x in 0..width {
             let color = (x * y) as u32;
-            data[row_start] = ((color & 0x00_ff_00_00) >> 16) as u8;
-            data[row_start + 1] = ((color & 0x00_00_ff_00) >> 8) as u8;
-            data[row_start + 2] = (color & 0x00_00_00_ff) as u8;
-            row_start += 3;
+            data_r[row_start] = ((color & 0x00_ff_00_00) >> 16) as u8;
+            data_g[row_start] = ((color & 0x00_00_ff_00) >> 8) as u8;
+            data_b[row_start] = (color & 0x00_00_00_ff) as u8;
+            row_start += 1;
         }
     }
 
@@ -46,8 +55,10 @@ fn create_and_encode_image() -> Result<(), failure::Error> {
     let image = handle.decode(ColorSpace::RGB, Chroma::InterleavedRgb)?;
     assert_eq!(image.color_space(), ColorSpace::RGB);
     assert_eq!(image.chroma_format(), Chroma::InterleavedRgb);
-    assert_eq!(image.width(Channel::Interleaved)?, width);
-    assert_eq!(image.height(Channel::Interleaved)?, height);
+    let planes = image.planes();
+    let plan = planes.interleaved.unwrap();
+    assert_eq!(plan.width, width);
+    assert_eq!(plan.height, height);
 
     Ok(())
 }

@@ -11,8 +11,8 @@ documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
 
 
 [dependencies.libheif-sys]
-version = "1.4"
-path = "../libheif-sys"
+version = "1.4.1"
+#path = "../libheif-sys"
 
 
 [dependencies]
@@ -20,6 +20,8 @@ failure = "0.1"
 num = "0.2"
 num-traits = "0.2"
 num-derive = "0.2"
+strum = "0.15"
+strum_macros = "0.15"
 
 
 [dev-dependencies]

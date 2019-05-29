@@ -1,9 +1,7 @@
 use exif::parse_exif;
 use failure;
 
-use libheif_rs::{
-    Channel, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, HeifContext,
-};
+use libheif_rs::{Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, HeifContext};
 
 #[test]
 fn get_image_handler() -> Result<(), failure::Error> {
@@ -77,13 +75,17 @@ fn decode_and_scale_image() -> Result<(), failure::Error> {
     let src_img = handle.decode(ColorSpace::Undefined, Chroma::Undefined)?;
     assert_eq!(src_img.color_space(), ColorSpace::YCbCr);
     assert_eq!(src_img.chroma_format(), Chroma::C420);
-    assert_eq!(src_img.width(Channel::Y)?, 3024);
-    assert_eq!(src_img.height(Channel::Y)?, 4032);
+    let planes = src_img.planes();
+    let y_plane = planes.y.unwrap();
+    assert_eq!(y_plane.width, 3024);
+    assert_eq!(y_plane.height, 4032);
 
     // Scale the image
     let img = src_img.scale(1024, 800, None)?;
-    assert_eq!(img.width(Channel::Y)?, 1024);
-    assert_eq!(img.height(Channel::Y)?, 800);
+    let planes = img.planes();
+    let y_plane = planes.y.unwrap();
+    assert_eq!(y_plane.width, 1024);
+    assert_eq!(y_plane.height, 800);
 
     Ok(())
 }
