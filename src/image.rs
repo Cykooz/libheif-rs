@@ -1,9 +1,9 @@
+use libheif_sys::*;
 use std;
 use std::mem;
 use std::ptr;
 use std::slice;
-
-use libheif_sys::*;
+use strum::IntoEnumIterator;
 
 use crate::enums::*;
 use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
@@ -11,46 +11,27 @@ use std::os::raw::c_int;
 
 const MAX_IMAGE_SIZE: u32 = std::i32::MAX as _;
 
-pub struct Plane<'a> {
-    pub data: &'a [u8],
+pub struct Plane<T> {
+    pub data: T,
     pub width: u32,
     pub height: u32,
     pub stride: usize,
     pub bits_pre_pixel: u8,
 }
 
-pub struct PlaneMut<'a> {
-    pub data: &'a mut [u8],
-    pub width: u32,
-    pub height: u32,
-    pub stride: usize,
-    pub bits_pre_pixel: u8,
+pub struct Planes<T> {
+    pub y: Option<Plane<T>>,
+    pub cb: Option<Plane<T>>,
+    pub cr: Option<Plane<T>>,
+    pub r: Option<Plane<T>>,
+    pub g: Option<Plane<T>>,
+    pub b: Option<Plane<T>>,
+    pub a: Option<Plane<T>>,
+    pub interleaved: Option<Plane<T>>,
 }
 
 pub struct Image {
     pub(crate) inner: *mut heif_image,
-}
-
-pub struct Planes<'a> {
-    pub y: Option<Plane<'a>>,
-    pub cb: Option<Plane<'a>>,
-    pub cr: Option<Plane<'a>>,
-    pub r: Option<Plane<'a>>,
-    pub g: Option<Plane<'a>>,
-    pub b: Option<Plane<'a>>,
-    pub a: Option<Plane<'a>>,
-    pub interleaved: Option<Plane<'a>>,
-}
-
-pub struct PlanesMut<'a> {
-    pub y: Option<PlaneMut<'a>>,
-    pub cb: Option<PlaneMut<'a>>,
-    pub cr: Option<PlaneMut<'a>>,
-    pub r: Option<PlaneMut<'a>>,
-    pub g: Option<PlaneMut<'a>>,
-    pub b: Option<PlaneMut<'a>>,
-    pub a: Option<PlaneMut<'a>>,
-    pub interleaved: Option<PlaneMut<'a>>,
 }
 
 pub struct ScalingOptions {}
@@ -122,7 +103,7 @@ impl Image {
         })
     }
 
-    fn plane(&self, channel: Channel) -> Option<Plane> {
+    fn plane(&self, channel: Channel) -> Option<Plane<&[u8]>> {
         if !self.has_channel(channel) {
             return None;
         }
@@ -143,7 +124,7 @@ impl Image {
         })
     }
 
-    fn plane_mut(&self, channel: Channel) -> Option<PlaneMut> {
+    fn plane_mut(&self, channel: Channel) -> Option<Plane<&mut [u8]>> {
         if !self.has_channel(channel) {
             return None;
         }
@@ -155,7 +136,7 @@ impl Image {
         let data = unsafe { heif_image_get_plane(self.inner, channel as _, &mut stride) };
         let size = height as usize * stride as usize;
         let bytes = unsafe { slice::from_raw_parts_mut(data, size) };
-        Some(PlaneMut {
+        Some(Plane {
             data: bytes,
             bits_pre_pixel,
             width,
@@ -164,7 +145,7 @@ impl Image {
         })
     }
 
-    pub fn planes(&self) -> Planes {
+    pub fn planes(&self) -> Planes<&[u8]> {
         Planes {
             y: self.plane(Channel::Y),
             cb: self.plane(Channel::Cb),
@@ -177,8 +158,8 @@ impl Image {
         }
     }
 
-    pub fn planes_mut(&mut self) -> PlanesMut {
-        PlanesMut {
+    pub fn planes_mut(&mut self) -> Planes<&mut [u8]> {
+        Planes {
             y: self.plane_mut(Channel::Y),
             cb: self.plane_mut(Channel::Cb),
             cr: self.plane_mut(Channel::Cr),
@@ -193,6 +174,16 @@ impl Image {
     pub fn has_channel(&self, channel: Channel) -> bool {
         unsafe { heif_image_has_channel(self.inner, channel as _) != 0 }
     }
+
+    //    pub fn channels(&self) -> Vec<Channel> {
+    //        let mut res = Vec::from_iter();
+    //        for channel in Channel::iter() {
+    //            if self.has_channel(channel) {
+    //                res.insert(channel);
+    //            }
+    //        }
+    //        res
+    //    }
 
     pub fn chroma_format(&self) -> Chroma {
         unsafe { mem::transmute(heif_image_get_chroma_format(self.inner)) }
