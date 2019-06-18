@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate num_derive;
-#[macro_use]
-extern crate strum_macros;
 
 pub use context::HeifContext;
 pub use encoder::{EncoderParametersTypes, EncodingOptions};

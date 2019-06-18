@@ -3,7 +3,6 @@ use std;
 use std::mem;
 use std::ptr;
 use std::slice;
-use strum::IntoEnumIterator;
 
 use crate::enums::*;
 use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};

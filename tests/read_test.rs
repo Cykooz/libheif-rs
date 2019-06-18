@@ -1,7 +1,9 @@
 use exif::parse_exif;
 use failure;
 
-use libheif_rs::{Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, HeifContext};
+use libheif_rs::{
+    Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, HeifContext,
+};
 
 #[test]
 fn get_image_handler() -> Result<(), failure::Error> {

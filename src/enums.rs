@@ -25,7 +25,7 @@ pub enum Chroma {
     InterleavedHdrRgbaLe = heif_chroma_heif_chroma_interleaved_RRGGBBAA_LE as _,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub enum Channel {
     Y = 0,
