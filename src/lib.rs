@@ -1,8 +1,7 @@
 #[macro_use]
 extern crate num_derive;
-
 pub use context::HeifContext;
-pub use encoder::{EncoderParameters, EncodingOptions};
+pub use encoder::{EncoderParametersTypes, EncodingOptions};
 pub use enums::*;
 pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 pub use image::Image;

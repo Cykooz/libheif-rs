@@ -7,7 +7,7 @@ use libheif_sys::*;
 use crate::encoder::{Encoder, EncodingOptions};
 use crate::enums::CompressionFormat;
 use crate::image::Image;
-use crate::{encoder, image_handle};
+use crate::image_handle;
 use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle};
 
 //#[derive(Debug)]
@@ -123,11 +123,13 @@ impl HeifContext {
     }
 
     pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder, HeifError> {
-        let mut encoder = Box::new(unsafe { mem::uninitialized() });
-        let err =
-            unsafe { heif_context_get_encoder_for_format(self.inner, format as _, &mut *encoder) };
+        let mut c_encoder = Box::new(unsafe { mem::uninitialized() });
+        let err = unsafe {
+            heif_context_get_encoder_for_format(self.inner, format as _, &mut *c_encoder)
+        };
         HeifError::from_heif_error(err)?;
-        Ok(encoder::heif_encoder_2_rs_encoder(*encoder))
+        let encoder = Encoder::new(*c_encoder)?;
+        Ok(encoder)
     }
 
     pub fn encode_image(

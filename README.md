@@ -2,21 +2,23 @@
 
 Safe wrapper to libheif-sys for parsing heif/heic files
 
-## Installing
+## System dependencies
 
 Ubuntu
 ```
 sudo apt-get install libheif-dev
 ```
 
-## Example of usage
+## Examples
+
+### Read HEIF file
 
 ```rust
 use failure;
 use libheif_rs::{Channel, Chroma, ColorSpace, HeifContext};
 
 fn main() -> Result<(), failure::Error> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.get_primary_image_handle()?;
 
     // Decode the image
@@ -30,6 +32,55 @@ fn main() -> Result<(), failure::Error> {
     let small_img = image.scale(1024, 800, None)?;
     assert_eq!(small_img.width(Channel::Interleaved), 1024);
     assert_eq!(small_img.height(Channel::Interleaved), 800);
+
+    Ok(())
+}
+```
+
+### Write HEIF file
+
+```rust
+use failure;
+use libheif_rs::{
+    Channel, Chroma, ColorSpace, CompressionFormat, EncoderQuality, HeifContext,
+    Image,
+};
+
+fn main() -> Result<(), failure::Error> {
+    let width = 640;
+    let height = 480;
+
+    let mut image = Image::new(width, height, ColorSpace::RGB, Chroma::C444)?;
+
+    image.create_plane(Channel::R, width, height, 8)?;
+    image.create_plane(Channel::G, width, height, 8)?;
+    image.create_plane(Channel::B, width, height, 8)?;
+
+    let planes = image.planes_mut();
+    let plane_r = planes.r.unwrap();
+    let stride = plane_r.stride;
+
+    let data_r = plane_r.data;
+    let data_g = planes.g.unwrap().data;
+    let data_b = planes.b.unwrap().data;
+
+    for y in 0..height {
+        let mut row_start = stride * y as usize;
+        for x in 0..width {
+            let color = (x * y) as u32;
+            data_r[row_start] = ((color & 0x00_ff_00_00) >> 16) as u8;
+            data_g[row_start] = ((color & 0x00_00_ff_00) >> 8) as u8;
+            data_b[row_start] = (color & 0x00_00_00_ff) as u8;
+            row_start += 1;
+        }
+    }
+
+    let mut context = HeifContext::new()?;
+    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
+    encoder.set_quality(EncoderQuality::LossLess)?;
+
+    context.encode_image(&image, &mut encoder, None)?;
+    context.write_to_file("./data/new.heif")?;
 
     Ok(())
 }

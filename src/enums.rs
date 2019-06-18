@@ -71,3 +71,9 @@ pub enum EncoderParameterValue {
 //    NonUniformDisparity =
 //        heif_depth_representation_type_heif_depth_representation_type_nonuniform_disparity as _,
 //}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum EncoderQuality {
+    LossLess,
+    Lossy(u8),
+}

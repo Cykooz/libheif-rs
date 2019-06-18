@@ -5,28 +5,72 @@ use libheif_sys::*;
 
 use crate::enums::{EncoderParameterType, EncoderParameterValue};
 use crate::utils::cstr_to_str;
-use crate::{HeifError, HeifErrorCode, HeifErrorSubCode};
+use crate::{EncoderQuality, HeifError, HeifErrorCode, HeifErrorSubCode};
 
-pub type EncoderParameters = HashMap<String, EncoderParameterType>;
+pub type EncoderParametersTypes = HashMap<String, EncoderParameterType>;
+
+fn parameters_types(c_encoder: *mut heif_encoder) -> Result<EncoderParametersTypes, HeifError> {
+    let mut res = EncoderParametersTypes::new();
+    unsafe {
+        let mut param_pointers = heif_encoder_list_parameters(c_encoder);
+        if !param_pointers.is_null() {
+            while let Some(raw_param) = (*param_pointers).as_ref() {
+                let c_param_type = heif_encoder_parameter_get_type(raw_param);
+                let param_type: EncoderParameterType;
+                match num::FromPrimitive::from_u32(c_param_type) {
+                    Some(res) => {
+                        param_type = res;
+                    }
+                    None => {
+                        return Err(HeifError {
+                            code: HeifErrorCode::EncoderPluginError,
+                            sub_code: HeifErrorSubCode::UnsupportedParameter,
+                            message: format!("{} is unknown type of parameter", c_param_type),
+                        });
+                    }
+                }
+                let c_param_name = heif_encoder_parameter_get_name(raw_param);
+                let name = cstr_to_str(c_param_name).unwrap_or("").to_string();
+                res.insert(name, param_type);
+                param_pointers = param_pointers.offset(1);
+            }
+        }
+    }
+    Ok(res)
+}
 
 pub struct Encoder {
     pub(crate) inner: *mut heif_encoder,
-    pub(crate) parameters: Option<EncoderParameters>,
+    pub(crate) parameters_types: EncoderParametersTypes,
 }
 
 impl Encoder {
+    pub(crate) fn new(c_encoder: *mut heif_encoder) -> Result<Encoder, HeifError> {
+        Ok(Encoder {
+            inner: c_encoder,
+            parameters_types: parameters_types(c_encoder)?,
+        })
+    }
+
     pub fn name(&self) -> &str {
         let res = unsafe { heif_encoder_get_name(self.inner) };
         cstr_to_str(res).unwrap_or("")
     }
 
-    pub fn set_lossless(&mut self, enable: bool) -> Result<(), HeifError> {
-        let err = unsafe { heif_encoder_set_lossless(self.inner, enable as _) };
-        HeifError::from_heif_error(err)
-    }
-
-    pub fn set_lossy_quality(&mut self, value: usize) -> Result<(), HeifError> {
-        let err = unsafe { heif_encoder_set_lossy_quality(self.inner, value as _) };
+    pub fn set_quality(&mut self, quality: EncoderQuality) -> Result<(), HeifError> {
+        let err;
+        match quality {
+            EncoderQuality::LossLess => {
+                err = unsafe { heif_encoder_set_lossless(self.inner, 1) };
+            }
+            EncoderQuality::Lossy(value) => {
+                unsafe {
+                    let middle_err = heif_encoder_set_lossless(self.inner, 0);
+                    HeifError::from_heif_error(middle_err)?;
+                    err = heif_encoder_set_lossy_quality(self.inner, i32::from(value))
+                };
+            }
+        }
         HeifError::from_heif_error(err)
     }
 
@@ -82,57 +126,12 @@ impl Encoder {
         Ok(param_value)
     }
 
-    fn fill_parameters(&mut self) -> Result<&EncoderParameters, HeifError> {
-        let mut res = EncoderParameters::new();
-        unsafe {
-            let mut param_pointers = heif_encoder_list_parameters(self.inner);
-            if !param_pointers.is_null() {
-                while let Some(raw_param) = (*param_pointers).as_ref() {
-                    let c_param_type = heif_encoder_parameter_get_type(raw_param);
-                    let param_type: EncoderParameterType;
-                    match num::FromPrimitive::from_u32(c_param_type) {
-                        Some(res) => {
-                            param_type = res;
-                        }
-                        None => {
-                            return Err(HeifError {
-                                code: HeifErrorCode::EncoderPluginError,
-                                sub_code: HeifErrorSubCode::UnsupportedParameter,
-                                message: format!("{} is unknown type of parameter", c_param_type),
-                            });
-                        }
-                    }
-                    let c_param_name = heif_encoder_parameter_get_name(raw_param);
-                    let name = cstr_to_str(c_param_name).unwrap_or("").to_string();
-                    res.insert(name, param_type);
-                    param_pointers = param_pointers.offset(1);
-                }
-            }
-        }
-        self.parameters.replace(res);
-        Ok(self.parameters.as_ref().unwrap())
+    pub fn parameters_names(&self) -> Vec<String> {
+        self.parameters_types.keys().cloned().collect()
     }
 
-    pub fn parameters_names(&mut self) -> Result<Vec<String>, HeifError> {
-        match self.parameters {
-            Some(ref res) => {
-                let names: Vec<String> = res.keys().cloned().collect();
-                Ok(names)
-            }
-            None => {
-                let parameters = self.fill_parameters()?;
-                let names: Vec<String> = parameters.keys().cloned().collect();
-                Ok(names)
-            }
-        }
-    }
-
-    pub fn parameter(&mut self, name: &str) -> Result<Option<EncoderParameterValue>, HeifError> {
-        if self.parameters.is_none() {
-            self.fill_parameters()?;
-        }
-
-        match self.parameters.as_ref().unwrap().get(name) {
+    pub fn parameter(&self, name: &str) -> Result<Option<EncoderParameterValue>, HeifError> {
+        match self.parameters_types.get(name) {
             Some(param_type) => {
                 let value = self.parameter_value(name, *param_type)?;
                 Ok(Some(value))
@@ -145,14 +144,6 @@ impl Encoder {
 impl Drop for Encoder {
     fn drop(&mut self) {
         unsafe { heif_encoder_release(self.inner) };
-    }
-}
-
-#[inline]
-pub fn heif_encoder_2_rs_encoder(encoder: *mut heif_encoder) -> Encoder {
-    Encoder {
-        inner: encoder,
-        parameters: None,
     }
 }
 
