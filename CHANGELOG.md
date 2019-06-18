@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.2.0] - 2019-06-18
 
 - Changed URL of the crate documentation.
 - Added small example of usage into README.md.
