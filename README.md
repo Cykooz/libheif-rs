@@ -4,10 +4,7 @@ Safe wrapper to libheif-sys for parsing heif/heic files
 
 ## System dependencies
 
-Ubuntu
-```
-sudo apt-get install libheif-dev
-```
+- libheif-dev >= 1.4.0
 
 ## Examples
 
@@ -20,6 +17,13 @@ use libheif_rs::{Channel, Chroma, ColorSpace, HeifContext};
 fn main() -> Result<(), failure::Error> {
     let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.get_primary_image_handle()?;
+    assert_eq!(handle.width(), 3024);
+    assert_eq!(handle.height(), 4032);
+
+    // Get Exif
+    let meta_ids = handle.list_of_metadata_block_ids("Exif", 1);
+    assert_eq!(meta_ids.len(), 1);
+    let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image
     let image = handle.decode(ColorSpace::Rgb, Chroma::InterleavedRgb)?;
@@ -32,6 +36,14 @@ fn main() -> Result<(), failure::Error> {
     let small_img = image.scale(1024, 800, None)?;
     assert_eq!(small_img.width(Channel::Interleaved), 1024);
     assert_eq!(small_img.height(Channel::Interleaved), 800);
+    
+    // Get "pixels"
+    let planes = small_img.planes();
+    let interleaved_plane = planes.interleaved.unwrap();
+    assert_eq!(interleaved_plane.width, 3024);
+    assert_eq!(interleaved_plane.height, 4032);
+    assert!(interleaved_plane.data.len() > 0);
+    assert!(interleaved_plane.stride > 0);
 
     Ok(())
 }
@@ -64,6 +76,7 @@ fn main() -> Result<(), failure::Error> {
     let data_g = planes.g.unwrap().data;
     let data_b = planes.b.unwrap().data;
 
+    // Fill data of planes by some "pixels"
     for y in 0..height {
         let mut row_start = stride * y as usize;
         for x in 0..width {
@@ -74,11 +87,11 @@ fn main() -> Result<(), failure::Error> {
             row_start += 1;
         }
     }
-
+    
+    // Encode image and save it into file.
     let mut context = HeifContext::new()?;
     let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
-
     context.encode_image(&image, &mut encoder, None)?;
     context.write_to_file("./data/new.heif")?;
 

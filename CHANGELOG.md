@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Fixed filtering of metadata blocks by type.
+
 ## [0.2.0] - 2019-06-18
 
 - Changed URL of the crate documentation.

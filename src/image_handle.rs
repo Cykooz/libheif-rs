@@ -165,28 +165,35 @@ impl ImageHandle {
     // Metadata
 
     #[inline]
-    fn convert_type_filter(type_filter: &str) -> *const c_char {
+    fn convert_type_filter(type_filter: &str) -> Option<CString> {
         match type_filter {
-            "" => ptr::null(),
-            _ => match CString::new(type_filter) {
-                Ok(s) => s.as_ptr(),
-                _ => ptr::null(),
-            },
+            "" => None,
+            _ => Some(CString::new(type_filter).unwrap()),
         }
     }
 
     pub fn number_of_metadata_blocks(&self, type_filter: &str) -> i32 {
         let c_type_filter = Self::convert_type_filter(type_filter);
-        unsafe { heif_image_handle_get_number_of_metadata_blocks(self.inner, c_type_filter) }
+        let filter_ptr: *const c_char = match &c_type_filter {
+            Some(s) => s.as_ptr(),
+            None => ptr::null(),
+        };
+        unsafe { heif_image_handle_get_number_of_metadata_blocks(self.inner, filter_ptr) }
     }
 
     pub fn list_of_metadata_block_ids(&self, type_filter: &str, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
+
         let c_type_filter = Self::convert_type_filter(type_filter);
+        let filter_ptr: *const c_char = match &c_type_filter {
+            Some(s) => s.as_ptr(),
+            None => ptr::null(),
+        };
+
         let res_count = unsafe {
             heif_image_handle_get_list_of_metadata_block_IDs(
                 self.inner,
-                c_type_filter,
+                filter_ptr,
                 item_ids.as_mut_ptr(),
                 count as _,
             ) as usize
@@ -198,7 +205,8 @@ impl ImageHandle {
     }
 
     pub fn metadata_type(&self, metadata_id: ItemId) -> Option<&str> {
-        let c_type = unsafe { heif_image_handle_get_metadata_type(self.inner, metadata_id) };
+        let c_type: *const c_char =
+            unsafe { heif_image_handle_get_metadata_type(self.inner, metadata_id) };
         cstr_to_str(c_type)
     }
 

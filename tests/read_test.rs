@@ -56,7 +56,14 @@ fn get_exif() -> Result<(), failure::Error> {
     assert_eq!(meta_content_type, Some(""));
     assert_eq!(handle.metadata_size(meta_ids[0]), 2030);
 
+    assert_eq!(handle.number_of_metadata_blocks("Unknown"), 0);
+    let meta_ids = handle.list_of_metadata_block_ids("Unknown", 1);
+    assert_eq!(meta_ids.len(), 0);
+
     // Exif
+    assert_eq!(handle.number_of_metadata_blocks("Exif"), 1);
+    let meta_ids = handle.list_of_metadata_block_ids("Exif", 1);
+    assert_eq!(meta_ids.len(), 1);
     let exif = handle.metadata(meta_ids[0])?;
     assert_eq!(exif.len(), 2030);
     assert_eq!(exif[0..4], [0, 0, 0, 6]);
@@ -88,6 +95,8 @@ fn decode_and_scale_image() -> Result<(), failure::Error> {
     let y_plane = planes.y.unwrap();
     assert_eq!(y_plane.width, 1024);
     assert_eq!(y_plane.height, 800);
+    assert!(!y_plane.data.is_empty());
+    assert!(y_plane.stride > 0);
 
     Ok(())
 }
