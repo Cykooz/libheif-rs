@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.2.1] - 2019-06-24
 
 - Fixed filtering of metadata blocks by type.
 
