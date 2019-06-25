@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Specified lifetime of ``ImageHandle``. Now it depends from ``HeifContext``.
+
 ## [0.2.1] - 2019-06-24
 
 - Fixed filtering of metadata blocks by type.

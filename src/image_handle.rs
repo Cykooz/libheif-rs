@@ -8,9 +8,10 @@ use libheif_sys::*;
 use crate::enums::{Chroma, ColorSpace};
 use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 use crate::utils::cstr_to_str;
-use crate::{image, Image};
+use crate::{image, HeifContext, Image};
 
-pub struct ImageHandle {
+pub struct ImageHandle<'a> {
+    context: &'a HeifContext,
     inner: *mut heif_image_handle,
 }
 
@@ -28,7 +29,14 @@ pub type ItemId = heif_item_id;
 //    pub depth_nonlinear_representation_model: *mut u8,
 //}
 
-impl ImageHandle {
+impl<'a> ImageHandle<'a> {
+    pub(crate) fn new(context: &HeifContext, handle: *mut heif_image_handle) -> ImageHandle {
+        ImageHandle {
+            inner: handle,
+            context,
+        }
+    }
+
     pub fn decode(&self, colorspace: ColorSpace, chroma: Chroma) -> Result<Image, HeifError> {
         let mut image = unsafe { mem::uninitialized() };
         let options = unsafe { heif_decoding_options_alloc() };
@@ -119,7 +127,7 @@ impl ImageHandle {
             )
         };
         HeifError::from_heif_error(err)?;
-        Ok(heif_image_handle_2_rs_image_handle(out_depth_handler))
+        Ok(ImageHandle::new(self.context, out_depth_handler))
     }
 
     //    pub fn get_depth_image_representation_info(&self, depth_image_id: ItemId) {
@@ -159,7 +167,7 @@ impl ImageHandle {
             heif_image_handle_get_thumbnail(self.inner, thumbnail_id, &mut out_thumbnail_handler)
         };
         HeifError::from_heif_error(err)?;
-        Ok(heif_image_handle_2_rs_image_handle(out_thumbnail_handler))
+        Ok(ImageHandle::new(self.context, out_thumbnail_handler))
     }
 
     // Metadata
@@ -239,13 +247,8 @@ impl ImageHandle {
     }
 }
 
-impl Drop for ImageHandle {
+impl<'a> Drop for ImageHandle<'a> {
     fn drop(&mut self) {
         unsafe { heif_image_handle_release(self.inner) };
     }
-}
-
-#[inline]
-pub fn heif_image_handle_2_rs_image_handle(handle: *mut heif_image_handle) -> ImageHandle {
-    ImageHandle { inner: handle }
 }
