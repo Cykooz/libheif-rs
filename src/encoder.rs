@@ -80,7 +80,7 @@ impl Encoder {
         parameter_type: EncoderParameterType,
     ) -> Result<EncoderParameterValue, HeifError> {
         let c_param_name = CString::new(name).unwrap();
-        let mut param_value;
+        let param_value;
         match parameter_type {
             EncoderParameterType::Int => {
                 let mut value = 0;

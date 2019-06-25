@@ -84,11 +84,7 @@ pub struct HeifError {
 
 impl fmt::Display for HeifError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f,
-            "Error {:?}-{:?} {}",
-            self.code, self.sub_code, self.message
-        )
+        write!(f, "{:?}({:?}) {}", self.code, self.sub_code, self.message)
     }
 }
 

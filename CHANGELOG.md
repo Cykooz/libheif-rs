@@ -3,6 +3,7 @@
 ## [Unreleased] - ReleaseDate
 
 - Specified lifetime of ``ImageHandle``. Now it depends from ``HeifContext``.
+- ``HeifContext`` implements the ``Send`` trait now.
 
 ## [0.2.1] - 2019-06-24
 

@@ -161,3 +161,5 @@ impl Drop for HeifContext {
         unsafe { heif_context_free(self.inner) };
     }
 }
+
+unsafe impl Send for HeifContext {}
