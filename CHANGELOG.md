@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.3.0] - 2019-06-25
 
 - Specified lifetime of ``ImageHandle``. Now it depends from ``HeifContext``.
 - ``HeifContext`` implements the ``Send`` trait now.
