@@ -1,5 +1,10 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Added method ``HeifContext::read_from_reader()`` to create context 
+  form any object that implements the ``Reader`` trait.
+
 ## [0.3.0] - 2019-06-25
 
 - Specified lifetime of ``ImageHandle``. Now it depends from ``HeifContext``.

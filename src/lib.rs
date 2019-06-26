@@ -7,6 +7,7 @@ pub use enums::*;
 pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 pub use image::Image;
 pub use image_handle::ImageHandle;
+pub use reader::{Reader, StreamReader};
 
 mod context;
 mod encoder;
@@ -14,4 +15,5 @@ mod enums;
 mod errors;
 mod image;
 mod image_handle;
+mod reader;
 mod utils;

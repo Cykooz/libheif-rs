@@ -61,19 +61,15 @@ pub enum EncoderParameterValue {
     String(String),
 }
 
-//#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-//pub enum DepthRepresentationType {
-//    UniformInverseZ =
-//        heif_depth_representation_type_heif_depth_representation_type_uniform_inverse_Z as _,
-//    UniformDisparity =
-//        heif_depth_representation_type_heif_depth_representation_type_uniform_disparity as _,
-//    UniformZ = heif_depth_representation_type_heif_depth_representation_type_uniform_Z as _,
-//    NonUniformDisparity =
-//        heif_depth_representation_type_heif_depth_representation_type_nonuniform_disparity as _,
-//}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EncoderQuality {
     LossLess,
     Lossy(u8),
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ReaderGrowStatus {
+    SizeReached = heif_reader_grow_status_heif_reader_grow_status_size_reached as _,
+    Timeout = heif_reader_grow_status_heif_reader_grow_status_timeout as _,
+    SizeBeyondEof = heif_reader_grow_status_heif_reader_grow_status_size_beyond_eof as _,
 }

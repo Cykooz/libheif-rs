@@ -1,5 +1,6 @@
 use std::ffi;
 use std::mem;
+use std::os::raw::c_void;
 use std::ptr;
 
 use libheif_sys::*;
@@ -7,29 +8,12 @@ use libheif_sys::*;
 use crate::encoder::{Encoder, EncodingOptions};
 use crate::enums::CompressionFormat;
 use crate::image::Image;
+use crate::reader::{Reader, HEIF_READER};
 use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle};
-
-//#[derive(Debug)]
-//pub struct DecodeOptions {
-//    inner: *mut heif_decoding_options,
-//}
-//
-//impl DecodeOptions {
-//    pub fn new() -> DecodeOptions {
-//        DecodeOptions {
-//            inner: unsafe { heif_decoding_options_alloc() },
-//        }
-//    }
-//}
-//
-//impl Drop for DecodeOptions {
-//    fn drop(&mut self) {
-//        unsafe { heif_decoding_options_free(self.inner) };
-//    }
-//}
 
 pub struct HeifContext {
     inner: *mut heif_context,
+    reader: Option<Box<Box<dyn Reader>>>,
 }
 
 impl HeifContext {
@@ -43,7 +27,10 @@ impl HeifContext {
                 message: String::from(""),
             })
         } else {
-            Ok(HeifContext { inner: ctx })
+            Ok(HeifContext {
+                inner: ctx,
+                reader: None,
+            })
         }
     }
 
@@ -72,11 +59,24 @@ impl HeifContext {
         Ok(context)
     }
 
+    /// Create a new context from reader.
+    pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext, HeifError> {
+        let mut context = HeifContext::new()?;
+        let mut reader_box = Box::new(reader);
+        let user_data = &mut *reader_box as *mut _ as *mut c_void;
+        let err = unsafe {
+            heif_context_read_from_reader(context.inner, &HEIF_READER, user_data, ptr::null())
+        };
+        HeifError::from_heif_error(err)?;
+        context.reader = Some(reader_box);
+        Ok(context)
+    }
+
     unsafe extern "C" fn vector_writer(
         _ctx: *mut heif_context,
-        data: *const ::std::os::raw::c_void,
+        data: *const c_void,
         size: usize,
-        user_data: *mut ::std::os::raw::c_void,
+        user_data: *mut c_void,
     ) -> heif_error {
         let vec: &mut Vec<u8> = &mut *(user_data as *mut Vec<u8>);
         vec.reserve(size);
@@ -92,7 +92,7 @@ impl HeifContext {
 
     pub fn write_to_bytes(&self) -> Result<Vec<u8>, HeifError> {
         let mut res = Vec::<u8>::new();
-        let pointer_to_res = &mut res as *mut _ as *mut ::std::os::raw::c_void;
+        let pointer_to_res = &mut res as *mut _ as *mut c_void;
 
         let mut writer = heif_writer {
             writer_api_version: 1,

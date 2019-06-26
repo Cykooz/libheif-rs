@@ -3,7 +3,39 @@ use failure;
 
 use libheif_rs::{
     Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, HeifContext,
+    StreamReader,
 };
+use std::fs::File;
+use std::io::{BufReader, Seek, SeekFrom};
+
+#[test]
+fn read_from_file() -> Result<(), failure::Error> {
+    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let handle = ctx.primary_image_handle()?;
+    assert_eq!(handle.width(), 3024);
+    assert_eq!(handle.height(), 4032);
+
+    Ok(())
+}
+
+#[test]
+fn read_from_reader() -> Result<(), failure::Error> {
+    let mut file = BufReader::new(File::open("./data/test.heic")?);
+    let total_size = file.seek(SeekFrom::End(0))?;
+    file.seek(SeekFrom::Start(0))?;
+    let stream_reader = StreamReader::new(file, total_size);
+
+    let ctx = HeifContext::read_from_reader(Box::new(stream_reader))?;
+    let handle = ctx.primary_image_handle()?;
+    assert_eq!(handle.width(), 3024);
+    assert_eq!(handle.height(), 4032);
+
+    let src_img = handle.decode(ColorSpace::Undefined, Chroma::Undefined)?;
+    assert_eq!(src_img.color_space(), ColorSpace::YCbCr);
+    assert_eq!(src_img.chroma_format(), Chroma::C420);
+
+    Ok(())
+}
 
 #[test]
 fn get_image_handler() -> Result<(), failure::Error> {
