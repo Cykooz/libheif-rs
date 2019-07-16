@@ -2,8 +2,8 @@ use std::ffi::CStr;
 use std::fmt;
 
 use failure::Fail;
-use libheif_sys::*;
-use num;
+use libheif_sys as lh;
+use num_derive::FromPrimitive;
 
 #[derive(Debug, Copy, Clone, FromPrimitive)]
 pub enum HeifErrorCode {

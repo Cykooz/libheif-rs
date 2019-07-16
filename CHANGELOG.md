@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Renamed some values of ``HeifErrorCode`` and ``HeifErrorSubCode`` enums.
+
 ## [0.4.0] - 2019-06-28
 
 - Added method ``HeifContext::read_from_reader()`` to create context 

@@ -4,9 +4,10 @@ use std::mem;
 use std::ptr;
 use std::slice;
 
-use crate::enums::*;
+use libheif_sys as lh;
+
+use crate::enums::{Channel, Chroma, ColorSpace};
 use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
-use std::os::raw::c_int;
 
 const MAX_IMAGE_SIZE: u32 = std::i32::MAX as _;
 
@@ -73,7 +74,7 @@ impl Image {
         }
         Err(HeifError {
             code: HeifErrorCode::UsageError,
-            sub_code: HeifErrorSubCode::NonexistingImageChannelReferenced,
+            sub_code: HeifErrorSubCode::NonExistingImageChannelReferenced,
             message: "".to_string(),
         })
     }
@@ -85,7 +86,7 @@ impl Image {
         }
         Err(HeifError {
             code: HeifErrorCode::UsageError,
-            sub_code: HeifErrorSubCode::NonexistingImageChannelReferenced,
+            sub_code: HeifErrorSubCode::NonExistingImageChannelReferenced,
             message: "".to_string(),
         })
     }
@@ -97,7 +98,7 @@ impl Image {
         }
         Err(HeifError {
             code: HeifErrorCode::UsageError,
-            sub_code: HeifErrorSubCode::NonexistingImageChannelReferenced,
+            sub_code: HeifErrorSubCode::NonExistingImageChannelReferenced,
             message: "".to_string(),
         })
     }

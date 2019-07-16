@@ -233,7 +233,7 @@ impl<'a> ImageHandle<'a> {
         if size == 0 {
             return Err(HeifError {
                 code: HeifErrorCode::UsageError,
-                sub_code: HeifErrorSubCode::NonexistingItemReferenced,
+                sub_code: HeifErrorSubCode::NonExistingItemReferenced,
                 message: "".to_string(),
             });
         }

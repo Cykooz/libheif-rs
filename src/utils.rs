@@ -1,5 +1,5 @@
-use std::os::raw::c_char;
 use std::ffi::CStr;
+use std::os::raw::c_char;
 
 #[inline]
 pub fn cstr_to_str<'a>(c_str: *const c_char) -> Option<&'a str> {

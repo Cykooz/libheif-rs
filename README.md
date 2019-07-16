@@ -1,6 +1,6 @@
 # libheif-rs
 
-Safe wrapper to libheif-sys for parsing heif/heic files
+Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
