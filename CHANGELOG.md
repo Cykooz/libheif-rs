@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.5.0] - 2019-07-16
 
 - Renamed some values of ``HeifErrorCode`` and ``HeifErrorSubCode`` enums.
 
