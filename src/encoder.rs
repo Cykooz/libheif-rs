@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::ffi::CString;
 
-use libheif_sys::*;
+use libheif_sys as lh;
 
 use crate::enums::{EncoderParameterType, EncoderParameterValue};
 use crate::utils::cstr_to_str;
@@ -9,13 +9,13 @@ use crate::{EncoderQuality, HeifError, HeifErrorCode, HeifErrorSubCode};
 
 pub type EncoderParametersTypes = HashMap<String, EncoderParameterType>;
 
-fn parameters_types(c_encoder: *mut heif_encoder) -> Result<EncoderParametersTypes, HeifError> {
+fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParametersTypes, HeifError> {
     let mut res = EncoderParametersTypes::new();
     unsafe {
-        let mut param_pointers = heif_encoder_list_parameters(c_encoder);
+        let mut param_pointers = lh::heif_encoder_list_parameters(c_encoder);
         if !param_pointers.is_null() {
             while let Some(raw_param) = (*param_pointers).as_ref() {
-                let c_param_type = heif_encoder_parameter_get_type(raw_param);
+                let c_param_type = lh::heif_encoder_parameter_get_type(raw_param);
                 let param_type: EncoderParameterType;
                 match num::FromPrimitive::from_u32(c_param_type) {
                     Some(res) => {
@@ -29,7 +29,7 @@ fn parameters_types(c_encoder: *mut heif_encoder) -> Result<EncoderParametersTyp
                         });
                     }
                 }
-                let c_param_name = heif_encoder_parameter_get_name(raw_param);
+                let c_param_name = lh::heif_encoder_parameter_get_name(raw_param);
                 let name = cstr_to_str(c_param_name).unwrap_or("").to_string();
                 res.insert(name, param_type);
                 param_pointers = param_pointers.offset(1);
@@ -40,12 +40,12 @@ fn parameters_types(c_encoder: *mut heif_encoder) -> Result<EncoderParametersTyp
 }
 
 pub struct Encoder {
-    pub(crate) inner: *mut heif_encoder,
+    pub(crate) inner: *mut lh::heif_encoder,
     pub(crate) parameters_types: EncoderParametersTypes,
 }
 
 impl Encoder {
-    pub(crate) fn new(c_encoder: *mut heif_encoder) -> Result<Encoder, HeifError> {
+    pub(crate) fn new(c_encoder: *mut lh::heif_encoder) -> Result<Encoder, HeifError> {
         Ok(Encoder {
             inner: c_encoder,
             parameters_types: parameters_types(c_encoder)?,
@@ -53,7 +53,7 @@ impl Encoder {
     }
 
     pub fn name(&self) -> &str {
-        let res = unsafe { heif_encoder_get_name(self.inner) };
+        let res = unsafe { lh::heif_encoder_get_name(self.inner) };
         cstr_to_str(res).unwrap_or("")
     }
 
@@ -61,13 +61,13 @@ impl Encoder {
         let err;
         match quality {
             EncoderQuality::LossLess => {
-                err = unsafe { heif_encoder_set_lossless(self.inner, 1) };
+                err = unsafe { lh::heif_encoder_set_lossless(self.inner, 1) };
             }
             EncoderQuality::Lossy(value) => {
                 unsafe {
-                    let middle_err = heif_encoder_set_lossless(self.inner, 0);
+                    let middle_err = lh::heif_encoder_set_lossless(self.inner, 0);
                     HeifError::from_heif_error(middle_err)?;
-                    err = heif_encoder_set_lossy_quality(self.inner, i32::from(value))
+                    err = lh::heif_encoder_set_lossy_quality(self.inner, i32::from(value))
                 };
             }
         }
@@ -85,7 +85,7 @@ impl Encoder {
             EncoderParameterType::Int => {
                 let mut value = 0;
                 let err = unsafe {
-                    heif_encoder_get_parameter_integer(
+                    lh::heif_encoder_get_parameter_integer(
                         self.inner,
                         c_param_name.as_ptr(),
                         &mut value as _,
@@ -97,7 +97,7 @@ impl Encoder {
             EncoderParameterType::Bool => {
                 let mut value = 0;
                 let err = unsafe {
-                    heif_encoder_get_parameter_boolean(
+                    lh::heif_encoder_get_parameter_boolean(
                         self.inner,
                         c_param_name.as_ptr(),
                         &mut value as _,
@@ -109,7 +109,7 @@ impl Encoder {
             EncoderParameterType::String => {
                 let value: Vec<u8> = vec![0; 51];
                 let err = unsafe {
-                    heif_encoder_get_parameter_string(
+                    lh::heif_encoder_get_parameter_string(
                         self.inner,
                         c_param_name.as_ptr(),
                         value.as_ptr() as _,
@@ -143,7 +143,7 @@ impl Encoder {
 
 impl Drop for Encoder {
     fn drop(&mut self) {
-        unsafe { heif_encoder_release(self.inner) };
+        unsafe { lh::heif_encoder_release(self.inner) };
     }
 }
 
@@ -157,20 +157,20 @@ pub struct EncodingOptions {
 impl Default for EncodingOptions {
     fn default() -> Self {
         unsafe {
-            let heif_opt = heif_encoding_options_alloc();
+            let heif_opt = lh::heif_encoding_options_alloc();
             let res = EncodingOptions {
                 version: (*heif_opt).version,
                 save_alpha_channel: (*heif_opt).save_alpha_channel != 0,
             };
-            heif_encoding_options_free(heif_opt);
+            lh::heif_encoding_options_free(heif_opt);
             res
         }
     }
 }
 
 impl EncodingOptions {
-    pub(crate) fn heif_encoding_options(self) -> heif_encoding_options {
-        heif_encoding_options {
+    pub(crate) fn heif_encoding_options(self) -> lh::heif_encoding_options {
+        lh::heif_encoding_options {
             version: self.version,
             save_alpha_channel: if self.save_alpha_channel { 1 } else { 0 },
         }

@@ -1,6 +1,7 @@
-use libheif_sys::*;
 use std;
 use std::mem;
+use std::mem::MaybeUninit;
+use std::os::raw::c_int;
 use std::ptr;
 use std::slice;
 
@@ -31,7 +32,7 @@ pub struct Planes<T> {
 }
 
 pub struct Image {
-    pub(crate) inner: *mut heif_image,
+    pub(crate) inner: *mut lh::heif_image,
 }
 
 pub struct ScalingOptions {}
@@ -51,24 +52,29 @@ impl Image {
             });
         }
 
-        let mut image = Image {
-            inner: unsafe { mem::uninitialized() },
-        };
+        let mut c_image = MaybeUninit::<_>::uninit();
         let err = unsafe {
-            heif_image_create(
+            lh::heif_image_create(
                 width as _,
                 height as _,
                 colorspace as _,
                 chroma as _,
-                &mut image.inner,
+                c_image.as_mut_ptr(),
             )
         };
         HeifError::from_heif_error(err)?;
-        Ok(image)
+        Ok(Image {
+            inner: unsafe { c_image.assume_init() },
+        })
+    }
+
+    #[inline]
+    pub(crate) fn from_heif_image(image: *mut lh::heif_image) -> Image {
+        Image { inner: image }
     }
 
     pub fn width(&self, channel: Channel) -> Result<u32, HeifError> {
-        let value = unsafe { heif_image_get_width(self.inner, channel as _) };
+        let value = unsafe { lh::heif_image_get_width(self.inner, channel as _) };
         if value >= 0 {
             return Ok(value as _);
         }
@@ -80,7 +86,7 @@ impl Image {
     }
 
     pub fn height(&self, channel: Channel) -> Result<u32, HeifError> {
-        let value = unsafe { heif_image_get_height(self.inner, channel as _) };
+        let value = unsafe { lh::heif_image_get_height(self.inner, channel as _) };
         if value >= 0 {
             return Ok(value as _);
         }
@@ -92,7 +98,7 @@ impl Image {
     }
 
     pub fn bits_per_pixel(&self, channel: Channel) -> Result<u8, HeifError> {
-        let value = unsafe { heif_image_get_bits_per_pixel(self.inner, channel as _) };
+        let value = unsafe { lh::heif_image_get_bits_per_pixel(self.inner, channel as _) };
         if value >= 0 {
             return Ok(value as _);
         }
@@ -112,7 +118,7 @@ impl Image {
         let height = self.height(channel).unwrap();
         let bits_pre_pixel = self.bits_per_pixel(channel).unwrap();
         let mut stride: i32 = 1;
-        let data = unsafe { heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
         let size = height as usize * stride as usize;
         let bytes = unsafe { slice::from_raw_parts(data, size) };
         Some(Plane {
@@ -133,7 +139,7 @@ impl Image {
         let height = self.height(channel).unwrap();
         let bits_pre_pixel = self.bits_per_pixel(channel).unwrap();
         let mut stride: i32 = 1;
-        let data = unsafe { heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
         let size = height as usize * stride as usize;
         let bytes = unsafe { slice::from_raw_parts_mut(data, size) };
         Some(Plane {
@@ -172,7 +178,7 @@ impl Image {
     }
 
     pub fn has_channel(&self, channel: Channel) -> bool {
-        unsafe { heif_image_has_channel(self.inner, channel as _) != 0 }
+        unsafe { lh::heif_image_has_channel(self.inner, channel as _) != 0 }
     }
 
     //    pub fn channels(&self) -> Vec<Channel> {
@@ -186,11 +192,11 @@ impl Image {
     //    }
 
     pub fn chroma_format(&self) -> Chroma {
-        unsafe { mem::transmute(heif_image_get_chroma_format(self.inner)) }
+        unsafe { mem::transmute(lh::heif_image_get_chroma_format(self.inner)) }
     }
 
     pub fn color_space(&self) -> ColorSpace {
-        unsafe { mem::transmute(heif_image_get_colorspace(self.inner)) }
+        unsafe { mem::transmute(lh::heif_image_get_colorspace(self.inner)) }
     }
 
     /// Scale image by "nearest neighbor" method.
@@ -200,12 +206,20 @@ impl Image {
         height: u32,
         _scaling_options: Option<ScalingOptions>,
     ) -> Result<Image, HeifError> {
-        let mut image = unsafe { mem::uninitialized() };
+        let mut c_image = MaybeUninit::<_>::uninit();
         let err = unsafe {
-            heif_image_scale_image(self.inner, &mut image, width as _, height as _, ptr::null())
+            lh::heif_image_scale_image(
+                self.inner,
+                c_image.as_mut_ptr(),
+                width as _,
+                height as _,
+                ptr::null(),
+            )
         };
         HeifError::from_heif_error(err)?;
-        Ok(Image { inner: image })
+        Ok(Image {
+            inner: unsafe { c_image.assume_init() },
+        })
     }
 
     pub fn create_plane(
@@ -216,7 +230,7 @@ impl Image {
         bit_depth: u8,
     ) -> Result<(), HeifError> {
         let err = unsafe {
-            heif_image_add_plane(
+            lh::heif_image_add_plane(
                 self.inner,
                 channel as _,
                 width as _,
@@ -245,11 +259,6 @@ impl Image {
 
 impl Drop for Image {
     fn drop(&mut self) {
-        unsafe { heif_image_release(self.inner) };
+        unsafe { lh::heif_image_release(self.inner) };
     }
-}
-
-#[inline]
-pub fn heif_image_2_rs_image(image: *mut heif_image) -> Image {
-    Image { inner: image }
 }

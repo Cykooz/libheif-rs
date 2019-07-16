@@ -3,7 +3,7 @@ pub use encoder::{EncoderParametersTypes, EncodingOptions};
 pub use enums::*;
 pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 pub use image::Image;
-pub use image_handle::ImageHandle;
+pub use image_handle::{ImageHandle, ItemId};
 pub use reader::{Reader, StreamReader};
 
 mod context;

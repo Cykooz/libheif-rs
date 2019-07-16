@@ -2,7 +2,7 @@ use std::io;
 use std::os::raw::{c_int, c_void};
 use std::slice;
 
-use libheif_sys::*;
+use libheif_sys as lh;
 
 use crate::enums::ReaderGrowStatus;
 
@@ -94,13 +94,13 @@ unsafe extern "C" fn seek(position: i64, user_data: *mut c_void) -> c_int {
 unsafe extern "C" fn wait_for_file_size(
     target_size: i64,
     user_data: *mut c_void,
-) -> heif_reader_grow_status {
+) -> lh::heif_reader_grow_status {
     let reader = &mut *(user_data as *mut Box<dyn Reader>);
     let target_size = target_size as u64;
     reader.wait_for_file_size(target_size) as _
 }
 
-pub(crate) const HEIF_READER: heif_reader = heif_reader {
+pub(crate) const HEIF_READER: lh::heif_reader = lh::heif_reader {
     reader_api_version: 1,
     get_position: Some(get_position),
     read: Some(read),
