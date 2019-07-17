@@ -1,12 +1,13 @@
+use std::fs::File;
+use std::io::{BufReader, Read, Seek, SeekFrom};
+
 use exif::parse_exif;
 use failure;
 
 use libheif_rs::{
-    Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, HeifContext,
-    StreamReader,
+    check_file_type, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality,
+    FileTypeResult, HeifContext, StreamReader,
 };
-use std::fs::File;
-use std::io::{BufReader, Seek, SeekFrom};
 
 #[test]
 fn read_from_file() -> Result<(), failure::Error> {
@@ -176,6 +177,22 @@ fn test_encoder() -> Result<(), failure::Error> {
     //    encoder.set_lossless(true)?;
     //
     //    assert_eq!(encoder.get_parameter("lossless")?, Some(&EncoderParameterValue::Bool(true)));
+
+    Ok(())
+}
+
+#[test]
+fn test_check_file_type() -> Result<(), failure::Error> {
+    let mut data = vec![0u8; 16];
+    assert_eq!(check_file_type(&data), FileTypeResult::No);
+
+    let mut f = File::open("./data/test.heic")?;
+    let len = f.read(&mut data)?;
+    assert_eq!(len, 16);
+
+    assert_eq!(check_file_type(&data[..7]), FileTypeResult::MayBe);
+    assert_eq!(check_file_type(&data[..8]), FileTypeResult::MayBe);
+    assert_eq!(check_file_type(&data[..12]), FileTypeResult::Supported);
 
     Ok(())
 }

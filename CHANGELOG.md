@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Added function ``check_file_type`` that checks file type by it first bytes.
+
 ## [0.5.0] - 2019-07-16
 
 - Renamed some values of ``HeifErrorCode`` and ``HeifErrorSubCode`` enums.

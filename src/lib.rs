@@ -5,6 +5,7 @@ pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 pub use image::Image;
 pub use image_handle::{ImageHandle, ItemId};
 pub use reader::{Reader, StreamReader};
+pub use utils::check_file_type;
 
 mod context;
 mod encoder;

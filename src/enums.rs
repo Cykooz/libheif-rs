@@ -74,3 +74,14 @@ pub enum ReaderGrowStatus {
     Timeout = lh::heif_reader_grow_status_heif_reader_grow_status_timeout as _,
     SizeBeyondEof = lh::heif_reader_grow_status_heif_reader_grow_status_size_beyond_eof as _,
 }
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, FromPrimitive)]
+pub enum FileTypeResult {
+    No = lh::heif_filetype_result_heif_filetype_no as _,
+    /// It is HEIF and can be read by libheif
+    Supported = lh::heif_filetype_result_heif_filetype_yes_supported as _,
+    /// It is HEIF, but cannot be read by libheif
+    Unsupported = lh::heif_filetype_result_heif_filetype_yes_unsupported as _,
+    /// Not sure whether it is an HEIF, try detection with more input data
+    MayBe = lh::heif_filetype_result_heif_filetype_maybe as _,
+}
