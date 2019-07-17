@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.6.0] - 2019-07-17
 
 - Added function ``check_file_type`` that checks file type by it first bytes.
 
