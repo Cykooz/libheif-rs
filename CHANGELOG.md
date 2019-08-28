@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Separate enums ``ColorSpace`` and ``Chroma`` replaced by one
+  complex enum ``ColorSpace``.
+- ``libheif-sys`` updated to version 1.5.
+
 ## [0.6.0] - 2019-07-17
 
 - Added function ``check_file_type`` that checks file type by it first bytes.

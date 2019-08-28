@@ -4,7 +4,7 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
-- libheif-dev >= 1.4.0
+- libheif-dev >= 1.5.0
 
 ## Examples
 
@@ -12,11 +12,11 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ```rust
 use failure;
-use libheif_rs::{Channel, Chroma, ColorSpace, HeifContext};
+use libheif_rs::{Channel, RgbChroma, ColorSpace, HeifContext};
 
 fn main() -> Result<(), failure::Error> {
-    let ctx = HeifContext::read_from_file("./data/test.heif")?;
-    let handle = ctx.get_primary_image_handle()?;
+    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
     assert_eq!(handle.height(), 4032);
 
@@ -26,23 +26,22 @@ fn main() -> Result<(), failure::Error> {
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb, Chroma::InterleavedRgb)?;
-    assert_eq!(image.get_color_space(), ColorSpace::Rgb);
-    assert_eq!(image.get_chroma_format(), Chroma::InterleavedRgb);
-    assert_eq!(image.width(Channel::Interleaved), 3024);
-    assert_eq!(image.height(Channel::Interleaved), 4032);
+    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb))?;
+    assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
+    assert_eq!(image.width(Channel::Interleaved)?, 3024);
+    assert_eq!(image.height(Channel::Interleaved)?, 4032);
 
     // Scale the image
     let small_img = image.scale(1024, 800, None)?;
-    assert_eq!(small_img.width(Channel::Interleaved), 1024);
-    assert_eq!(small_img.height(Channel::Interleaved), 800);
-    
+    assert_eq!(small_img.width(Channel::Interleaved)?, 1024);
+    assert_eq!(small_img.height(Channel::Interleaved)?, 800);
+
     // Get "pixels"
     let planes = small_img.planes();
     let interleaved_plane = planes.interleaved.unwrap();
-    assert_eq!(interleaved_plane.width, 3024);
-    assert_eq!(interleaved_plane.height, 4032);
-    assert!(interleaved_plane.data.len() > 0);
+    assert_eq!(interleaved_plane.width, 1024);
+    assert_eq!(interleaved_plane.height, 800);
+    assert!(!interleaved_plane.data.is_empty());
     assert!(interleaved_plane.stride > 0);
 
     Ok(())
@@ -54,7 +53,7 @@ fn main() -> Result<(), failure::Error> {
 ```rust
 use failure;
 use libheif_rs::{
-    Channel, Chroma, ColorSpace, CompressionFormat, EncoderQuality, HeifContext,
+    Channel, RgbChroma, ColorSpace, CompressionFormat, EncoderQuality, HeifContext,
     Image,
 };
 
@@ -62,7 +61,7 @@ fn main() -> Result<(), failure::Error> {
     let width = 640;
     let height = 480;
 
-    let mut image = Image::new(width, height, ColorSpace::RGB, Chroma::C444)?;
+    let mut image = Image::new(width, height, ColorSpace::Rgb(RgbChroma::C444))?;
 
     image.create_plane(Channel::R, width, height, 8)?;
     image.create_plane(Channel::G, width, height, 8)?;
@@ -87,7 +86,7 @@ fn main() -> Result<(), failure::Error> {
             row_start += 1;
         }
     }
-    
+
     // Encode image and save it into file.
     let mut context = HeifContext::new()?;
     let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;

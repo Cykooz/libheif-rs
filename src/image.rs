@@ -1,5 +1,4 @@
 use std;
-use std::mem;
 use std::mem::MaybeUninit;
 use std::os::raw::c_int;
 use std::ptr;
@@ -7,7 +6,7 @@ use std::slice;
 
 use libheif_sys as lh;
 
-use crate::enums::{Channel, Chroma, ColorSpace};
+use crate::enums::{Channel, ColorSpace};
 use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 
 const MAX_IMAGE_SIZE: u32 = std::i32::MAX as _;
@@ -38,12 +37,7 @@ pub struct Image {
 pub struct ScalingOptions {}
 
 impl Image {
-    pub fn new(
-        width: u32,
-        height: u32,
-        colorspace: ColorSpace,
-        chroma: Chroma,
-    ) -> Result<Image, HeifError> {
+    pub fn new(width: u32, height: u32, color_space: ColorSpace) -> Result<Image, HeifError> {
         if width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE {
             return Err(HeifError {
                 code: HeifErrorCode::UsageError,
@@ -57,8 +51,8 @@ impl Image {
             lh::heif_image_create(
                 width as _,
                 height as _,
-                colorspace as _,
-                chroma as _,
+                color_space.heif_color_space(),
+                color_space.heif_chroma(),
                 c_image.as_mut_ptr(),
             )
         };
@@ -191,12 +185,13 @@ impl Image {
     //        res
     //    }
 
-    pub fn chroma_format(&self) -> Chroma {
-        unsafe { mem::transmute(lh::heif_image_get_chroma_format(self.inner)) }
-    }
-
-    pub fn color_space(&self) -> ColorSpace {
-        unsafe { mem::transmute(lh::heif_image_get_colorspace(self.inner)) }
+    pub fn color_space(&self) -> Option<ColorSpace> {
+        unsafe {
+            ColorSpace::from_libheif(
+                lh::heif_image_get_colorspace(self.inner),
+                lh::heif_image_get_chroma_format(self.inner),
+            )
+        }
     }
 
     /// Scale image by "nearest neighbor" method.

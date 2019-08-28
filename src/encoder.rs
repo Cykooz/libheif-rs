@@ -3,9 +3,11 @@ use std::ffi::CString;
 
 use libheif_sys as lh;
 
-use crate::enums::{EncoderParameterType, EncoderParameterValue};
 use crate::utils::cstr_to_str;
-use crate::{EncoderQuality, HeifError, HeifErrorCode, HeifErrorSubCode};
+use crate::{
+    EncoderParameterType, EncoderParameterValue, EncoderQuality, HeifError, HeifErrorCode,
+    HeifErrorSubCode,
+};
 
 pub type EncoderParametersTypes = HashMap<String, EncoderParameterType>;
 

@@ -12,7 +12,7 @@ documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
 
 
 [dependencies.libheif-sys]
-version = "1.4.2"
+version = "1.5"
 
 
 [dependencies]

@@ -80,11 +80,11 @@ impl HeifContext {
     ) -> lh::heif_error {
         let vec: &mut Vec<u8> = &mut *(user_data as *mut Vec<u8>);
         vec.reserve(size);
-        vec.set_len(size);
         ptr::copy_nonoverlapping::<u8>(data as _, vec.as_mut_ptr(), size);
+        vec.set_len(size);
 
         lh::heif_error {
-            code: 0,
+            code: lh::heif_error_code_heif_error_Ok,
             subcode: lh::heif_suberror_code_heif_suberror_Unspecified,
             message: ptr::null(),
         }

@@ -5,10 +5,8 @@ use std::ptr;
 
 use libheif_sys as lh;
 
-use crate::enums::{Chroma, ColorSpace};
-use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
 use crate::utils::cstr_to_str;
-use crate::{HeifContext, Image};
+use crate::{ColorSpace, HeifContext, HeifError, HeifErrorCode, HeifErrorSubCode, Image};
 
 pub struct ImageHandle<'a> {
     context: &'a HeifContext,
@@ -32,24 +30,25 @@ pub type ItemId = lh::heif_item_id;
 impl<'a> ImageHandle<'a> {
     pub(crate) fn new(context: &HeifContext, handle: *mut lh::heif_image_handle) -> ImageHandle {
         ImageHandle {
-            inner: handle,
             context,
+            inner: handle,
         }
     }
 
-    pub fn decode(&self, colorspace: ColorSpace, chroma: Chroma) -> Result<Image, HeifError> {
+    pub fn decode(&self, color_space: ColorSpace) -> Result<Image, HeifError> {
         let mut c_image = MaybeUninit::<_>::uninit();
-        let options = unsafe { lh::heif_decoding_options_alloc() };
-        let err = unsafe {
-            lh::heif_decode_image(
+        let err;
+        unsafe {
+            let options = lh::heif_decoding_options_alloc();
+            err = lh::heif_decode_image(
                 self.inner,
                 c_image.as_mut_ptr(),
-                colorspace as _,
-                chroma as _,
+                color_space.heif_color_space(),
+                color_space.heif_chroma(),
                 options,
-            )
-        };
-        unsafe { lh::heif_decoding_options_free(options) };
+            );
+            lh::heif_decoding_options_free(options);
+        }
         HeifError::from_heif_error(err)?;
         let c_image = unsafe { c_image.assume_init() };
         Ok(Image::from_heif_image(c_image))
