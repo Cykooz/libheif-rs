@@ -1,6 +1,6 @@
 [package]
 name = "libheif-rs"
-version = "0.6.1-alpha.0"
+version = "0.7.0"
 authors = ["Kirill Kuzminykh <cykooz@gmail.com>"]
 edition = "2018"
 description = "Safe wrapper around the libheif-sys crate for parsing heif/heic files"
@@ -11,15 +11,15 @@ repository = "https://github.com/cykooz/libheif-rs"
 documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
 
 
-[dependencies.libheif-sys]
-version = "1.5"
-
-
 [dependencies]
 failure = "0.1"
 num = "0.2"
 num-traits = "0.2"
 num-derive = "0.2"
+
+
+[dependencies.libheif-sys]
+version = "1.5"
 
 
 [dev-dependencies]

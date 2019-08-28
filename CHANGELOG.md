@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.7.0] - 2019-08-28
 
 - Separate enums ``ColorSpace`` and ``Chroma`` replaced by one
   complex enum ``ColorSpace``.
