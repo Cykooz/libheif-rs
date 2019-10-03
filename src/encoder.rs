@@ -6,12 +6,12 @@ use libheif_sys as lh;
 use crate::utils::cstr_to_str;
 use crate::{
     EncoderParameterType, EncoderParameterValue, EncoderQuality, HeifError, HeifErrorCode,
-    HeifErrorSubCode,
+    HeifErrorSubCode, Result,
 };
 
 pub type EncoderParametersTypes = HashMap<String, EncoderParameterType>;
 
-fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParametersTypes, HeifError> {
+fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParametersTypes> {
     let mut res = EncoderParametersTypes::new();
     unsafe {
         let mut param_pointers = lh::heif_encoder_list_parameters(c_encoder);
@@ -47,7 +47,7 @@ pub struct Encoder {
 }
 
 impl Encoder {
-    pub(crate) fn new(c_encoder: *mut lh::heif_encoder) -> Result<Encoder, HeifError> {
+    pub(crate) fn new(c_encoder: *mut lh::heif_encoder) -> Result<Encoder> {
         Ok(Encoder {
             inner: c_encoder,
             parameters_types: parameters_types(c_encoder)?,
@@ -59,7 +59,7 @@ impl Encoder {
         cstr_to_str(res).unwrap_or("")
     }
 
-    pub fn set_quality(&mut self, quality: EncoderQuality) -> Result<(), HeifError> {
+    pub fn set_quality(&mut self, quality: EncoderQuality) -> Result<()> {
         let err;
         match quality {
             EncoderQuality::LossLess => {
@@ -80,7 +80,7 @@ impl Encoder {
         &self,
         name: &str,
         parameter_type: EncoderParameterType,
-    ) -> Result<EncoderParameterValue, HeifError> {
+    ) -> Result<EncoderParameterValue> {
         let c_param_name = CString::new(name).unwrap();
         let param_value;
         match parameter_type {
@@ -132,7 +132,7 @@ impl Encoder {
         self.parameters_types.keys().cloned().collect()
     }
 
-    pub fn parameter(&self, name: &str) -> Result<Option<EncoderParameterValue>, HeifError> {
+    pub fn parameter(&self, name: &str) -> Result<Option<EncoderParameterValue>> {
         match self.parameters_types.get(name) {
             Some(param_type) => {
                 let value = self.parameter_value(name, *param_type)?;

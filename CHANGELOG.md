@@ -1,5 +1,14 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Added method ``ImageHandle::set_primary()``.
+
+### Breaking changes
+- Removed dependency from ``failure`` crate.
+- Added type ``Result<T>`` as alias for ``std::result::Result<T, HeifError>``.
+- ``ImageHandle::is_primary_image`` method renamed to ``ImageHandle::is_primary``.
+
 ## [0.7.0] - 2019-08-28
 
 - Separate enums ``ColorSpace`` and ``Chroma`` replaced by one

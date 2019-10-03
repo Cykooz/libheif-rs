@@ -12,7 +12,6 @@ documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
 
 
 [dependencies]
-failure = "0.1"
 num = "0.2"
 num-traits = "0.2"
 num-derive = "0.2"

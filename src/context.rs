@@ -9,16 +9,16 @@ use crate::encoder::{Encoder, EncodingOptions};
 use crate::enums::CompressionFormat;
 use crate::image::Image;
 use crate::reader::{Reader, HEIF_READER};
-use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle};
+use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle, Result};
 
 pub struct HeifContext {
-    inner: *mut lh::heif_context,
+    pub(crate) inner: *mut lh::heif_context,
     reader: Option<Box<Box<dyn Reader>>>,
 }
 
 impl HeifContext {
     /// Create a new empty context.
-    pub fn new() -> Result<HeifContext, HeifError> {
+    pub fn new() -> Result<HeifContext> {
         let ctx = unsafe { lh::heif_context_alloc() };
         if ctx.is_null() {
             Err(HeifError {
@@ -35,7 +35,7 @@ impl HeifContext {
     }
 
     /// Create a new context from bytes.
-    pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext, HeifError> {
+    pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext> {
         let context = HeifContext::new()?;
         let err = unsafe {
             lh::heif_context_read_from_memory_without_copy(
@@ -50,7 +50,7 @@ impl HeifContext {
     }
 
     /// Create a new context from file.
-    pub fn read_from_file(name: &str) -> Result<HeifContext, HeifError> {
+    pub fn read_from_file(name: &str) -> Result<HeifContext> {
         let context = HeifContext::new()?;
         let c_name = ffi::CString::new(name).unwrap();
         let err =
@@ -60,7 +60,7 @@ impl HeifContext {
     }
 
     /// Create a new context from reader.
-    pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext, HeifError> {
+    pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext> {
         let mut context = HeifContext::new()?;
         let mut reader_box = Box::new(reader);
         let user_data = &mut *reader_box as *mut _ as *mut c_void;
@@ -90,7 +90,7 @@ impl HeifContext {
         }
     }
 
-    pub fn write_to_bytes(&self) -> Result<Vec<u8>, HeifError> {
+    pub fn write_to_bytes(&self) -> Result<Vec<u8>> {
         let mut res = Vec::<u8>::new();
         let pointer_to_res = &mut res as *mut _ as *mut c_void;
 
@@ -104,7 +104,7 @@ impl HeifContext {
         Ok(res)
     }
 
-    pub fn write_to_file(&self, name: &str) -> Result<(), HeifError> {
+    pub fn write_to_file(&self, name: &str) -> Result<()> {
         let c_name = ffi::CString::new(name).unwrap();
         let err = unsafe { lh::heif_context_write_to_file(self.inner, c_name.as_ptr()) };
         HeifError::from_heif_error(err)
@@ -114,7 +114,7 @@ impl HeifContext {
         unsafe { lh::heif_context_get_number_of_top_level_images(self.inner) as _ }
     }
 
-    pub fn primary_image_handle(&self) -> Result<ImageHandle, HeifError> {
+    pub fn primary_image_handle(&self) -> Result<ImageHandle> {
         let mut handle = MaybeUninit::<_>::uninit();
         let err =
             unsafe { lh::heif_context_get_primary_image_handle(self.inner, handle.as_mut_ptr()) };
@@ -123,7 +123,7 @@ impl HeifContext {
         Ok(ImageHandle::new(self, handle))
     }
 
-    pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder, HeifError> {
+    pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder> {
         let mut c_encoder = MaybeUninit::<_>::uninit();;
         let err = unsafe {
             lh::heif_context_get_encoder_for_format(self.inner, format as _, c_encoder.as_mut_ptr())
@@ -134,12 +134,16 @@ impl HeifContext {
         Ok(encoder)
     }
 
+    /// Compress the input image.
+    /// The first image added to the context is also automatically set the primary image, but
+    /// you can change the primary image later with [`set_primary_image`] method.
+    /// [`set_primary_image`]: #method.set_primary_image
     pub fn encode_image(
         &mut self,
         image: &Image,
         encoder: &mut Encoder,
         encoding_options: Option<EncodingOptions>,
-    ) -> Result<(), HeifError> {
+    ) -> Result<()> {
         let encoding_options_ptr = match encoding_options {
             Some(options) => &(options.heif_encoding_options()),
             None => ptr::null(),
@@ -156,6 +160,13 @@ impl HeifContext {
             HeifError::from_heif_error(err)?;
         }
         Ok(())
+    }
+
+    pub fn set_primary_image(&mut self, image_handle: &mut ImageHandle) -> Result<()> {
+        unsafe {
+            let err = lh::heif_context_set_primary_image(self.inner, image_handle.inner);
+            HeifError::from_heif_error(err)
+        }
     }
 }
 

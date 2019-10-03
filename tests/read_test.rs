@@ -2,15 +2,14 @@ use std::fs::File;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 
 use exif::parse_exif;
-use failure;
 
 use libheif_rs::{
     check_file_type, Channel, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue,
-    EncoderQuality, FileTypeResult, HeifContext, RgbChroma, StreamReader,
+    EncoderQuality, FileTypeResult, HeifContext, Result, RgbChroma, StreamReader,
 };
 
 #[test]
-fn read_from_file() -> Result<(), failure::Error> {
+fn read_from_file() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
@@ -20,10 +19,10 @@ fn read_from_file() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn read_from_reader() -> Result<(), failure::Error> {
-    let mut file = BufReader::new(File::open("./data/test.heic")?);
-    let total_size = file.seek(SeekFrom::End(0))?;
-    file.seek(SeekFrom::Start(0))?;
+fn read_from_reader() -> Result<()> {
+    let mut file = BufReader::new(File::open("./data/test.heic").unwrap());
+    let total_size = file.seek(SeekFrom::End(0)).unwrap();
+    file.seek(SeekFrom::Start(0)).unwrap();
     let stream_reader = StreamReader::new(file, total_size);
 
     let ctx = HeifContext::read_from_reader(Box::new(stream_reader))?;
@@ -38,7 +37,7 @@ fn read_from_reader() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn get_image_handler() -> Result<(), failure::Error> {
+fn get_image_handler() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
 
     // Get a handle to the primary image
@@ -48,7 +47,7 @@ fn get_image_handler() -> Result<(), failure::Error> {
     assert_eq!(handle.ispe_width(), 4032);
     assert_eq!(handle.ispe_height(), 3024);
     assert!(!handle.has_alpha_channel());
-    assert!(handle.is_primary_image());
+    assert!(handle.is_primary());
     assert_eq!(handle.luma_bits_per_pixel(), 8);
     assert_eq!(handle.chroma_bits_per_pixel(), 8);
     assert!(!handle.has_depth_image());
@@ -59,7 +58,7 @@ fn get_image_handler() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn get_thumbnail() -> Result<(), failure::Error> {
+fn get_thumbnail() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
 
@@ -74,7 +73,7 @@ fn get_thumbnail() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn get_exif() -> Result<(), failure::Error> {
+fn get_exif() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
 
@@ -100,7 +99,7 @@ fn get_exif() -> Result<(), failure::Error> {
     assert_eq!(exif.len(), 2030);
     assert_eq!(exif[0..4], [0, 0, 0, 6]);
     let tiff_exif = &exif[10..]; // Skip header
-    let (exif_fields, is_le) = parse_exif(tiff_exif)?;
+    let (exif_fields, is_le) = parse_exif(tiff_exif).unwrap();
     assert!(!is_le);
     assert_eq!(exif_fields.len(), 56);
 
@@ -108,7 +107,7 @@ fn get_exif() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn decode_and_scale_image() -> Result<(), failure::Error> {
+fn decode_and_scale_image() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
 
@@ -149,7 +148,7 @@ fn decode_and_scale_image() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn test_encoder() -> Result<(), failure::Error> {
+fn test_encoder() -> Result<()> {
     let ctx = HeifContext::new()?;
 
     let mut encoder = ctx.encoder_for_format(CompressionFormat::Hevc)?;
@@ -196,12 +195,12 @@ fn test_encoder() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn test_check_file_type() -> Result<(), failure::Error> {
+fn test_check_file_type() -> Result<()> {
     let mut data = vec![0u8; 16];
     assert_eq!(check_file_type(&data), FileTypeResult::No);
 
-    let mut f = File::open("./data/test.heic")?;
-    let len = f.read(&mut data)?;
+    let mut f = File::open("./data/test.heic").unwrap();
+    let len = f.read(&mut data).unwrap();
     assert_eq!(len, 16);
 
     assert_eq!(check_file_type(&data[..7]), FileTypeResult::MayBe);
@@ -212,7 +211,7 @@ fn test_check_file_type() -> Result<(), failure::Error> {
 }
 
 #[test]
-fn read_test_from_readme_file() -> Result<(), failure::Error> {
+fn read_test_from_readme_file() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
@@ -222,6 +221,7 @@ fn read_test_from_readme_file() -> Result<(), failure::Error> {
     let meta_ids = handle.list_of_metadata_block_ids("Exif", 1);
     assert_eq!(meta_ids.len(), 1);
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
+    assert_eq!(exif.len(), 2030);
 
     // Decode the image
     let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb))?;

@@ -1,7 +1,7 @@
 pub use context::HeifContext;
 pub use encoder::{EncoderParametersTypes, EncodingOptions};
 pub use enums::*;
-pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
+pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 pub use image::Image;
 pub use image_handle::{ImageHandle, ItemId};
 pub use reader::{Reader, StreamReader};

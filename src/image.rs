@@ -7,7 +7,7 @@ use std::slice;
 use libheif_sys as lh;
 
 use crate::enums::{Channel, ColorSpace};
-use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode};
+use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 
 const MAX_IMAGE_SIZE: u32 = std::i32::MAX as _;
 
@@ -37,7 +37,10 @@ pub struct Image {
 pub struct ScalingOptions {}
 
 impl Image {
-    pub fn new(width: u32, height: u32, color_space: ColorSpace) -> Result<Image, HeifError> {
+    /// Create a new image of the specified resolution and colorspace.
+    /// Note: no memory for the actual image data is reserved yet. You have to use
+    /// Image::create_plane() to add the image planes required by your colorspace.    
+    pub fn new(width: u32, height: u32, color_space: ColorSpace) -> Result<Image> {
         if width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE {
             return Err(HeifError {
                 code: HeifErrorCode::UsageError,
@@ -67,7 +70,7 @@ impl Image {
         Image { inner: image }
     }
 
-    pub fn width(&self, channel: Channel) -> Result<u32, HeifError> {
+    pub fn width(&self, channel: Channel) -> Result<u32> {
         let value = unsafe { lh::heif_image_get_width(self.inner, channel as _) };
         if value >= 0 {
             return Ok(value as _);
@@ -79,7 +82,7 @@ impl Image {
         })
     }
 
-    pub fn height(&self, channel: Channel) -> Result<u32, HeifError> {
+    pub fn height(&self, channel: Channel) -> Result<u32> {
         let value = unsafe { lh::heif_image_get_height(self.inner, channel as _) };
         if value >= 0 {
             return Ok(value as _);
@@ -91,7 +94,7 @@ impl Image {
         })
     }
 
-    pub fn bits_per_pixel(&self, channel: Channel) -> Result<u8, HeifError> {
+    pub fn bits_per_pixel(&self, channel: Channel) -> Result<u8> {
         let value = unsafe { lh::heif_image_get_bits_per_pixel(self.inner, channel as _) };
         if value >= 0 {
             return Ok(value as _);
@@ -113,6 +116,7 @@ impl Image {
         let bits_pre_pixel = self.bits_per_pixel(channel).unwrap();
         let mut stride: i32 = 1;
         let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        assert!(!data.is_null());
         let size = height as usize * stride as usize;
         let bytes = unsafe { slice::from_raw_parts(data, size) };
         Some(Plane {
@@ -200,7 +204,7 @@ impl Image {
         width: u32,
         height: u32,
         _scaling_options: Option<ScalingOptions>,
-    ) -> Result<Image, HeifError> {
+    ) -> Result<Image> {
         let mut c_image = MaybeUninit::<_>::uninit();
         let err = unsafe {
             lh::heif_image_scale_image(
@@ -217,13 +221,18 @@ impl Image {
         })
     }
 
+    /// The indicated bit_depth corresponds to the bit depth per channel.
+    /// I.e. for interleaved formats like RRGGBB, the bit_depth would be, e.g., 10 bit instead
+    /// of 30 bits or 3*16=48 bits.
+    /// For backward compatibility, one can also specify 24bits for RGB and 32bits for RGBA,
+    /// instead of the preferred 8 bits.
     pub fn create_plane(
         &mut self,
         channel: Channel,
         width: u32,
         height: u32,
         bit_depth: u8,
-    ) -> Result<(), HeifError> {
+    ) -> Result<()> {
         let err = unsafe {
             lh::heif_image_add_plane(
                 self.inner,

@@ -1,8 +1,9 @@
-use crate::FileTypeResult;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
 use libheif_sys as lh;
+
+use crate::FileTypeResult;
 
 #[inline]
 pub(crate) fn cstr_to_str<'a>(c_str: *const c_char) -> Option<&'a str> {

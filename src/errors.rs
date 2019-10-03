@@ -1,7 +1,6 @@
 use std::ffi::CStr;
 use std::fmt;
 
-use failure::Fail;
 use libheif_sys as lh;
 use num_derive::FromPrimitive;
 
@@ -77,12 +76,14 @@ pub enum HeifErrorSubCode {
     CannotWriteOutputData = lh::heif_suberror_code_heif_suberror_Cannot_write_output_data as _,
 }
 
-#[derive(Debug, Clone, Fail)]
+#[derive(Debug, Clone)]
 pub struct HeifError {
     pub code: HeifErrorCode,
     pub sub_code: HeifErrorSubCode,
     pub message: String,
 }
+
+pub type Result<T> = std::result::Result<T, HeifError>;
 
 impl fmt::Display for HeifError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -91,7 +92,7 @@ impl fmt::Display for HeifError {
 }
 
 impl HeifError {
-    pub fn from_heif_error(err: lh::heif_error) -> Result<(), HeifError> {
+    pub fn from_heif_error(err: lh::heif_error) -> Result<()> {
         if err.code == 0 {
             return Ok(());
         }

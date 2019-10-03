@@ -6,11 +6,11 @@ use std::ptr;
 use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
-use crate::{ColorSpace, HeifContext, HeifError, HeifErrorCode, HeifErrorSubCode, Image};
+use crate::{ColorSpace, HeifContext, HeifError, HeifErrorCode, HeifErrorSubCode, Image, Result};
 
 pub struct ImageHandle<'a> {
     context: &'a HeifContext,
-    inner: *mut lh::heif_image_handle,
+    pub(crate) inner: *mut lh::heif_image_handle,
 }
 
 pub type ItemId = lh::heif_item_id;
@@ -35,7 +35,7 @@ impl<'a> ImageHandle<'a> {
         }
     }
 
-    pub fn decode(&self, color_space: ColorSpace) -> Result<Image, HeifError> {
+    pub fn decode(&self, color_space: ColorSpace) -> Result<Image> {
         let mut c_image = MaybeUninit::<_>::uninit();
         let err;
         unsafe {
@@ -66,7 +66,7 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_has_alpha_channel(self.inner) != 0 }
     }
 
-    pub fn is_primary_image(&self) -> bool {
+    pub fn is_primary(&self) -> bool {
         unsafe { lh::heif_image_handle_is_primary_image(self.inner) != 0 }
     }
 
@@ -117,7 +117,7 @@ impl<'a> ImageHandle<'a> {
         item_ids
     }
 
-    pub fn depth_image_handle(&self, depth_image_id: ItemId) -> Result<ImageHandle, HeifError> {
+    pub fn depth_image_handle(&self, depth_image_id: ItemId) -> Result<ImageHandle> {
         let mut out_depth_handler = MaybeUninit::<_>::uninit();
         let err = unsafe {
             lh::heif_image_handle_get_depth_image_handle(
@@ -162,7 +162,7 @@ impl<'a> ImageHandle<'a> {
         item_ids
     }
 
-    pub fn thumbnail(&self, thumbnail_id: ItemId) -> Result<ImageHandle, HeifError> {
+    pub fn thumbnail(&self, thumbnail_id: ItemId) -> Result<ImageHandle> {
         let mut out_thumbnail_handler = MaybeUninit::<_>::uninit();
         let err = unsafe {
             lh::heif_image_handle_get_thumbnail(
@@ -234,7 +234,7 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_metadata_size(self.inner, metadata_id) }
     }
 
-    pub fn metadata(&self, metadata_id: ItemId) -> Result<Vec<u8>, HeifError> {
+    pub fn metadata(&self, metadata_id: ItemId) -> Result<Vec<u8>> {
         let size = self.metadata_size(metadata_id);
         if size == 0 {
             return Err(HeifError {
