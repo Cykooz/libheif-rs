@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.8.0] - 2019-10-03
 
 - Added method ``ImageHandle::set_primary()``.
 
