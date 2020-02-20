@@ -14,7 +14,7 @@ documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
 [dependencies]
 num = "0.2"
 num-traits = "0.2"
-num-derive = "0.2"
+num-derive = "0.3"
 
 
 [dependencies.libheif-sys]
@@ -22,7 +22,7 @@ version = "1.5"
 
 
 [dev-dependencies]
-kamadak-exif = "0.3"
+kamadak-exif = "0.5"
 
 
 [profile.release]
