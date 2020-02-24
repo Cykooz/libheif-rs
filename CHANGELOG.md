@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.9.0] - 2020-02-24
 
 - Updated versions of dependencies.
 
