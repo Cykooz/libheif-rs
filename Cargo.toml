@@ -8,7 +8,7 @@ readme = "README.md"
 keywords = ["heic", "heif", "libheif"]
 license = "MIT"
 repository = "https://github.com/cykooz/libheif-rs"
-documentation = "https://cykooz.github.io/libheif-rs/libheif_rs/"
+documentation = "https://docs.rs/crate/libheif-rs"
 
 
 [dependencies]
