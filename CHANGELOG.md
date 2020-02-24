@@ -1,10 +1,19 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Updated versions of dependencies.
+
+### Breaking changes
+
+- Added argument ``ignore_transformations`` into method ``ImageHandle::decode()``.
+
 ## [0.8.0] - 2019-10-03
 
 - Added method ``ImageHandle::set_primary()``.
 
 ### Breaking changes
+
 - Removed dependency from ``failure`` crate.
 - Added type ``Result<T>`` as alias for ``std::result::Result<T, HeifError>``.
 - ``ImageHandle::is_primary_image`` method renamed to ``ImageHandle::is_primary``.

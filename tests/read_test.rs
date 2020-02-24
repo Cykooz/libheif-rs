@@ -4,8 +4,8 @@ use std::io::{BufReader, Read, Seek, SeekFrom};
 use exif::parse_exif;
 
 use libheif_rs::{
-    check_file_type, Channel, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue,
-    EncoderQuality, FileTypeResult, HeifContext, Result, RgbChroma, StreamReader,
+    check_file_type, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality,
+    FileTypeResult, HeifContext, Result, StreamReader,
 };
 
 #[test]
@@ -30,7 +30,7 @@ fn read_from_reader() -> Result<()> {
     assert_eq!(handle.width(), 3024);
     assert_eq!(handle.height(), 4032);
 
-    let src_img = handle.decode(ColorSpace::Undefined)?;
+    let src_img = handle.decode(ColorSpace::Undefined, false)?;
     assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
 
     Ok(())
@@ -112,7 +112,7 @@ fn decode_and_scale_image() -> Result<()> {
     let handle = ctx.primary_image_handle()?;
 
     // Decode the image
-    let src_img = handle.decode(ColorSpace::Undefined)?;
+    let src_img = handle.decode(ColorSpace::Undefined, false)?;
     assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
     let planes = src_img.planes();
     let y_plane = planes.y.unwrap();
@@ -206,41 +206,6 @@ fn test_check_file_type() -> Result<()> {
     assert_eq!(check_file_type(&data[..7]), FileTypeResult::MayBe);
     assert_eq!(check_file_type(&data[..8]), FileTypeResult::MayBe);
     assert_eq!(check_file_type(&data[..12]), FileTypeResult::Supported);
-
-    Ok(())
-}
-
-#[test]
-fn read_test_from_readme_file() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
-    let handle = ctx.primary_image_handle()?;
-    assert_eq!(handle.width(), 3024);
-    assert_eq!(handle.height(), 4032);
-
-    // Get Exif
-    let meta_ids = handle.list_of_metadata_block_ids("Exif", 1);
-    assert_eq!(meta_ids.len(), 1);
-    let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
-    assert_eq!(exif.len(), 2030);
-
-    // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb))?;
-    assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
-    assert_eq!(image.width(Channel::Interleaved)?, 3024);
-    assert_eq!(image.height(Channel::Interleaved)?, 4032);
-
-    // Scale the image
-    let small_img = image.scale(1024, 800, None)?;
-    assert_eq!(small_img.width(Channel::Interleaved)?, 1024);
-    assert_eq!(small_img.height(Channel::Interleaved)?, 800);
-
-    // Get "pixels"
-    let planes = small_img.planes();
-    let interleaved_plane = planes.interleaved.unwrap();
-    assert_eq!(interleaved_plane.width, 1024);
-    assert_eq!(interleaved_plane.height, 800);
-    assert!(!interleaved_plane.data.is_empty());
-    assert!(interleaved_plane.stride > 0);
 
     Ok(())
 }

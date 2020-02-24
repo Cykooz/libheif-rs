@@ -35,11 +35,12 @@ impl<'a> ImageHandle<'a> {
         }
     }
 
-    pub fn decode(&self, color_space: ColorSpace) -> Result<Image> {
+    pub fn decode(&self, color_space: ColorSpace, ignore_transformations: bool) -> Result<Image> {
         let mut c_image = MaybeUninit::<_>::uninit();
         let err;
         unsafe {
-            let options = lh::heif_decoding_options_alloc();
+            let mut options = lh::heif_decoding_options_alloc();
+            (*options).ignore_transformations = if ignore_transformations { 1 } else { 0 };
             err = lh::heif_decode_image(
                 self.inner,
                 c_image.as_mut_ptr(),

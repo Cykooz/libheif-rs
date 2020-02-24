@@ -2,6 +2,8 @@
 
 Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
+[CHANGELOG](https://github.com/Cykooz/libheif-rs/blob/master/CHANGELOG.md)
+
 ## System dependencies
 
 - libheif-dev >= 1.5.0
@@ -11,10 +13,9 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 ### Read HEIF file
 
 ```rust
-use failure;
-use libheif_rs::{Channel, RgbChroma, ColorSpace, HeifContext};
+use libheif_rs::{Channel, RgbChroma, ColorSpace, HeifContext, Result};
 
-fn main() -> Result<(), failure::Error> {
+fn main() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
@@ -26,7 +27,7 @@ fn main() -> Result<(), failure::Error> {
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb))?;
+    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), false)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     assert_eq!(image.width(Channel::Interleaved)?, 3024);
     assert_eq!(image.height(Channel::Interleaved)?, 4032);
@@ -51,13 +52,13 @@ fn main() -> Result<(), failure::Error> {
 ### Write HEIF file
 
 ```rust
-use failure;
+use tempfile::NamedTempFile;
 use libheif_rs::{
     Channel, RgbChroma, ColorSpace, CompressionFormat, EncoderQuality, HeifContext,
-    Image,
+    Image, Result
 };
 
-fn main() -> Result<(), failure::Error> {
+fn main() -> Result<()> {
     let width = 640;
     let height = 480;
 
@@ -92,7 +93,9 @@ fn main() -> Result<(), failure::Error> {
     let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     context.encode_image(&image, &mut encoder, None)?;
-    context.write_to_file("./data/new.heif")?;
+    
+    let tmp_file = NamedTempFile::new().unwrap();
+    context.write_to_file(tmp_file.path())?;
 
     Ok(())
 }

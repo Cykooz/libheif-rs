@@ -124,7 +124,7 @@ impl HeifContext {
     }
 
     pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder> {
-        let mut c_encoder = MaybeUninit::<_>::uninit();;
+        let mut c_encoder = MaybeUninit::<_>::uninit();
         let err = unsafe {
             lh::heif_context_get_encoder_for_format(self.inner, format as _, c_encoder.as_mut_ptr())
         };
