@@ -12,7 +12,7 @@ documentation = "https://docs.rs/crate/libheif-rs"
 
 
 [dependencies]
-num = "0.2"
+num = "0.3"
 num-traits = "0.2"
 num-derive = "0.3"
 
