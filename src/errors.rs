@@ -2,9 +2,9 @@ use std::ffi::CStr;
 use std::fmt;
 
 use libheif_sys as lh;
-use num_derive::FromPrimitive;
 
-#[derive(Debug, Copy, Clone, FromPrimitive)]
+#[derive(Debug, Copy, Clone, enumn::N)]
+#[repr(C)]
 pub enum HeifErrorCode {
     InputDoesNotExist = lh::heif_error_code_heif_error_Input_does_not_exist as _,
     InvalidInput = lh::heif_error_code_heif_error_Invalid_input as _,
@@ -19,7 +19,8 @@ pub enum HeifErrorCode {
     Unknown,
 }
 
-#[derive(Debug, Copy, Clone, FromPrimitive)]
+#[derive(Debug, Copy, Clone, enumn::N)]
+#[repr(C)]
 pub enum HeifErrorSubCode {
     Unspecified = lh::heif_suberror_code_heif_suberror_Unspecified as _,
     EndOfData = lh::heif_suberror_code_heif_suberror_End_of_data as _,
@@ -105,9 +106,8 @@ impl HeifError {
         };
 
         Err(HeifError {
-            code: num::FromPrimitive::from_u32(err.code).unwrap_or(HeifErrorCode::Unknown),
-            sub_code: num::FromPrimitive::from_u32(err.subcode)
-                .unwrap_or(HeifErrorSubCode::Unspecified),
+            code: HeifErrorCode::n(err.code).unwrap_or(HeifErrorCode::Unknown),
+            sub_code: HeifErrorSubCode::n(err.subcode).unwrap_or(HeifErrorSubCode::Unspecified),
             message: String::from(message),
         })
     }

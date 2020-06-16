@@ -19,7 +19,7 @@ fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParameter
             while let Some(raw_param) = (*param_pointers).as_ref() {
                 let c_param_type = lh::heif_encoder_parameter_get_type(raw_param);
                 let param_type: EncoderParameterType;
-                match num::FromPrimitive::from_u32(c_param_type) {
+                match EncoderParameterType::n(c_param_type) {
                     Some(res) => {
                         param_type = res;
                     }

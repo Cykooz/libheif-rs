@@ -1,5 +1,10 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Removed ``num``, ``num-traits`` and ``num-derive`` from dependencies.
+- Added ``enumn`` as dependency.
+
 ## [0.9.0] - 2020-02-24
 
 - Updated versions of dependencies.

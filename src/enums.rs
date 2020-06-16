@@ -1,5 +1,4 @@
 use libheif_sys as lh;
-use num_derive::FromPrimitive;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Chroma {
@@ -99,7 +98,7 @@ impl ColorSpace {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub enum Channel {
     Y = lh::heif_channel_heif_channel_Y as _,
@@ -112,7 +111,7 @@ pub enum Channel {
     Interleaved = lh::heif_channel_heif_channel_interleaved as _,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
 #[repr(C)]
 pub enum CompressionFormat {
     Undefined = lh::heif_compression_format_heif_compression_undefined as _,
@@ -121,7 +120,8 @@ pub enum CompressionFormat {
     Jpeg = lh::heif_compression_format_heif_compression_JPEG as _,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[repr(C)]
 pub enum EncoderParameterType {
     Int = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_integer as _,
     Bool = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_boolean as _,
@@ -148,7 +148,8 @@ pub enum ReaderGrowStatus {
     SizeBeyondEof = lh::heif_reader_grow_status_heif_reader_grow_status_size_beyond_eof as _,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, FromPrimitive)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[repr(C)]
 pub enum FileTypeResult {
     No = lh::heif_filetype_result_heif_filetype_no as _,
     /// It is HEIF and can be read by libheif
