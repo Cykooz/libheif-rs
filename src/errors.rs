@@ -86,6 +86,8 @@ pub struct HeifError {
 
 pub type Result<T> = std::result::Result<T, HeifError>;
 
+impl std::error::Error for HeifError {}
+
 impl fmt::Display for HeifError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}({:?}) {}", self.code, self.sub_code, self.message)
