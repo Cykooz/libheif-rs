@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.9.2] - 2020-08-15
 
 - Implemented std::error::Error for HeifError (paolobarbolini).
 
