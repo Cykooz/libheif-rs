@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.10.0] - 2020-08-29
 
 - ``libheif-sys`` updated to version 1.8.
 - Added new compression format - ``CompressionFormat::Av1``.
