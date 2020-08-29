@@ -5,7 +5,7 @@ use exif::parse_exif;
 
 use libheif_rs::{
     check_file_type, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality,
-    FileTypeResult, HeifContext, Result, StreamReader,
+    FileTypeResult, HeifContext, Result, RgbChroma, StreamReader,
 };
 
 #[test]
@@ -31,7 +31,10 @@ fn read_from_reader() -> Result<()> {
     assert_eq!(handle.height(), 4032);
 
     let src_img = handle.decode(ColorSpace::Undefined, false)?;
-    assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
+    assert_eq!(
+        src_img.color_space(),
+        Some(ColorSpace::Rgb(RgbChroma::C444))
+    );
 
     Ok(())
 }
@@ -112,7 +115,7 @@ fn decode_and_scale_image() -> Result<()> {
     let handle = ctx.primary_image_handle()?;
 
     // Decode the image
-    let src_img = handle.decode(ColorSpace::Undefined, false)?;
+    let src_img = handle.decode(ColorSpace::YCbCr(Chroma::C420), false)?;
     assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
     let planes = src_img.planes();
     let y_plane = planes.y.unwrap();
@@ -156,8 +159,9 @@ fn test_encoder() -> Result<()> {
 
     let mut params = encoder.parameters_names();
     params.sort();
-    assert_eq!(params.len(), 6);
+    assert_eq!(params.len(), 7);
     let expect = vec![
+        "chroma".to_string(),
         "complexity".to_string(),
         "lossless".to_string(),
         "preset".to_string(),

@@ -56,6 +56,10 @@ pub enum HeifErrorSubCode {
     UnknownColorProfileType = lh::heif_suberror_code_heif_suberror_Unknown_color_profile_type as _,
     WrongTileImageChromaFormat =
         lh::heif_suberror_code_heif_suberror_Wrong_tile_image_chroma_format as _,
+    InvalidFractionalNumber = lh::heif_suberror_code_heif_suberror_Invalid_fractional_number as _,
+    InvalidImageSize = lh::heif_suberror_code_heif_suberror_Invalid_image_size as _,
+    InvalidPixiBox = lh::heif_suberror_code_heif_suberror_Invalid_pixi_box as _,
+    NoAv1cBox = lh::heif_suberror_code_heif_suberror_No_av1C_box as _,
     SecurityLimitExceeded = lh::heif_suberror_code_heif_suberror_Security_limit_exceeded as _,
     NonExistingItemReferenced =
         lh::heif_suberror_code_heif_suberror_Nonexisting_item_referenced as _,

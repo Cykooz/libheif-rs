@@ -1,6 +1,3 @@
-#[cfg(test)]
-use doc_comment;
-
 pub use context::HeifContext;
 pub use encoder::{EncoderParametersTypes, EncodingOptions};
 pub use enums::*;

@@ -12,16 +12,16 @@ documentation = "https://docs.rs/crate/libheif-rs"
 
 
 [dependencies]
-enumn = "0.1.2"
+enumn = "0.1.3"
 
 
 [dependencies.libheif-sys]
-version = "1.5"
+version = "1.8.1"
 
 
 [dev-dependencies]
-kamadak-exif = "0.5"
-doc-comment = "0.3.1"
+kamadak-exif = "0.5.2"
+doc-comment = "0.3.3"
 tempfile = "3.1.0"
 
 
@@ -29,3 +29,13 @@ tempfile = "3.1.0"
 lto = true
 opt-level = 3
 codegen-units = 1
+
+
+[package.metadata.release]
+pre-release-replacements = [
+    {file="CHANGELOG.md", search="Unreleased", replace="{{version}}"},
+    {file="CHANGELOG.md", search="ReleaseDate", replace="{{date}}"}
+]
+
+# Header of next release in CHANGELOG.md:
+#   ## [Unreleased] - ReleaseDate

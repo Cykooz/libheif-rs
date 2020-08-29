@@ -118,6 +118,7 @@ pub enum CompressionFormat {
     Hevc = lh::heif_compression_format_heif_compression_HEVC as _,
     Avc = lh::heif_compression_format_heif_compression_AVC as _,
     Jpeg = lh::heif_compression_format_heif_compression_JPEG as _,
+    Av1 = lh::heif_compression_format_heif_compression_AV1 as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]

@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- ``libheif-sys`` updated to version 1.8.
+- Added new compression format - ``CompressionFormat::Av1``.
+- Added new values of ``HeifErrorSubCode`` enum:
+  ``InvalidFractionalNumber``, ``InvalidImageSize``,
+  ``InvalidPixiBox``,  ``NoAv1cBox``.
+
 ## [0.9.2] - 2020-08-15
 
 - Implemented std::error::Error for HeifError (paolobarbolini).
