@@ -265,3 +265,5 @@ impl Drop for Image {
         unsafe { lh::heif_image_release(self.inner) };
     }
 }
+
+unsafe impl Send for Image {}

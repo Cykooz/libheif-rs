@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- ``Image`` has marked as ``Send``.
+
 ## [0.10.0] - 2020-08-29
 
 - ``libheif-sys`` updated to version 1.8.
