@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.11.0] - 2020-09-26
 
 - ``Image`` has marked as ``Send``.
 
