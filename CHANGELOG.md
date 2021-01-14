@@ -1,5 +1,15 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- ``libheif-sys`` updated to version 1.10.
+
+### Breaking changes
+
+- All fields of ``EncodingOptions`` struct are made private. Added 
+  corresponding methods for access to this fields.
+- Method ``HeifContext::encode_image()`` now returns ``Result<ImageHandle>``.
+
 ## [0.11.0] - 2020-09-26
 
 - ``Image`` has marked as ``Send``.

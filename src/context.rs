@@ -143,23 +143,24 @@ impl HeifContext {
         image: &Image,
         encoder: &mut Encoder,
         encoding_options: Option<EncodingOptions>,
-    ) -> Result<()> {
+    ) -> Result<ImageHandle> {
         let encoding_options_ptr = match encoding_options {
-            Some(options) => &(options.heif_encoding_options()),
+            Some(options) => options.inner,
             None => ptr::null(),
         };
-
+        let mut handle = MaybeUninit::<_>::uninit();
         unsafe {
             let err = lh::heif_context_encode_image(
                 self.inner,
                 image.inner,
                 encoder.inner,
                 encoding_options_ptr,
-                ptr::null_mut(),
+                handle.as_mut_ptr(),
             );
             HeifError::from_heif_error(err)?;
         }
-        Ok(())
+        let handle = unsafe { handle.assume_init() };
+        Ok(ImageHandle::new(self, handle))
     }
 
     pub fn set_primary_image(&mut self, image_handle: &mut ImageHandle) -> Result<()> {

@@ -149,32 +149,65 @@ impl Drop for Encoder {
     }
 }
 
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 pub struct EncodingOptions {
-    pub version: u8,
-    pub save_alpha_channel: bool,
+    pub(crate) inner: *mut lh::heif_encoding_options,
 }
 
 impl Default for EncodingOptions {
     fn default() -> Self {
+        let inner = unsafe { lh::heif_encoding_options_alloc() };
+        if inner.is_null() {
+            panic!("heif_encoding_options_alloc() returns a null pointer")
+        }
+        Self { inner }
+    }
+}
+
+impl Drop for EncodingOptions {
+    fn drop(&mut self) {
         unsafe {
-            let heif_opt = lh::heif_encoding_options_alloc();
-            let res = EncodingOptions {
-                version: (*heif_opt).version,
-                save_alpha_channel: (*heif_opt).save_alpha_channel != 0,
-            };
-            lh::heif_encoding_options_free(heif_opt);
-            res
+            lh::heif_encoding_options_free(self.inner);
         }
     }
 }
 
 impl EncodingOptions {
-    pub(crate) fn heif_encoding_options(self) -> lh::heif_encoding_options {
-        lh::heif_encoding_options {
-            version: self.version,
-            save_alpha_channel: if self.save_alpha_channel { 1 } else { 0 },
+    #[inline]
+    pub fn version(&self) -> u8 {
+        unsafe { (*self.inner).version }
+    }
+
+    #[inline]
+    pub fn save_alpha_channel(&self) -> bool {
+        unsafe { (*self.inner).save_alpha_channel != 0 }
+    }
+
+    #[inline]
+    pub fn set_save_alpha_channel(&mut self, enable: bool) {
+        unsafe { (*self.inner).save_alpha_channel = if enable { 1 } else { 0 } }
+    }
+
+    #[inline]
+    pub fn mac_os_compatibility_workaround(&self) -> bool {
+        unsafe { (*self.inner).macOS_compatibility_workaround != 0 }
+    }
+
+    #[inline]
+    pub fn set_mac_os_compatibility_workaround(&mut self, enable: bool) {
+        unsafe { (*self.inner).macOS_compatibility_workaround = if enable { 1 } else { 0 } }
+    }
+
+    #[inline]
+    pub fn save_two_colr_boxes_when_icc_and_nclx_available(&self) -> bool {
+        unsafe { (*self.inner).save_two_colr_boxes_when_ICC_and_nclx_available != 0 }
+    }
+
+    #[inline]
+    pub fn set_save_two_colr_boxes_when_icc_and_nclx_available(&mut self, enable: bool) {
+        unsafe {
+            (*self.inner).save_two_colr_boxes_when_ICC_and_nclx_available =
+                if enable { 1 } else { 0 }
         }
     }
 }
