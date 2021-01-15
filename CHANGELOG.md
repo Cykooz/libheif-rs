@@ -1,5 +1,12 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Breaking changes
+
+- Added new value of ``HeifErrorCode`` enum -
+  ``ColorProfileDoesNotExist``.
+
 ## [0.12.0] - 2021-01-14
 
 - ``libheif-sys`` updated to version 1.10.
@@ -24,7 +31,7 @@
 
 ## [0.9.2] - 2020-08-15
 
-- Implemented std::error::Error for HeifError (paolobarbolini).
+- Implemented ``std::error::Error`` for ``HeifError`` (paolobarbolini).
 
 ## [0.9.1] - 2020-06-16
 

@@ -15,6 +15,7 @@ pub enum HeifErrorCode {
     DecoderPluginError = lh::heif_error_code_heif_error_Decoder_plugin_error as _,
     EncoderPluginError = lh::heif_error_code_heif_error_Encoder_plugin_error as _,
     EncodingError = lh::heif_error_code_heif_error_Encoding_error as _,
+    ColorProfileDoesNotExist = lh::heif_error_code_heif_error_Color_profile_does_not_exist as _,
     ContextCreateFailed,
     Unknown,
 }

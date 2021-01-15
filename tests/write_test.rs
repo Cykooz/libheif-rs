@@ -39,8 +39,9 @@ fn create_and_encode_image() -> Result<()> {
     let context = HeifContext::read_from_bytes(&buf)?;
     let handle = context.primary_image_handle()?;
 
-    // TODO: libheif 1.10 has some error with saving images.
+    // TODO: libheif 1.10.0 has an error with saving images.
     //       Saved image don't has correct information about width and height.
+    //       https://github.com/strukturag/libheif/issues/405
     // assert_eq!(handle.width(), width);
     // assert_eq!(handle.height(), height);
 
