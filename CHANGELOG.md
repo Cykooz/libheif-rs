@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.13.0] - 2021-01-15
 
 ### Breaking changes
 
