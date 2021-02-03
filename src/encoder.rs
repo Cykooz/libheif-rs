@@ -210,4 +210,17 @@ impl EncodingOptions {
                 if enable { 1 } else { 0 }
         }
     }
+
+    #[inline]
+    pub fn mac_os_compatibility_workaround_no_nclx_profile(&self) -> bool {
+        unsafe { (*self.inner).macOS_compatibility_workaround_no_nclx_profile != 0 }
+    }
+
+    #[inline]
+    pub fn set_mac_os_compatibility_workaround_no_nclx_profile(&mut self, enable: bool) {
+        unsafe {
+            (*self.inner).macOS_compatibility_workaround_no_nclx_profile =
+                if enable { 1 } else { 0 }
+        }
+    }
 }

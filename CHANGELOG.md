@@ -1,5 +1,12 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- ``libheif-sys`` updated to version 1.11.
+- Added methods: 
+  ``EncodingOptions::mac_os_compatibility_workaround_no_nclx_profile()``,
+  ``EncodingOptions::set_mac_os_compatibility_workaround_no_nclx_profile()``.
+
 ## [0.13.0] - 2021-01-15
 
 ### Breaking changes
