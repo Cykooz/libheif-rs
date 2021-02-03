@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.13.1] - 2021-02-03
 
 - ``libheif-sys`` updated to version 1.11.
 - Added methods: 
