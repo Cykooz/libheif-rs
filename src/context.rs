@@ -9,7 +9,7 @@ use crate::encoder::{Encoder, EncodingOptions};
 use crate::enums::CompressionFormat;
 use crate::image::Image;
 use crate::reader::{Reader, HEIF_READER};
-use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle, Result};
+use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle, ItemId, Result};
 
 pub struct HeifContext {
     pub(crate) inner: *mut lh::heif_context,
@@ -114,10 +114,34 @@ impl HeifContext {
         unsafe { lh::heif_context_get_number_of_top_level_images(self.inner) as _ }
     }
 
+    pub fn list_of_image_handle_ids(&self, count: usize) -> Vec<ItemId> {
+        let mut item_ids: Vec<ItemId> = vec![0; count];
+        let res_count = unsafe {
+            lh::heif_context_get_list_of_top_level_image_IDs(
+                self.inner,
+                item_ids.as_mut_ptr(),
+                count as _,
+            ) as usize
+        };
+        if count != res_count {
+            item_ids.resize(res_count, 0);
+        }
+        item_ids
+    }
+
     pub fn primary_image_handle(&self) -> Result<ImageHandle> {
         let mut handle = MaybeUninit::<_>::uninit();
         let err =
             unsafe { lh::heif_context_get_primary_image_handle(self.inner, handle.as_mut_ptr()) };
+        HeifError::from_heif_error(err)?;
+        let handle = unsafe { handle.assume_init() };
+        Ok(ImageHandle::new(self, handle))
+    }
+
+    pub fn image_handle(&self, id: ItemId) -> Result<ImageHandle> {
+        let id = id as u32;
+        let mut handle = MaybeUninit::<_>::uninit();
+        let err = unsafe { lh::heif_context_get_image_handle(self.inner, id, handle.as_mut_ptr()) };
         HeifError::from_heif_error(err)?;
         let handle = unsafe { handle.assume_init() };
         Ok(ImageHandle::new(self, handle))
