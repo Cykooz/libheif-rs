@@ -1,6 +1,6 @@
 # Change Log
 
-# [Unreleased] - ReleaseDate
+# [0.14.0] - 2021-03-17
 
 - Added new methods:
   ``ImageHandle::depth_image_ids()``, ``ImageHandle::thumbnail_ids()``,
