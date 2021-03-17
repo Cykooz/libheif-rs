@@ -1,5 +1,14 @@
 # Change Log
 
+# [Unreleased] - ReleaseDate
+
+- Added new methods:
+  ``ImageHandle::depth_image_ids()``, ``ImageHandle::thumbnail_ids()``,
+  ``ImageHandle::metadata_block_ids()``.
+- Deprecated some methods:
+  ``ImageHandle::list_of_depth_image_ids()``, ``ImageHandle::list_of_thumbnail_ids()``,
+  ``ImageHandle::list_of_metadata_block_ids()``.
+
 ## [0.13.1] - 2021-02-03
 
 - ``libheif-sys`` updated to version 1.11.

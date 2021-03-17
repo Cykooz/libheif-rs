@@ -22,8 +22,9 @@ fn main() -> Result<()> {
     assert_eq!(handle.height(), 4032);
 
     // Get Exif
-    let meta_ids = handle.list_of_metadata_block_ids("Exif", 1);
-    assert_eq!(meta_ids.len(), 1);
+    let mut meta_ids: Vec<ItemId> = vec![0; 1];
+    let count = handle.metadata_block_ids("Exif", &mut meta_ids);
+    assert_eq!(count, 1);
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image

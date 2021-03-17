@@ -5,7 +5,7 @@ use exif::parse_exif;
 
 use libheif_rs::{
     check_file_type, Chroma, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality,
-    FileTypeResult, HeifContext, Result, RgbChroma, StreamReader,
+    FileTypeResult, HeifContext, ItemId, Result, RgbChroma, StreamReader,
 };
 
 #[test]
@@ -55,8 +55,9 @@ fn get_image_handler() -> Result<()> {
     assert_eq!(handle.chroma_bits_per_pixel(), 8);
     assert!(!handle.has_depth_image());
     assert_eq!(handle.number_of_depth_images(), 0);
-    let ids = handle.list_of_depth_image_ids(1);
-    assert_eq!(ids.len(), 0);
+    let mut image_ids: Vec<ItemId> = vec![0; 1];
+    let count = handle.depth_image_ids(&mut image_ids);
+    assert_eq!(count, 0);
     Ok(())
 }
 
@@ -67,8 +68,9 @@ fn get_thumbnail() -> Result<()> {
 
     // Thumbnails
     assert_eq!(handle.number_of_thumbnails(), 1);
-    let thumb_ids = handle.list_of_thumbnail_ids(2);
-    assert_eq!(thumb_ids.len(), 1);
+    let mut thumb_ids: Vec<ItemId> = vec![0; 2];
+    let count = handle.thumbnail_ids(&mut thumb_ids);
+    assert_eq!(count, 1);
     let thumb_handle = handle.thumbnail(thumb_ids[0])?;
     assert_eq!(thumb_handle.width(), 240);
     assert_eq!(thumb_handle.height(), 320);
@@ -82,8 +84,9 @@ fn get_exif() -> Result<()> {
 
     // Metadata blocks
     assert_eq!(handle.number_of_metadata_blocks(""), 1);
-    let meta_ids = handle.list_of_metadata_block_ids("", 2);
-    assert_eq!(meta_ids.len(), 1);
+    let mut meta_ids: Vec<ItemId> = vec![0; 2];
+    let count = handle.metadata_block_ids("", &mut meta_ids);
+    assert_eq!(count, 1);
     let meta_type = handle.metadata_type(meta_ids[0]);
     assert_eq!(meta_type, Some("Exif"));
     let meta_content_type = handle.metadata_content_type(meta_ids[0]);
@@ -91,13 +94,13 @@ fn get_exif() -> Result<()> {
     assert_eq!(handle.metadata_size(meta_ids[0]), 2030);
 
     assert_eq!(handle.number_of_metadata_blocks("Unknown"), 0);
-    let meta_ids = handle.list_of_metadata_block_ids("Unknown", 1);
-    assert_eq!(meta_ids.len(), 0);
+    let count = handle.metadata_block_ids("Unknown", &mut meta_ids);
+    assert_eq!(count, 0);
 
     // Exif
     assert_eq!(handle.number_of_metadata_blocks("Exif"), 1);
-    let meta_ids = handle.list_of_metadata_block_ids("Exif", 1);
-    assert_eq!(meta_ids.len(), 1);
+    let count = handle.metadata_block_ids("Exif", &mut meta_ids);
+    assert_eq!(count, 1);
     let exif = handle.metadata(meta_ids[0])?;
     assert_eq!(exif.len(), 2030);
     assert_eq!(exif[0..4], [0, 0, 0, 6]);
@@ -199,7 +202,7 @@ fn test_encoder() -> Result<()> {
 }
 
 #[test]
-fn test_check_file_type() -> Result<()> {
+fn test_check_file_type() {
     let mut data = vec![0u8; 16];
     assert_eq!(check_file_type(&data), FileTypeResult::No);
 
@@ -210,6 +213,4 @@ fn test_check_file_type() -> Result<()> {
     assert_eq!(check_file_type(&data[..7]), FileTypeResult::MayBe);
     assert_eq!(check_file_type(&data[..8]), FileTypeResult::MayBe);
     assert_eq!(check_file_type(&data[..12]), FileTypeResult::Supported);
-
-    Ok(())
 }

@@ -103,6 +103,10 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_number_of_depth_images(self.inner) }
     }
 
+    #[deprecated(
+        since = "0.14.0",
+        note = "Please use the ``depth_image_ids`` method instead"
+    )]
     pub fn list_of_depth_image_ids(&self, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
         let res_count = unsafe {
@@ -116,6 +120,20 @@ impl<'a> ImageHandle<'a> {
             item_ids.resize(res_count, 0);
         }
         item_ids
+    }
+
+    pub fn depth_image_ids(&self, item_ids: &mut [ItemId]) -> usize {
+        if item_ids.is_empty() {
+            0
+        } else {
+            unsafe {
+                lh::heif_image_handle_get_list_of_depth_image_IDs(
+                    self.inner,
+                    item_ids.as_mut_ptr(),
+                    item_ids.len() as _,
+                ) as usize
+            }
+        }
     }
 
     pub fn depth_image_handle(&self, depth_image_id: ItemId) -> Result<ImageHandle> {
@@ -148,6 +166,10 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_number_of_thumbnails(self.inner) as _ }
     }
 
+    #[deprecated(
+        since = "0.14.0",
+        note = "Please use the ``thumbnail_ids`` method instead"
+    )]
     pub fn list_of_thumbnail_ids(&self, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
         let res_count = unsafe {
@@ -161,6 +183,20 @@ impl<'a> ImageHandle<'a> {
             item_ids.resize(res_count, 0);
         }
         item_ids
+    }
+
+    pub fn thumbnail_ids(&self, item_ids: &mut [ItemId]) -> usize {
+        if item_ids.is_empty() {
+            0
+        } else {
+            unsafe {
+                lh::heif_image_handle_get_list_of_thumbnail_IDs(
+                    self.inner,
+                    item_ids.as_mut_ptr(),
+                    item_ids.len() as _,
+                ) as usize
+            }
+        }
     }
 
     pub fn thumbnail(&self, thumbnail_id: ItemId) -> Result<ImageHandle> {
@@ -196,6 +232,10 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_number_of_metadata_blocks(self.inner, filter_ptr) }
     }
 
+    #[deprecated(
+        since = "0.14.0",
+        note = "Please use the ``metadata_block_ids`` method instead"
+    )]
     pub fn list_of_metadata_block_ids(&self, type_filter: &str, count: usize) -> Vec<ItemId> {
         let mut item_ids: Vec<ItemId> = vec![0; count];
 
@@ -217,6 +257,26 @@ impl<'a> ImageHandle<'a> {
             item_ids.resize(res_count, 0);
         }
         item_ids
+    }
+
+    pub fn metadata_block_ids(&self, type_filter: &str, item_ids: &mut [ItemId]) -> usize {
+        if item_ids.is_empty() {
+            0
+        } else {
+            let c_type_filter = Self::convert_type_filter(type_filter);
+            let filter_ptr: *const c_char = match &c_type_filter {
+                Some(s) => s.as_ptr(),
+                None => ptr::null(),
+            };
+            unsafe {
+                lh::heif_image_handle_get_list_of_metadata_block_IDs(
+                    self.inner,
+                    filter_ptr,
+                    item_ids.as_mut_ptr(),
+                    item_ids.len() as _,
+                ) as usize
+            }
+        }
     }
 
     pub fn metadata_type(&self, metadata_id: ItemId) -> Option<&str> {
