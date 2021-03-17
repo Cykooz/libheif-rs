@@ -13,7 +13,7 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 ### Read HEIF file
 
 ```rust
-use libheif_rs::{Channel, RgbChroma, ColorSpace, HeifContext, Result};
+use libheif_rs::{Channel, RgbChroma, ColorSpace, HeifContext, Result, ItemId};
 
 fn main() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;

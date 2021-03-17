@@ -8,6 +8,8 @@
 - Deprecated some methods:
   ``ImageHandle::list_of_depth_image_ids()``, ``ImageHandle::list_of_thumbnail_ids()``,
   ``ImageHandle::list_of_metadata_block_ids()``.
+- Added new methods for getting top level images from ``HeifContext``:
+  ``HeifContext::top_level_image_ids()``, ``HeifContext::image_handle()``.
 
 ## [0.13.1] - 2021-02-03
 

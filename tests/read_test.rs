@@ -154,6 +154,26 @@ fn decode_and_scale_image() -> Result<()> {
 }
 
 #[test]
+fn top_level_images() -> Result<()> {
+    let ctx = HeifContext::read_from_file("./data/4_chunks-wo_exif.heic")?;
+    assert_eq!(ctx.number_of_top_level_images(), 5);
+    let mut image_ids: Vec<ItemId> = vec![0; 6];
+    let count = ctx.top_level_image_ids(&mut image_ids);
+    assert_eq!(count, 5);
+
+    for &image_id in image_ids[0..4].iter() {
+        let handle = ctx.image_handle(image_id)?;
+        assert_eq!(handle.width(), 480);
+    }
+
+    // Primary image
+    let handle = ctx.image_handle(image_ids[4])?;
+    assert_eq!(handle.width(), 960);
+
+    Ok(())
+}
+
+#[test]
 fn test_encoder() -> Result<()> {
     let ctx = HeifContext::new()?;
 
