@@ -6,7 +6,7 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
-- libheif-dev >= 1.10.0
+- libheif-dev >= 1.12.0
 
 ## Examples
 

@@ -1,5 +1,14 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- ``libheif-sys`` updated to version 1.12.
+- Added new value of ``HeifErrorSubCode`` enum -
+  ``WrongTileImagePixelDepth``.  
+- Added methods:
+  ``Image::set_premultiplied_alpha()``, ``Image::is_premultiplied_alpha()``,
+  ``ImageHandle::is_premultiplied_alpha()``.
+
 # [0.14.0] - 2021-03-17
 
 - Added new methods:

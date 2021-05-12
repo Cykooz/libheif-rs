@@ -50,6 +50,7 @@ fn get_image_handler() -> Result<()> {
     assert_eq!(handle.ispe_width(), 4032);
     assert_eq!(handle.ispe_height(), 3024);
     assert!(!handle.has_alpha_channel());
+    assert!(!handle.is_premultiplied_alpha());
     assert!(handle.is_primary());
     assert_eq!(handle.luma_bits_per_pixel(), 8);
     assert_eq!(handle.chroma_bits_per_pixel(), 8);

@@ -67,6 +67,10 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_has_alpha_channel(self.inner) != 0 }
     }
 
+    pub fn is_premultiplied_alpha(&self) -> bool {
+        unsafe { lh::heif_image_handle_is_premultiplied_alpha(self.inner) != 0 }
+    }
+
     pub fn is_primary(&self) -> bool {
         unsafe { lh::heif_image_handle_is_primary_image(self.inner) != 0 }
     }

@@ -8,7 +8,7 @@ use libheif_sys as lh;
 use crate::enums::{Channel, ColorSpace};
 use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 
-const MAX_IMAGE_SIZE: u32 = std::i32::MAX as _;
+const MAX_IMAGE_SIZE: u32 = i32::MAX as _;
 
 pub struct Plane<T> {
     pub data: T,
@@ -258,6 +258,14 @@ impl Image {
     //        };
     //        HeifError::from_heif_error(err)
     //    }
+
+    pub fn set_premultiplied_alpha(&self, is_premultiplied_alpha: bool) {
+        unsafe { lh::heif_image_set_premultiplied_alpha(self.inner, is_premultiplied_alpha as _) };
+    }
+
+    pub fn is_premultiplied_alpha(&self) -> bool {
+        unsafe { lh::heif_image_is_premultiplied_alpha(self.inner) != 0 }
+    }
 }
 
 impl Drop for Image {

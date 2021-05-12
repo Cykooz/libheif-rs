@@ -61,6 +61,8 @@ pub enum HeifErrorSubCode {
     InvalidImageSize = lh::heif_suberror_code_heif_suberror_Invalid_image_size as _,
     InvalidPixiBox = lh::heif_suberror_code_heif_suberror_Invalid_pixi_box as _,
     NoAv1cBox = lh::heif_suberror_code_heif_suberror_No_av1C_box as _,
+    WrongTileImagePixelDepth =
+        lh::heif_suberror_code_heif_suberror_Wrong_tile_image_pixel_depth as _,
     SecurityLimitExceeded = lh::heif_suberror_code_heif_suberror_Security_limit_exceeded as _,
     NonExistingItemReferenced =
         lh::heif_suberror_code_heif_suberror_Nonexisting_item_referenced as _,
