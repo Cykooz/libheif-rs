@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.15.0] - 2021-05-12
 
 - ``libheif-sys`` updated to version 1.12.
 - Added new value of ``HeifErrorSubCode`` enum -
