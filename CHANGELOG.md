@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.15.1] - 2022-10-21
 
 - Added method ``Encoder::set_parameter_value()``.
 
