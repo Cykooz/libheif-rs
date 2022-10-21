@@ -1,13 +1,9 @@
 use libheif_rs::{
-    Channel, ColorSpace, CompressionFormat, EncoderQuality, EncodingOptions, HeifContext, Image,
-    Result, RgbChroma,
+    Channel, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, EncodingOptions,
+    HeifContext, Image, Result, RgbChroma,
 };
 
-#[test]
-fn create_and_encode_image() -> Result<()> {
-    let width = 640;
-    let height = 480;
-
+fn create_image(width: u32, height: u32) -> Result<Image> {
     let mut image = Image::new(width, height, ColorSpace::Rgb(RgbChroma::Rgb))?;
     image.create_plane(Channel::Interleaved, width, height, 24)?;
 
@@ -26,7 +22,15 @@ fn create_and_encode_image() -> Result<()> {
             row_start += 3;
         }
     }
+    Ok(image)
+}
 
+#[test]
+fn create_and_encode_image() -> Result<()> {
+    let width = 640;
+    let height = 480;
+
+    let image = create_image(width, height)?;
     let mut context = HeifContext::new()?;
     let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
@@ -83,6 +87,38 @@ fn create_and_encode_monochrome_image() -> Result<()> {
 
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
     let _buf = context.write_to_bytes()?;
+
+    Ok(())
+}
+
+#[test]
+fn set_encoder_param() -> Result<()> {
+    let width = 640;
+    let height = 480;
+
+    let image = create_image(width, height)?;
+
+    let mut context = HeifContext::new()?;
+    let mut encoder = context.encoder_for_format(CompressionFormat::Av1)?;
+    encoder.set_parameter_value("speed", EncoderParameterValue::Int(5))?;
+    let encoding_options: EncodingOptions = Default::default();
+    context.encode_image(&image, &mut encoder, Some(encoding_options))?;
+
+    let buf = context.write_to_bytes()?;
+
+    // Check result of encoding by decode it
+    let context = HeifContext::read_from_bytes(&buf)?;
+    let handle = context.primary_image_handle()?;
+    assert_eq!(handle.width(), width);
+    assert_eq!(handle.height(), height);
+
+    // Decode the image
+    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), false)?;
+    assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
+    let planes = image.planes();
+    let plan = planes.interleaved.unwrap();
+    assert_eq!(plan.width, width);
+    assert_eq!(plan.height, height);
 
     Ok(())
 }

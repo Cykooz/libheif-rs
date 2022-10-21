@@ -18,11 +18,8 @@ fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParameter
         if !param_pointers.is_null() {
             while let Some(raw_param) = (*param_pointers).as_ref() {
                 let c_param_type = lh::heif_encoder_parameter_get_type(raw_param);
-                let param_type: EncoderParameterType;
-                match EncoderParameterType::n(c_param_type) {
-                    Some(res) => {
-                        param_type = res;
-                    }
+                let param_type = match EncoderParameterType::n(c_param_type) {
+                    Some(res) => res,
                     None => {
                         return Err(HeifError {
                             code: HeifErrorCode::EncoderPluginError,
@@ -30,7 +27,7 @@ fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParameter
                             message: format!("{} is unknown type of parameter", c_param_type),
                         });
                     }
-                }
+                };
                 let c_param_name = lh::heif_encoder_parameter_get_name(raw_param);
                 let name = cstr_to_str(c_param_name).unwrap_or("").to_string();
                 res.insert(name, param_type);
@@ -82,8 +79,7 @@ impl Encoder {
         parameter_type: EncoderParameterType,
     ) -> Result<EncoderParameterValue> {
         let c_param_name = CString::new(name).unwrap();
-        let param_value;
-        match parameter_type {
+        let param_value = match parameter_type {
             EncoderParameterType::Int => {
                 let mut value = 0;
                 let err = unsafe {
@@ -94,7 +90,7 @@ impl Encoder {
                     )
                 };
                 HeifError::from_heif_error(err)?;
-                param_value = EncoderParameterValue::Int(value);
+                EncoderParameterValue::Int(value)
             }
             EncoderParameterType::Bool => {
                 let mut value = 0;
@@ -106,7 +102,7 @@ impl Encoder {
                     )
                 };
                 HeifError::from_heif_error(err)?;
-                param_value = EncoderParameterValue::Bool(value > 0);
+                EncoderParameterValue::Bool(value > 0)
             }
             EncoderParameterType::String => {
                 let value: Vec<u8> = vec![0; 51];
@@ -119,9 +115,9 @@ impl Encoder {
                     )
                 };
                 HeifError::from_heif_error(err)?;
-                param_value = EncoderParameterValue::String(
+                EncoderParameterValue::String(
                     cstr_to_str(value.as_ptr() as _).unwrap_or("").to_string(),
-                );
+                )
             }
         };
 
@@ -140,6 +136,28 @@ impl Encoder {
             }
             None => Ok(None),
         }
+    }
+
+    pub fn set_parameter_value(&self, name: &str, value: EncoderParameterValue) -> Result<()> {
+        let c_param_name = CString::new(name).unwrap();
+        let err = match value {
+            EncoderParameterValue::Bool(v) => unsafe {
+                lh::heif_encoder_set_parameter_boolean(self.inner, c_param_name.as_ptr(), v.into())
+            },
+            EncoderParameterValue::Int(v) => unsafe {
+                lh::heif_encoder_set_parameter_integer(self.inner, c_param_name.as_ptr(), v)
+            },
+            EncoderParameterValue::String(v) => unsafe {
+                let c_param_value = CString::new(v).unwrap();
+                lh::heif_encoder_set_parameter_string(
+                    self.inner,
+                    c_param_name.as_ptr(),
+                    c_param_value.as_ptr(),
+                )
+            },
+        };
+        HeifError::from_heif_error(err)?;
+        Ok(())
     }
 }
 

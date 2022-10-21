@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+- Added method ``Encoder::set_parameter_value()``.
+
 ## [0.15.0] - 2021-05-12
 
 - ``libheif-sys`` updated to version 1.12.
