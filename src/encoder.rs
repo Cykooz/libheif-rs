@@ -51,6 +51,7 @@ impl Encoder {
         })
     }
 
+    /// Name of encoder.
     pub fn name(&self) -> &str {
         let res = unsafe { lh::heif_encoder_get_name(self.inner) };
         cstr_to_str(res).unwrap_or("")
@@ -128,6 +129,7 @@ impl Encoder {
         self.parameters_types.keys().cloned().collect()
     }
 
+    /// Get value of encoder's parameter.
     pub fn parameter(&self, name: &str) -> Result<Option<EncoderParameterValue>> {
         match self.parameters_types.get(name) {
             Some(param_type) => {
@@ -138,6 +140,7 @@ impl Encoder {
         }
     }
 
+    /// Set value of encoder's parameter.
     pub fn set_parameter_value(&self, name: &str, value: EncoderParameterValue) -> Result<()> {
         let c_param_name = CString::new(name).unwrap();
         let err = match value {
