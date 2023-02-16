@@ -111,37 +111,6 @@ pub enum Channel {
     Interleaved = lh::heif_channel_heif_channel_interleaved as _,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
-#[repr(C)]
-pub enum CompressionFormat {
-    Undefined = lh::heif_compression_format_heif_compression_undefined as _,
-    Hevc = lh::heif_compression_format_heif_compression_HEVC as _,
-    Avc = lh::heif_compression_format_heif_compression_AVC as _,
-    Jpeg = lh::heif_compression_format_heif_compression_JPEG as _,
-    Av1 = lh::heif_compression_format_heif_compression_AV1 as _,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
-#[repr(C)]
-pub enum EncoderParameterType {
-    Int = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_integer as _,
-    Bool = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_boolean as _,
-    String = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_string as _,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum EncoderParameterValue {
-    Int(i32),
-    Bool(bool),
-    String(String),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum EncoderQuality {
-    LossLess,
-    Lossy(u8),
-}
-
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ReaderGrowStatus {
     SizeReached = lh::heif_reader_grow_status_heif_reader_grow_status_size_reached as _,
@@ -159,4 +128,21 @@ pub enum FileTypeResult {
     Unsupported = lh::heif_filetype_result_heif_filetype_yes_unsupported as _,
     /// Not sure whether it is an HEIF, try detection with more input data
     MayBe = lh::heif_filetype_result_heif_filetype_maybe as _,
+}
+
+#[derive(Debug, Copy, Clone, enumn::N)]
+#[repr(C)]
+pub enum ImageOrientation {
+    Normal = lh::heif_orientation_heif_orientation_normal as _,
+    FlipHorizontally = lh::heif_orientation_heif_orientation_flip_horizontally as _,
+    Rotate180 = lh::heif_orientation_heif_orientation_rotate_180 as _,
+    FlipVertically = lh::heif_orientation_heif_orientation_flip_vertically as _,
+    Rotate90CwThenFlipHorizontally =
+        lh::heif_orientation_heif_orientation_rotate_90_cw_then_flip_horizontally as _,
+    Rotate90Cw = lh::heif_orientation_heif_orientation_rotate_90_cw as _,
+    Rotate90CwThenFlipVertically =
+        lh::heif_orientation_heif_orientation_rotate_90_cw_then_flip_vertically as _,
+    Rotate270Cw = lh::heif_orientation_heif_orientation_rotate_270_cw as _,
+    /// This value is used when library `libheif` returns unknown value of image orientation.
+    Unknown,
 }

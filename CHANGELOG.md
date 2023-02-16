@@ -2,7 +2,29 @@
 
 ## [Unreleased] - ReleaseDate
 
-- `Encoder` struct exposed in public interface of the crate.
+- `libheif-sys` updated to version 1.14.2.
+- Added new value of `HeifErrorCode` enum - `PluginLoadingError`. 
+- Added new value of `HeifErrorSubCode` enum:
+  `UnknownNclxColorPrimaries`, `UnknownNclxTransferCharacteristics`,
+  `UnknownNclxMatrixCoefficients`, `UnsupportedHeaderCompressionMethod`,
+  `PluginLoadingError`, `PluginIsNotLoaded`, `CannotReadPluginDirectory`,
+  `Unknown`.
+- Struct `Encoder` exposed in public interface of the crate.
+- Added enum `ImageOrientation`.
+- Added methods `Encoder::image_orientation()` and `Encoder::set_image_orientation()`.
+- Added struct `DecodingOptions`.
+- Added type `ColorProfleType`.
+- Added structs `ColorProfileRaw` and `ColorProfileNCLX`.
+- Added methods `Image::color_profile_raw()` and `Image::color_profile_nclx()`.
+- Added methods `ImageHandle::color_profile_raw()` and `ImageHandle::color_profile_nclx()`.
+
+### Breaking changes
+
+- Argument `ignore_transformations` of `ImageHandle::decode()` method was
+  replaced on argument `decoding_options`.
+- Removed deprecated methods: `ImageHandle::list_of_depth_image_ids()`,
+  `ImageHandle::list_of_thumbnail_ids()`, 
+  `ImageHandle::list_of_metadata_block_ids()`.
 
 ## [0.15.1] - 2022-10-21
 

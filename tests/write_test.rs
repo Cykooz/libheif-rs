@@ -46,7 +46,7 @@ fn create_and_encode_image() -> Result<()> {
     assert_eq!(handle.height(), height);
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), false)?;
+    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     let planes = image.planes();
     let plan = planes.interleaved.unwrap();
@@ -113,7 +113,7 @@ fn set_encoder_param() -> Result<()> {
     assert_eq!(handle.height(), height);
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), false)?;
+    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     let planes = image.planes();
     let plan = planes.interleaved.unwrap();

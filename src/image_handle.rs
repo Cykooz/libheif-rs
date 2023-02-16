@@ -5,9 +5,14 @@ use std::ptr;
 
 use libheif_sys as lh;
 
+use crate::decoder::DecodingOptions;
 use crate::utils::cstr_to_str;
-use crate::{ColorSpace, HeifContext, HeifError, HeifErrorCode, HeifErrorSubCode, Image, Result};
+use crate::{
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifContext, HeifError,
+    HeifErrorCode, HeifErrorSubCode, Image, Result,
+};
 
+/// Encoded image.
 pub struct ImageHandle<'a> {
     context: &'a HeifContext,
     pub(crate) inner: *mut lh::heif_image_handle,
@@ -35,20 +40,24 @@ impl<'a> ImageHandle<'a> {
         }
     }
 
-    pub fn decode(&self, color_space: ColorSpace, ignore_transformations: bool) -> Result<Image> {
+    pub fn decode(
+        &self,
+        color_space: ColorSpace,
+        decoding_options: Option<DecodingOptions>,
+    ) -> Result<Image> {
+        let decoding_options_ptr = decoding_options
+            .map(|o| o.inner)
+            .unwrap_or_else(ptr::null_mut);
         let mut c_image = MaybeUninit::<_>::uninit();
         let err;
         unsafe {
-            let mut options = lh::heif_decoding_options_alloc();
-            (*options).ignore_transformations = if ignore_transformations { 1 } else { 0 };
             err = lh::heif_decode_image(
                 self.inner,
                 c_image.as_mut_ptr(),
                 color_space.heif_color_space(),
                 color_space.heif_chroma(),
-                options,
+                decoding_options_ptr,
             );
-            lh::heif_decoding_options_free(options);
         }
         HeifError::from_heif_error(err)?;
         let c_image = unsafe { c_image.assume_init() };
@@ -107,25 +116,6 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_number_of_depth_images(self.inner) }
     }
 
-    #[deprecated(
-        since = "0.14.0",
-        note = "Please use the ``depth_image_ids`` method instead"
-    )]
-    pub fn list_of_depth_image_ids(&self, count: usize) -> Vec<ItemId> {
-        let mut item_ids: Vec<ItemId> = vec![0; count];
-        let res_count = unsafe {
-            lh::heif_image_handle_get_list_of_depth_image_IDs(
-                self.inner,
-                item_ids.as_mut_ptr(),
-                count as _,
-            ) as usize
-        };
-        if count != res_count {
-            item_ids.resize(res_count, 0);
-        }
-        item_ids
-    }
-
     pub fn depth_image_ids(&self, item_ids: &mut [ItemId]) -> usize {
         if item_ids.is_empty() {
             0
@@ -168,25 +158,6 @@ impl<'a> ImageHandle<'a> {
 
     pub fn number_of_thumbnails(&self) -> usize {
         unsafe { lh::heif_image_handle_get_number_of_thumbnails(self.inner) as _ }
-    }
-
-    #[deprecated(
-        since = "0.14.0",
-        note = "Please use the ``thumbnail_ids`` method instead"
-    )]
-    pub fn list_of_thumbnail_ids(&self, count: usize) -> Vec<ItemId> {
-        let mut item_ids: Vec<ItemId> = vec![0; count];
-        let res_count = unsafe {
-            lh::heif_image_handle_get_list_of_thumbnail_IDs(
-                self.inner,
-                item_ids.as_mut_ptr(),
-                count as _,
-            ) as usize
-        };
-        if count != res_count {
-            item_ids.resize(res_count, 0);
-        }
-        item_ids
     }
 
     pub fn thumbnail_ids(&self, item_ids: &mut [ItemId]) -> usize {
@@ -236,33 +207,6 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_number_of_metadata_blocks(self.inner, filter_ptr) }
     }
 
-    #[deprecated(
-        since = "0.14.0",
-        note = "Please use the ``metadata_block_ids`` method instead"
-    )]
-    pub fn list_of_metadata_block_ids(&self, type_filter: &str, count: usize) -> Vec<ItemId> {
-        let mut item_ids: Vec<ItemId> = vec![0; count];
-
-        let c_type_filter = Self::convert_type_filter(type_filter);
-        let filter_ptr: *const c_char = match &c_type_filter {
-            Some(s) => s.as_ptr(),
-            None => ptr::null(),
-        };
-
-        let res_count = unsafe {
-            lh::heif_image_handle_get_list_of_metadata_block_IDs(
-                self.inner,
-                filter_ptr,
-                item_ids.as_mut_ptr(),
-                count as _,
-            ) as usize
-        };
-        if count != res_count {
-            item_ids.resize(res_count, 0);
-        }
-        item_ids
-    }
-
     pub fn metadata_block_ids(&self, type_filter: &str, item_ids: &mut [ItemId]) -> usize {
         if item_ids.is_empty() {
             0
@@ -310,12 +254,56 @@ impl<'a> ImageHandle<'a> {
         }
         let mut result: Vec<u8> = Vec::with_capacity(size);
         unsafe {
-            result.set_len(size);
             let err =
                 lh::heif_image_handle_get_metadata(self.inner, metadata_id, result.as_ptr() as _);
             HeifError::from_heif_error(err)?;
+            result.set_len(size);
         }
         Ok(result)
+    }
+
+    pub fn color_profile_raw(&self) -> Option<ColorProfileRaw> {
+        let size = unsafe { lh::heif_image_handle_get_raw_color_profile_size(self.inner) };
+        if size == 0 {
+            return None;
+        }
+        let mut result: Vec<u8> = Vec::with_capacity(size);
+        let err = unsafe {
+            lh::heif_image_handle_get_raw_color_profile(self.inner, result.as_ptr() as _)
+        };
+        if err.code != 0 {
+            // Only one error is possible inside `libheif` - `ColorProfileDoesNotExist`
+            return None;
+        }
+        unsafe {
+            result.set_len(size);
+        }
+        let c_profile_type = unsafe { lh::heif_image_handle_get_color_profile_type(self.inner) };
+        let profile_type = ColorProfileType::from(c_profile_type);
+
+        Some(ColorProfileRaw {
+            typ: profile_type,
+            data: result,
+        })
+    }
+
+    /// NOTE: This function does currently not return an NCLX profile if it is
+    /// stored in the image bitstream. Only NCLX profiles stored as colr boxes
+    /// are returned. This may change in the future.
+    pub fn color_profile_nclx(&self) -> Option<ColorProfileNCLX> {
+        let mut profile_ptr = MaybeUninit::<_>::uninit();
+        let err = unsafe {
+            lh::heif_image_handle_get_nclx_color_profile(self.inner, profile_ptr.as_mut_ptr())
+        };
+        if err.code != 0 {
+            // Only one error is possible inside `libheif` - `ColorProfileDoesNotExist`
+            return None;
+        }
+        let profile_ptr = unsafe { profile_ptr.assume_init() };
+        if profile_ptr.is_null() {
+            return None;
+        }
+        Some(ColorProfileNCLX { inner: profile_ptr })
     }
 }
 

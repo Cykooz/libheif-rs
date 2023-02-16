@@ -2,7 +2,7 @@
 name = "libheif-rs"
 version = "0.15.1"
 authors = ["Kirill Kuzminykh <cykooz@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "Safe wrapper around the libheif-sys crate for parsing heif/heic files"
 readme = "README.md"
 keywords = ["heic", "heif", "libheif"]
@@ -13,21 +13,24 @@ documentation = "https://docs.rs/crate/libheif-rs"
 
 [dependencies]
 enumn = "0.1"
+four-cc = "0.2"
 
 
 [dependencies.libheif-sys]
-version = "1.12.0"
+version = "1.14.2"
 
 
 [dev-dependencies]
 kamadak-exif = "0.5"
-doc-comment = "0.3"
 tempfile = "3"
 
 
 [profile.release]
 lto = true
 opt-level = 3
+
+
+[profile.release.package.libheif-rs]
 codegen-units = 1
 
 

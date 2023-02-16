@@ -16,7 +16,9 @@ pub enum HeifErrorCode {
     EncoderPluginError = lh::heif_error_code_heif_error_Encoder_plugin_error as _,
     EncodingError = lh::heif_error_code_heif_error_Encoding_error as _,
     ColorProfileDoesNotExist = lh::heif_error_code_heif_error_Color_profile_does_not_exist as _,
+    PluginLoadingError = lh::heif_error_code_heif_error_Plugin_loading_error as _,
     ContextCreateFailed,
+    /// This value is used when library `libheif` returns unknown value of error code.
     Unknown,
 }
 
@@ -82,6 +84,20 @@ pub enum HeifErrorSubCode {
         lh::heif_suberror_code_heif_suberror_Unsupported_item_construction_method as _,
     UnsupportedBitDepth = lh::heif_suberror_code_heif_suberror_Unsupported_bit_depth as _,
     CannotWriteOutputData = lh::heif_suberror_code_heif_suberror_Cannot_write_output_data as _,
+    UnknownNclxColorPrimaries =
+        lh::heif_suberror_code_heif_suberror_Unknown_NCLX_color_primaries as _,
+    UnknownNclxTransferCharacteristics =
+        lh::heif_suberror_code_heif_suberror_Unknown_NCLX_transfer_characteristics as _,
+    UnknownNclxMatrixCoefficients =
+        lh::heif_suberror_code_heif_suberror_Unknown_NCLX_matrix_coefficients as _,
+    UnsupportedHeaderCompressionMethod =
+        lh::heif_suberror_code_heif_suberror_Unsupported_header_compression_method as _,
+    PluginLoadingError = lh::heif_suberror_code_heif_suberror_Plugin_loading_error as _,
+    PluginIsNotLoaded = lh::heif_suberror_code_heif_suberror_Plugin_is_not_loaded as _,
+    CannotReadPluginDirectory =
+        lh::heif_suberror_code_heif_suberror_Cannot_read_plugin_directory as _,
+    /// This value is used when library `libheif` returns unknown value of error sub-code.
+    Unknown,
 }
 
 #[derive(Debug, Clone)]
@@ -116,7 +132,7 @@ impl HeifError {
 
         Err(HeifError {
             code: HeifErrorCode::n(err.code).unwrap_or(HeifErrorCode::Unknown),
-            sub_code: HeifErrorSubCode::n(err.subcode).unwrap_or(HeifErrorSubCode::Unspecified),
+            sub_code: HeifErrorSubCode::n(err.subcode).unwrap_or(HeifErrorSubCode::Unknown),
             message: String::from(message),
         })
     }

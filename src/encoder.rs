@@ -4,39 +4,40 @@ use std::ffi::CString;
 use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
-use crate::{
-    EncoderParameterType, EncoderParameterValue, EncoderQuality, HeifError, HeifErrorCode,
-    HeifErrorSubCode, Result,
-};
+use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageOrientation, Result};
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[repr(C)]
+pub enum CompressionFormat {
+    Undefined = lh::heif_compression_format_heif_compression_undefined as _,
+    Hevc = lh::heif_compression_format_heif_compression_HEVC as _,
+    Avc = lh::heif_compression_format_heif_compression_AVC as _,
+    Jpeg = lh::heif_compression_format_heif_compression_JPEG as _,
+    Av1 = lh::heif_compression_format_heif_compression_AV1 as _,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[repr(C)]
+pub enum EncoderParameterType {
+    Int = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_integer as _,
+    Bool = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_boolean as _,
+    String = lh::heif_encoder_parameter_type_heif_encoder_parameter_type_string as _,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum EncoderParameterValue {
+    Int(i32),
+    Bool(bool),
+    String(String),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum EncoderQuality {
+    LossLess,
+    Lossy(u8),
+}
 
 pub type EncoderParametersTypes = HashMap<String, EncoderParameterType>;
-
-fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParametersTypes> {
-    let mut res = EncoderParametersTypes::new();
-    unsafe {
-        let mut param_pointers = lh::heif_encoder_list_parameters(c_encoder);
-        if !param_pointers.is_null() {
-            while let Some(raw_param) = (*param_pointers).as_ref() {
-                let c_param_type = lh::heif_encoder_parameter_get_type(raw_param);
-                let param_type = match EncoderParameterType::n(c_param_type) {
-                    Some(res) => res,
-                    None => {
-                        return Err(HeifError {
-                            code: HeifErrorCode::EncoderPluginError,
-                            sub_code: HeifErrorSubCode::UnsupportedParameter,
-                            message: format!("{} is unknown type of parameter", c_param_type),
-                        });
-                    }
-                };
-                let c_param_name = lh::heif_encoder_parameter_get_name(raw_param);
-                let name = cstr_to_str(c_param_name).unwrap_or("").to_string();
-                res.insert(name, param_type);
-                param_pointers = param_pointers.offset(1);
-            }
-        }
-    }
-    Ok(res)
-}
 
 pub struct Encoder {
     pub(crate) inner: *mut lh::heif_encoder,
@@ -170,6 +171,33 @@ impl Drop for Encoder {
     }
 }
 
+fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParametersTypes> {
+    let mut res = EncoderParametersTypes::new();
+    unsafe {
+        let mut param_pointers = lh::heif_encoder_list_parameters(c_encoder);
+        if !param_pointers.is_null() {
+            while let Some(raw_param) = (*param_pointers).as_ref() {
+                let c_param_type = lh::heif_encoder_parameter_get_type(raw_param);
+                let param_type = match EncoderParameterType::n(c_param_type) {
+                    Some(res) => res,
+                    None => {
+                        return Err(HeifError {
+                            code: HeifErrorCode::EncoderPluginError,
+                            sub_code: HeifErrorSubCode::UnsupportedParameter,
+                            message: format!("{} is unknown type of parameter", c_param_type),
+                        });
+                    }
+                };
+                let c_param_name = lh::heif_encoder_parameter_get_name(raw_param);
+                let name = cstr_to_str(c_param_name).unwrap_or("").to_string();
+                res.insert(name, param_type);
+                param_pointers = param_pointers.offset(1);
+            }
+        }
+    }
+    Ok(res)
+}
+
 #[derive(Debug)]
 pub struct EncodingOptions {
     pub(crate) inner: *mut lh::heif_encoding_options,
@@ -242,6 +270,19 @@ impl EncodingOptions {
         unsafe {
             (*self.inner).macOS_compatibility_workaround_no_nclx_profile =
                 if enable { 1 } else { 0 }
+        }
+    }
+
+    #[inline]
+    pub fn image_orientation(&self) -> ImageOrientation {
+        let orientation = unsafe { (*self.inner).image_orientation };
+        ImageOrientation::n(orientation).unwrap_or(ImageOrientation::Normal)
+    }
+
+    #[inline]
+    pub fn set_image_orientation(&mut self, orientation: ImageOrientation) {
+        unsafe {
+            (*self.inner).image_orientation = orientation as _;
         }
     }
 }

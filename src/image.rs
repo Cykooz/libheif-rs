@@ -5,8 +5,10 @@ use std::slice;
 
 use libheif_sys as lh;
 
-use crate::enums::{Channel, ColorSpace};
-use crate::errors::{HeifError, HeifErrorCode, HeifErrorSubCode, Result};
+use crate::{
+    Channel, ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError,
+    HeifErrorCode, HeifErrorSubCode, Result,
+};
 
 const MAX_IMAGE_SIZE: u32 = i32::MAX as _;
 
@@ -38,7 +40,7 @@ pub struct ScalingOptions {}
 impl Image {
     /// Create a new image of the specified resolution and colorspace.
     /// Note: no memory for the actual image data is reserved yet. You have to use
-    /// Image::create_plane() to add the image planes required by your colorspace.    
+    /// [`Image::create_plane`] method to add image planes required by your colorspace.    
     pub fn new(width: u32, height: u32, color_space: ColorSpace) -> Result<Image> {
         if width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE {
             return Err(HeifError {
@@ -265,6 +267,41 @@ impl Image {
 
     pub fn is_premultiplied_alpha(&self) -> bool {
         unsafe { lh::heif_image_is_premultiplied_alpha(self.inner) != 0 }
+    }
+
+    pub fn color_profile_raw(&self) -> Option<ColorProfileRaw> {
+        let size = unsafe { lh::heif_image_get_raw_color_profile_size(self.inner) };
+        if size == 0 {
+            return None;
+        }
+        let mut result: Vec<u8> = Vec::with_capacity(size);
+        let err = unsafe { lh::heif_image_get_raw_color_profile(self.inner, result.as_ptr() as _) };
+        if err.code != 0 {
+            // Only one error is possible inside `libheif` - `ColorProfileDoesNotExist`
+            return None;
+        }
+        unsafe {
+            result.set_len(size);
+        }
+        let c_profile_type = unsafe { lh::heif_image_get_color_profile_type(self.inner) };
+        let profile_type = ColorProfileType::from(c_profile_type);
+
+        Some(ColorProfileRaw {
+            typ: profile_type,
+            data: result,
+        })
+    }
+
+    pub fn color_profile_nclx(&self) -> Option<ColorProfileNCLX> {
+        let mut profile_ptr = MaybeUninit::<_>::uninit();
+        let err =
+            unsafe { lh::heif_image_get_nclx_color_profile(self.inner, profile_ptr.as_mut_ptr()) };
+        if err.code != 0 {
+            // Only one error is possible inside `libheif` - `ColorProfileDoesNotExist`
+            return None;
+        }
+        let profile_ptr = unsafe { profile_ptr.assume_init() };
+        Some(ColorProfileNCLX { inner: profile_ptr })
     }
 }
 

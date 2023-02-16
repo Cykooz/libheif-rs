@@ -5,11 +5,11 @@ use std::ptr;
 
 use libheif_sys as lh;
 
-use crate::encoder::{Encoder, EncodingOptions};
-use crate::enums::CompressionFormat;
-use crate::image::Image;
 use crate::reader::{Reader, HEIF_READER};
-use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageHandle, ItemId, Result};
+use crate::{
+    CompressionFormat, Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image,
+    ImageHandle, ItemId, Result,
+};
 
 pub struct HeifContext {
     pub(crate) inner: *mut lh::heif_context,
@@ -63,7 +63,7 @@ impl HeifContext {
     pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext> {
         let mut context = HeifContext::new()?;
         let mut reader_box = Box::new(reader);
-        let user_data = &mut *reader_box as *mut _ as *mut c_void;
+        let user_data = reader_box.as_mut() as *mut _ as *mut c_void;
         let err = unsafe {
             lh::heif_context_read_from_reader(context.inner, &HEIF_READER, user_data, ptr::null())
         };

@@ -6,7 +6,7 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
-- libheif-dev >= 1.12.0
+- libheif-dev >= 1.14.2
 
 ## Examples
 
@@ -28,7 +28,7 @@ fn main() -> Result<()> {
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), false)?;
+    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     assert_eq!(image.width(Channel::Interleaved)?, 3024);
     assert_eq!(image.height(Channel::Interleaved)?, 4032);
@@ -94,9 +94,9 @@ fn main() -> Result<()> {
     let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     context.encode_image(&image, &mut encoder, None)?;
-    
+
     let tmp_file = NamedTempFile::new().unwrap();
-    context.write_to_file(tmp_file.path())?;
+    context.write_to_file(tmp_file.path().to_str().unwrap())?;
 
     Ok(())
 }

@@ -45,9 +45,7 @@ where
     T: io::Read + io::Seek,
 {
     fn position(&mut self) -> u64 {
-        self.stream
-            .seek(io::SeekFrom::Current(0))
-            .unwrap_or(self.total_size)
+        self.stream.stream_position().unwrap_or(self.total_size)
     }
 
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
@@ -59,7 +57,7 @@ where
     }
 
     fn wait_for_file_size(&mut self, target_size: u64) -> ReaderGrowStatus {
-        if self.stream.seek(io::SeekFrom::Current(0)).is_err() {
+        if self.stream.stream_position().is_err() {
             ReaderGrowStatus::Timeout
         } else if target_size > self.total_size {
             ReaderGrowStatus::SizeBeyondEof
@@ -100,7 +98,7 @@ unsafe extern "C" fn wait_for_file_size(
     reader.wait_for_file_size(target_size) as _
 }
 
-pub(crate) const HEIF_READER: lh::heif_reader = lh::heif_reader {
+pub(crate) static HEIF_READER: lh::heif_reader = lh::heif_reader {
     reader_api_version: 1,
     get_position: Some(get_position),
     read: Some(read),
