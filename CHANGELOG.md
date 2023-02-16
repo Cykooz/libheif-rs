@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [0.16.0] - 2023-02-16
 
 - `libheif-sys` updated to version 1.14.2.
 - Added new value of `HeifErrorCode` enum - `PluginLoadingError`. 
