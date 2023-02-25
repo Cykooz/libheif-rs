@@ -30,13 +30,13 @@ fn main() -> Result<()> {
     // Decode the image
     let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
-    assert_eq!(image.width(Channel::Interleaved)?, 3024);
-    assert_eq!(image.height(Channel::Interleaved)?, 4032);
+    assert_eq!(image.width(), 3024);
+    assert_eq!(image.height(), 4032);
 
     // Scale the image
     let small_img = image.scale(1024, 800, None)?;
-    assert_eq!(small_img.width(Channel::Interleaved)?, 1024);
-    assert_eq!(small_img.height(Channel::Interleaved)?, 800);
+    assert_eq!(small_img.width(), 1024);
+    assert_eq!(small_img.height(), 800);
 
     // Get "pixels"
     let planes = small_img.planes();

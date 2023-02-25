@@ -1,5 +1,35 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added 
+
+- Added methods `Image::width()` and `Image::height()` for  receiving 
+  width and height of the main image channel (Y in YCbCr, or any in RGB).
+- Added method `Image::storage_bits_per_pixel()`. This method returns the 
+  number of bits used for storage of each pixel.
+- Added methods `Image::set_color_profile_raw()` and 
+  `Image::set_color_profile_nclx`.
+- Added field `storage_bits_per_pixel` into structure `Plane`.
+- Added methods `ColorProfileRaw::new()`.
+- For structure `ColorProfileNCLX` was added methods: `new`, `inner_mut`, 
+  `set_color_primaries`.
+
+### Changed
+
+- **BREAKING**: Old methods `Image::width(channel)` and `Image::height(channel)` 
+  were renamed into `Image::channel_width(channel)` 
+  and `Image::channel_height(channel)`. The return type of these methods
+  was changed from `Result<u32>` to `Option<u32>`.
+- **BREAKING**: The return type of method `Image::bits_per_pixel()` was 
+  changed from `Result<u8>` to `Option<u8>`.
+- **BREAKING**: Method `Image::bits_per_pixel()` now returns the number of bits
+  used for representing the pixel value, which might be smaller than 
+  the number of bits used in memory.
+- **BREAKING**: Fixed typo in name of field `Plane::bits_pre_pixel`. This field 
+  was renamed into `Plane::bits_per_pixel`.
+- Structures `Plane` and `Planes` was exposed in public interface of the crate.
+
 ## [0.16.0] - 2023-02-16
 
 - `libheif-sys` updated to version 1.14.2.

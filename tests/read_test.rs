@@ -5,8 +5,9 @@ use exif::parse_exif;
 
 use libheif_rs::{
     check_file_type, color_profile_types, Chroma, ColorPrimaries, ColorProfile, ColorSpace,
-    CompressionFormat, EncoderParameterValue, EncoderQuality, FileTypeResult, HeifContext, ItemId,
-    MatrixCoefficients, Result, RgbChroma, StreamReader, TransferCharacteristics,
+    CompressionFormat, EncoderParameterValue, EncoderQuality, FileTypeResult, HeifContext,
+    ImageHandle, ItemId, MatrixCoefficients, Result, RgbChroma, StreamReader,
+    TransferCharacteristics,
 };
 
 #[test]
@@ -66,14 +67,21 @@ fn get_image_handler() -> Result<()> {
 #[test]
 fn get_thumbnail() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
-    let handle = ctx.primary_image_handle()?;
+    let thumb_handle: ImageHandle;
 
-    // Thumbnails
-    assert_eq!(handle.number_of_thumbnails(), 1);
-    let mut thumb_ids: Vec<ItemId> = vec![0; 2];
-    let count = handle.thumbnail_ids(&mut thumb_ids);
-    assert_eq!(count, 1);
-    let thumb_handle = handle.thumbnail(thumb_ids[0])?;
+    // All instances of ImageHandle MUST have lifetime of their
+    // parent HeifContext instance, but not lifetime of parent
+    // ImageHandle instance.
+    {
+        let handle = ctx.primary_image_handle()?;
+        // Thumbnails
+        assert_eq!(handle.number_of_thumbnails(), 1);
+        let mut thumb_ids: Vec<ItemId> = vec![0; 2];
+        let count = handle.thumbnail_ids(&mut thumb_ids);
+        assert_eq!(count, 1);
+        thumb_handle = handle.thumbnail(thumb_ids[0])?;
+    }
+
     assert_eq!(thumb_handle.width(), 240);
     assert_eq!(thumb_handle.height(), 320);
     Ok(())

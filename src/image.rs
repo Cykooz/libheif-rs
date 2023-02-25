@@ -17,7 +17,8 @@ pub struct Plane<T> {
     pub width: u32,
     pub height: u32,
     pub stride: usize,
-    pub bits_pre_pixel: u8,
+    pub bits_per_pixel: u8,
+    pub storage_bits_per_pixel: u8,
 }
 
 pub struct Planes<T> {
@@ -40,7 +41,7 @@ pub struct ScalingOptions {}
 impl Image {
     /// Create a new image of the specified resolution and colorspace.
     /// Note: no memory for the actual image data is reserved yet. You have to use
-    /// [`Image::create_plane`] method to add image planes required by your colorspace.    
+    /// [`Image::create_plane()`] method to add image planes required by your colorspace.
     pub fn new(width: u32, height: u32, color_space: ColorSpace) -> Result<Image> {
         if width > MAX_IMAGE_SIZE || height > MAX_IMAGE_SIZE {
             return Err(HeifError {
@@ -71,58 +72,71 @@ impl Image {
         Image { inner: image }
     }
 
-    pub fn width(&self, channel: Channel) -> Result<u32> {
+    /// Get the width of the main channel (Y in YCbCr, or any in RGB).
+    pub fn width(&self) -> u32 {
+        unsafe { lh::heif_image_get_primary_width(self.inner).max(0) as u32 }
+    }
+
+    /// Get the height of the main channel (Y in YCbCr, or any in RGB).
+    pub fn height(&self) -> u32 {
+        unsafe { lh::heif_image_get_primary_height(self.inner).max(0) as u32 }
+    }
+
+    /// Get width of the given image channel in pixels.
+    pub fn channel_width(&self, channel: Channel) -> Option<u32> {
         let value = unsafe { lh::heif_image_get_width(self.inner, channel as _) };
-        if value >= 0 {
-            return Ok(value as _);
-        }
-        Err(HeifError {
-            code: HeifErrorCode::UsageError,
-            sub_code: HeifErrorSubCode::NonExistingImageChannelReferenced,
-            message: "".to_string(),
-        })
+        (value >= 0).then_some(value as _)
     }
 
-    pub fn height(&self, channel: Channel) -> Result<u32> {
+    /// Get height of the given image channel in pixels.
+    pub fn channel_height(&self, channel: Channel) -> Option<u32> {
         let value = unsafe { lh::heif_image_get_height(self.inner, channel as _) };
-        if value >= 0 {
-            return Ok(value as _);
-        }
-        Err(HeifError {
-            code: HeifErrorCode::UsageError,
-            sub_code: HeifErrorSubCode::NonExistingImageChannelReferenced,
-            message: "".to_string(),
-        })
+        (value >= 0).then_some(value as _)
     }
 
-    pub fn bits_per_pixel(&self, channel: Channel) -> Result<u8> {
+    /// Get the number of bits per pixel in the given image channel. Returns
+    /// `None` if a non-existing channel was given.
+    ///
+    /// Note that the number of bits per pixel may be different for each color channel.
+    /// This function returns the number of bits used for storage of each pixel.
+    /// Especially for HDR images, this is probably not what you want. Have a look at
+    /// [`Image::bits_per_pixel()`] instead.
+    pub fn storage_bits_per_pixel(&self, channel: Channel) -> Option<u8> {
         let value = unsafe { lh::heif_image_get_bits_per_pixel(self.inner, channel as _) };
-        if value >= 0 {
-            return Ok(value as _);
-        }
-        Err(HeifError {
-            code: HeifErrorCode::UsageError,
-            sub_code: HeifErrorSubCode::NonExistingImageChannelReferenced,
-            message: "".to_string(),
-        })
+        (value >= 0).then_some(value as _)
+    }
+
+    /// Get the number of bits per pixel in the given image channel. Returns
+    /// `None` if a non-existing channel was given.
+    ///
+    /// This function returns the number of bits used for representing
+    /// the pixel value, which might be smaller than the number of bits used
+    /// in memory. For example, in 12bit HDR images, this function returns `12`,
+    /// while still 16 bits are reserved for storage. For interleaved RGBA with
+    /// 12 bit, this function also returns `12`, not `48` or `64`
+    /// ([`Image::storage_bits_per_pixel()`] returns `64` in this case).
+    pub fn bits_per_pixel(&self, channel: Channel) -> Option<u8> {
+        let value = unsafe { lh::heif_image_get_bits_per_pixel_range(self.inner, channel as _) };
+        (value >= 0).then_some(value as _)
     }
 
     fn plane(&self, channel: Channel) -> Option<Plane<&[u8]>> {
-        if !self.has_channel(channel) {
+        let mut stride: i32 = 1;
+        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        if data.is_null() {
             return None;
         }
 
-        let width = self.width(channel).unwrap();
-        let height = self.height(channel).unwrap();
-        let bits_pre_pixel = self.bits_per_pixel(channel).unwrap();
-        let mut stride: i32 = 1;
-        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
-        assert!(!data.is_null());
+        let width = self.channel_width(channel).unwrap_or_default();
+        let height = self.channel_height(channel).unwrap_or_default();
+        let bits_per_pixel = self.bits_per_pixel(channel).unwrap_or_default();
+        let storage_bits_per_pixel = self.storage_bits_per_pixel(channel).unwrap_or_default();
         let size = height as usize * stride as usize;
         let bytes = unsafe { slice::from_raw_parts(data, size) };
         Some(Plane {
             data: bytes,
-            bits_pre_pixel,
+            bits_per_pixel,
+            storage_bits_per_pixel,
             width,
             height,
             stride: stride as _,
@@ -130,20 +144,22 @@ impl Image {
     }
 
     fn plane_mut(&self, channel: Channel) -> Option<Plane<&mut [u8]>> {
-        if !self.has_channel(channel) {
+        let mut stride: i32 = 1;
+        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        if data.is_null() {
             return None;
         }
 
-        let width = self.width(channel).unwrap();
-        let height = self.height(channel).unwrap();
-        let bits_pre_pixel = self.bits_per_pixel(channel).unwrap();
-        let mut stride: i32 = 1;
-        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        let width = self.channel_width(channel).unwrap_or_default();
+        let height = self.channel_height(channel).unwrap_or_default();
+        let bits_per_pixel = self.bits_per_pixel(channel).unwrap_or_default();
+        let storage_bits_per_pixel = self.storage_bits_per_pixel(channel).unwrap_or_default();
         let size = height as usize * stride as usize;
         let bytes = unsafe { slice::from_raw_parts_mut(data, size) };
         Some(Plane {
             data: bytes,
-            bits_pre_pixel,
+            bits_per_pixel,
+            storage_bits_per_pixel,
             width,
             height,
             stride: stride as _,
@@ -200,6 +216,8 @@ impl Image {
     }
 
     /// Scale image by "nearest neighbor" method.
+    ///
+    /// Note: Currently, `_scaling_options` is not used. Pass a `None`.
     pub fn scale(
         &self,
         width: u32,
@@ -246,21 +264,6 @@ impl Image {
         HeifError::from_heif_error(err)
     }
 
-    //    TODO: need implement
-    //    pub fn set_raw_color_profile(&self) -> Result<(), HeifError> {
-    //        let err = unsafe {
-    //            heif_image_set_raw_color_profile(self.inner)
-    //        };
-    //        HeifError::from_heif_error(err)
-    //    }
-    //
-    //    pub fn set_nclx_color_profile(&self) -> Result<(), HeifError> {
-    //        let err = unsafe {
-    //            heif_image_set_nclx_color_profile(self.inner)
-    //        };
-    //        HeifError::from_heif_error(err)
-    //    }
-
     pub fn set_premultiplied_alpha(&self, is_premultiplied_alpha: bool) {
         unsafe { lh::heif_image_set_premultiplied_alpha(self.inner, is_premultiplied_alpha as _) };
     }
@@ -292,6 +295,18 @@ impl Image {
         })
     }
 
+    pub fn set_color_profile_raw(&mut self, profile: &ColorProfileRaw) -> Result<()> {
+        let err = unsafe {
+            lh::heif_image_set_raw_color_profile(
+                self.inner,
+                profile.typ.0.as_ptr() as _,
+                profile.data.as_ptr() as _,
+                profile.data.len(),
+            )
+        };
+        HeifError::from_heif_error(err)
+    }
+
     pub fn color_profile_nclx(&self) -> Option<ColorProfileNCLX> {
         let mut profile_ptr = MaybeUninit::<_>::uninit();
         let err =
@@ -302,6 +317,11 @@ impl Image {
         }
         let profile_ptr = unsafe { profile_ptr.assume_init() };
         Some(ColorProfileNCLX { inner: profile_ptr })
+    }
+
+    pub fn set_color_profile_nclx(&mut self, profile: &ColorProfileNCLX) -> Result<()> {
+        let err = unsafe { lh::heif_image_set_nclx_color_profile(self.inner, profile.inner) };
+        HeifError::from_heif_error(err)
     }
 }
 

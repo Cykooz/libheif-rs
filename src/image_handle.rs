@@ -1,4 +1,5 @@
 use std::ffi::CString;
+use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 use std::ptr;
@@ -14,8 +15,10 @@ use crate::{
 
 /// Encoded image.
 pub struct ImageHandle<'a> {
-    context: &'a HeifContext,
     pub(crate) inner: *mut lh::heif_image_handle,
+    // All instances of ImageHandle MUST have lifetime of their
+    // parent HeifContext instance.
+    phantom_context: PhantomData<&'a HeifContext>,
 }
 
 pub type ItemId = lh::heif_item_id;
@@ -33,10 +36,10 @@ pub type ItemId = lh::heif_item_id;
 //}
 
 impl<'a> ImageHandle<'a> {
-    pub(crate) fn new(context: &HeifContext, handle: *mut lh::heif_image_handle) -> ImageHandle {
+    pub(crate) fn new(_context: &'a HeifContext, handle: *mut lh::heif_image_handle) -> Self {
         ImageHandle {
-            context,
             inner: handle,
+            phantom_context: PhantomData,
         }
     }
 
@@ -130,7 +133,7 @@ impl<'a> ImageHandle<'a> {
         }
     }
 
-    pub fn depth_image_handle(&self, depth_image_id: ItemId) -> Result<ImageHandle> {
+    pub fn depth_image_handle(&self, depth_image_id: ItemId) -> Result<Self> {
         let mut out_depth_handler = MaybeUninit::<_>::uninit();
         let err = unsafe {
             lh::heif_image_handle_get_depth_image_handle(
@@ -141,7 +144,10 @@ impl<'a> ImageHandle<'a> {
         };
         HeifError::from_heif_error(err)?;
         let out_depth_handler = unsafe { out_depth_handler.assume_init() };
-        Ok(ImageHandle::new(self.context, out_depth_handler))
+        Ok(ImageHandle {
+            inner: out_depth_handler,
+            phantom_context: self.phantom_context,
+        })
     }
 
     //    pub fn get_depth_image_representation_info(&self, depth_image_id: ItemId) {
@@ -174,7 +180,7 @@ impl<'a> ImageHandle<'a> {
         }
     }
 
-    pub fn thumbnail(&self, thumbnail_id: ItemId) -> Result<ImageHandle> {
+    pub fn thumbnail(&self, thumbnail_id: ItemId) -> Result<Self> {
         let mut out_thumbnail_handler = MaybeUninit::<_>::uninit();
         let err = unsafe {
             lh::heif_image_handle_get_thumbnail(
@@ -185,7 +191,10 @@ impl<'a> ImageHandle<'a> {
         };
         HeifError::from_heif_error(err)?;
         let out_thumbnail_handler = unsafe { out_thumbnail_handler.assume_init() };
-        Ok(ImageHandle::new(self.context, out_thumbnail_handler))
+        Ok(ImageHandle {
+            inner: out_thumbnail_handler,
+            phantom_context: self.phantom_context,
+        })
     }
 
     // Metadata

@@ -110,6 +110,12 @@ pub struct ColorProfileRaw {
     pub data: Vec<u8>,
 }
 
+impl ColorProfileRaw {
+    pub fn new(typ: ColorProfileType, data: Vec<u8>) -> Self {
+        Self { typ, data }
+    }
+}
+
 impl ColorProfile for ColorProfileRaw {
     fn profile_type(&self) -> ColorProfileType {
         self.typ
@@ -135,9 +141,19 @@ impl ColorProfile for ColorProfileNCLX {
 }
 
 impl ColorProfileNCLX {
+    pub fn new() -> Option<Self> {
+        let inner = unsafe { lh::heif_nclx_color_profile_alloc() };
+        (!inner.is_null()).then_some(Self { inner })
+    }
+
     #[inline(always)]
     fn inner_ref(&self) -> &lh::heif_color_profile_nclx {
         unsafe { &(*self.inner) }
+    }
+
+    #[inline(always)]
+    fn inner_mut(&mut self) -> &mut lh::heif_color_profile_nclx {
+        unsafe { &mut (*self.inner) }
     }
 
     pub fn version(&self) -> u8 {
@@ -146,6 +162,12 @@ impl ColorProfileNCLX {
 
     pub fn color_primaries(&self) -> ColorPrimaries {
         ColorPrimaries::n(self.inner_ref().color_primaries).unwrap_or(ColorPrimaries::Unknown)
+    }
+
+    pub fn set_color_primaries(&mut self, v: ColorPrimaries) {
+        if v != ColorPrimaries::Unknown {
+            self.inner_mut().color_primaries = v as _;
+        }
     }
 
     pub fn transfer_characteristics(&self) -> TransferCharacteristics {
