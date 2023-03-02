@@ -5,7 +5,7 @@
 ### Added
 
 - Added methods `add_generic_metadata()`, `add_exif_metadata()` 
-  and `add_xmp_metadata` for `HeifContext`.
+  and `add_xmp_metadata()` for `HeifContext`.
 
 ### Changed
 
