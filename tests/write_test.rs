@@ -15,7 +15,7 @@ fn create_image(width: u32, height: u32) -> Result<Image> {
     for y in 0..height {
         let mut row_start = stride * y as usize;
         for x in 0..width {
-            let color = (x * y) as u32;
+            let color = x * y;
             data[row_start] = ((color & 0x00_ff_00_00) >> 16) as u8;
             data[row_start + 1] = ((color & 0x00_00_ff_00) >> 8) as u8;
             data[row_start + 2] = (color & 0x00_00_00_ff) as u8;

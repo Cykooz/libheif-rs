@@ -6,6 +6,7 @@ use std::ptr;
 use libheif_sys as lh;
 
 use crate::reader::{Reader, HEIF_READER};
+use crate::utils::str_to_cstring;
 use crate::{
     CompressionFormat, Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image,
     ImageHandle, ItemId, Result,
@@ -190,6 +191,68 @@ impl HeifContext {
             let err = lh::heif_context_set_primary_image(self.inner, image_handle.inner);
             HeifError::from_heif_error(err)
         }
+    }
+
+    /// Add generic, proprietary metadata to an image. You have to specify
+    /// an `item_type` that will identify your metadata. `content_type` can be
+    /// an additional type.
+    ///
+    /// For example, this function can be used to add IPTC metadata
+    /// (IIM stream, not XMP) to an image. Although not standard, we propose
+    /// to store IPTC data with item_type="iptc", content_type=None.
+    pub fn add_generic_metadata(
+        &mut self,
+        master_image: &ImageHandle,
+        data: &[u8],
+        item_type: &str,
+        content_type: Option<&str>,
+    ) -> Result<()> {
+        let c_item_type = str_to_cstring(item_type, "item_type")?;
+        let c_content_type = match content_type {
+            Some(s) => Some(str_to_cstring(s, "content_type")?),
+            None => None,
+        };
+        let c_content_type_ptr = c_content_type.map(|s| s.as_ptr()).unwrap_or(ptr::null());
+        let error = unsafe {
+            lh::heif_context_add_generic_metadata(
+                self.inner,
+                master_image.inner,
+                data.as_ptr() as _,
+                data.len() as _,
+                c_item_type.as_ptr(),
+                c_content_type_ptr,
+            )
+        };
+        HeifError::from_heif_error(error)?;
+        Ok(())
+    }
+
+    /// Add EXIF metadata to an image.
+    pub fn add_exif_metadata(&mut self, master_image: &ImageHandle, data: &[u8]) -> Result<()> {
+        let error = unsafe {
+            lh::heif_context_add_exif_metadata(
+                self.inner,
+                master_image.inner,
+                data.as_ptr() as _,
+                data.len() as _,
+            )
+        };
+        HeifError::from_heif_error(error)?;
+        Ok(())
+    }
+
+    /// Add XMP metadata to an image.
+    pub fn add_xmp_metadata(&mut self, master_image: &ImageHandle, data: &[u8]) -> Result<()> {
+        let error = unsafe {
+            lh::heif_context_add_XMP_metadata(
+                self.inner,
+                master_image.inner,
+                data.as_ptr() as _,
+                data.len() as _,
+            )
+        };
+        HeifError::from_heif_error(error)?;
+        Ok(())
     }
 }
 

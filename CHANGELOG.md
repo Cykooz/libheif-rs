@@ -1,5 +1,12 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- For `HeifContext` was added methods: `add_generic_metadata()`, 
+  `add_exif_metadata()` and `add_xmp_metadata`.
+
 ## [0.17.0] - 2023-02-25
 
 ### Added
