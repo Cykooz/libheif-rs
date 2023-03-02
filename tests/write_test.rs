@@ -130,8 +130,7 @@ fn add_metadata() -> Result<()> {
     let image = create_image(width, height)?;
     let mut context = HeifContext::new()?;
     let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
-    let mut handle = context.encode_image(&image, &mut encoder, None)?;
-    context.set_primary_image(&mut handle)?;
+    let handle = context.encode_image(&image, &mut encoder, None)?;
 
     let item_type = b"MyDt";
     let item_data = b"custom data";
