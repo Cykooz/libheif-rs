@@ -4,8 +4,17 @@
 
 ### Added
 
-- For `HeifContext` was added methods: `add_generic_metadata()`, 
-  `add_exif_metadata()` and `add_xmp_metadata`.
+- Added methods `add_generic_metadata()`, `add_exif_metadata()` 
+  and `add_xmp_metadata` for `HeifContext`.
+
+### Changed
+
+- **BREAKING**: Changed type of argument `type_filer` of methods
+  ``ImageHandle::number_of_metadata_blocks()`` and 
+  ``ImageHandle::metadata_block_ids()``. Now it must be something that 
+  implements `Into<FourCC>`. For example - `b"Exif"`. 
+- **BREAKING**: Changed order of arguments of method 
+  ``ImageHandle::metadata_block_ids()``.
 
 ## [0.17.0] - 2023-02-25
 
@@ -19,7 +28,7 @@
   `Image::set_color_profile_nclx()`.
 - Added field `storage_bits_per_pixel` into structure `Plane`.
 - Added method `ColorProfileRaw::new()`.
-- Methods `new` and `set_color_primaries` were addeded into structure `ColorProfileNCLX`.
+- Methods `new` and `set_color_primaries` were added into structure `ColorProfileNCLX`.
 
 ### Changed
 

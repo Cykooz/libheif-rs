@@ -122,3 +122,55 @@ fn set_encoder_param() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn add_metadata() -> Result<()> {
+    let width = 640;
+    let height = 480;
+    let image = create_image(width, height)?;
+    let mut context = HeifContext::new()?;
+    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut handle = context.encode_image(&image, &mut encoder, None)?;
+    context.set_primary_image(&mut handle)?;
+
+    let item_type = b"MyDt";
+    let item_data = b"custom data";
+    let exif_data = b"MM\0*FakeExif";
+    let content_type = Some("text/plain");
+    context.add_generic_metadata(&handle, item_data, item_type, content_type)?;
+    context.add_exif_metadata(&handle, exif_data)?;
+    context.add_xmp_metadata(&handle, item_data)?;
+
+    // Write result HEIF file into vector
+    let buf = context.write_to_bytes()?;
+
+    // Check stored meta data in the encoded result
+    let context = HeifContext::read_from_bytes(&buf)?;
+    let handle = context.primary_image_handle()?;
+
+    // Custom meta data block "MyDt"
+    let mut item_ids = vec![0; 1];
+    let count = handle.metadata_block_ids(&mut item_ids, item_type);
+    assert_eq!(count, 1);
+    let md_data = handle.metadata(item_ids[0])?;
+    assert_eq!(&md_data, item_data);
+    let md_content_type = handle.metadata_content_type(item_ids[0]);
+    // content_type is stored in HEIF only for "mime" type of meta data.
+    assert_eq!(md_content_type, Some(""));
+
+    // Exif
+    let count = handle.metadata_block_ids(&mut item_ids, b"Exif");
+    assert_eq!(count, 1);
+    let md_data = handle.metadata(item_ids[0])?;
+    assert_eq!(&md_data, b"\0\0\0\0MM\0*FakeExif");
+
+    // Xmp
+    let count = handle.metadata_block_ids(&mut item_ids, b"mime");
+    assert_eq!(count, 1);
+    let md_data = handle.metadata(item_ids[0])?;
+    assert_eq!(&md_data, item_data);
+    let md_content_type = handle.metadata_content_type(item_ids[0]);
+    assert_eq!(md_content_type, Some("application/rdf+xml"));
+
+    Ok(())
+}

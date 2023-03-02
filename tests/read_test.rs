@@ -93,9 +93,9 @@ fn get_exif() -> Result<()> {
     let handle = ctx.primary_image_handle()?;
 
     // Metadata blocks
-    assert_eq!(handle.number_of_metadata_blocks(""), 1);
+    assert_eq!(handle.number_of_metadata_blocks(0), 1);
     let mut meta_ids: Vec<ItemId> = vec![0; 2];
-    let count = handle.metadata_block_ids("", &mut meta_ids);
+    let count = handle.metadata_block_ids(&mut meta_ids, 0);
     assert_eq!(count, 1);
     let meta_type = handle.metadata_type(meta_ids[0]);
     assert_eq!(meta_type, Some("Exif"));
@@ -103,13 +103,13 @@ fn get_exif() -> Result<()> {
     assert_eq!(meta_content_type, Some(""));
     assert_eq!(handle.metadata_size(meta_ids[0]), 2030);
 
-    assert_eq!(handle.number_of_metadata_blocks("Unknown"), 0);
-    let count = handle.metadata_block_ids("Unknown", &mut meta_ids);
+    assert_eq!(handle.number_of_metadata_blocks(b"Unkn"), 0);
+    let count = handle.metadata_block_ids(&mut meta_ids, b"Unkn");
     assert_eq!(count, 0);
 
     // Exif
-    assert_eq!(handle.number_of_metadata_blocks("Exif"), 1);
-    let count = handle.metadata_block_ids("Exif", &mut meta_ids);
+    assert_eq!(handle.number_of_metadata_blocks(b"Exif"), 1);
+    let count = handle.metadata_block_ids(&mut meta_ids, b"Exif");
     assert_eq!(count, 1);
     let exif = handle.metadata(meta_ids[0])?;
     assert_eq!(exif.len(), 2030);

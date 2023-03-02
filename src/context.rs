@@ -1,3 +1,4 @@
+use four_cc::FourCC;
 use std::ffi;
 use std::mem::MaybeUninit;
 use std::os::raw::c_void;
@@ -135,7 +136,7 @@ impl HeifContext {
             unsafe { lh::heif_context_get_image_handle(self.inner, item_id, handle.as_mut_ptr()) };
         HeifError::from_heif_error(err)?;
         let handle = unsafe { handle.assume_init() };
-        Ok(ImageHandle::new(self, handle))
+        Ok(ImageHandle::new(handle))
     }
 
     pub fn primary_image_handle(&self) -> Result<ImageHandle> {
@@ -144,7 +145,7 @@ impl HeifContext {
             unsafe { lh::heif_context_get_primary_image_handle(self.inner, handle.as_mut_ptr()) };
         HeifError::from_heif_error(err)?;
         let handle = unsafe { handle.assume_init() };
-        Ok(ImageHandle::new(self, handle))
+        Ok(ImageHandle::new(handle))
     }
 
     pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder> {
@@ -183,7 +184,7 @@ impl HeifContext {
             HeifError::from_heif_error(err)?;
         }
         let handle = unsafe { handle.assume_init() };
-        Ok(ImageHandle::new(self, handle))
+        Ok(ImageHandle::new(handle))
     }
 
     pub fn set_primary_image(&mut self, image_handle: &mut ImageHandle) -> Result<()> {
@@ -199,15 +200,19 @@ impl HeifContext {
     ///
     /// For example, this function can be used to add IPTC metadata
     /// (IIM stream, not XMP) to an image. Although not standard, we propose
-    /// to store IPTC data with item_type="iptc", content_type=None.
-    pub fn add_generic_metadata(
+    /// to store IPTC data with `item_type=FourCC::from(b"iptc")`
+    /// and `content_type=None`.
+    pub fn add_generic_metadata<T>(
         &mut self,
         master_image: &ImageHandle,
         data: &[u8],
-        item_type: &str,
+        item_type: T,
         content_type: Option<&str>,
-    ) -> Result<()> {
-        let c_item_type = str_to_cstring(item_type, "item_type")?;
+    ) -> Result<()>
+    where
+        T: Into<FourCC>,
+    {
+        let c_item_type = str_to_cstring(&item_type.into().to_string(), "item_type")?;
         let c_content_type = match content_type {
             Some(s) => Some(str_to_cstring(s, "content_type")?),
             None => None,
@@ -223,8 +228,7 @@ impl HeifContext {
                 c_content_type_ptr,
             )
         };
-        HeifError::from_heif_error(error)?;
-        Ok(())
+        HeifError::from_heif_error(error)
     }
 
     /// Add EXIF metadata to an image.
@@ -237,8 +241,7 @@ impl HeifContext {
                 data.len() as _,
             )
         };
-        HeifError::from_heif_error(error)?;
-        Ok(())
+        HeifError::from_heif_error(error)
     }
 
     /// Add XMP metadata to an image.
@@ -251,8 +254,7 @@ impl HeifContext {
                 data.len() as _,
             )
         };
-        HeifError::from_heif_error(error)?;
-        Ok(())
+        HeifError::from_heif_error(error)
     }
 }
 

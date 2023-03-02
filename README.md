@@ -23,7 +23,7 @@ fn main() -> Result<()> {
 
     // Get Exif
     let mut meta_ids: Vec<ItemId> = vec![0; 1];
-    let count = handle.metadata_block_ids("Exif", &mut meta_ids);
+    let count = handle.metadata_block_ids(&mut meta_ids, b"Exif");
     assert_eq!(count, 1);
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 

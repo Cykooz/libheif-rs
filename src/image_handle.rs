@@ -1,5 +1,5 @@
+use four_cc::FourCC;
 use std::ffi::CString;
-use std::marker::PhantomData;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 use std::ptr;
@@ -9,16 +9,13 @@ use libheif_sys as lh;
 use crate::decoder::DecodingOptions;
 use crate::utils::cstr_to_str;
 use crate::{
-    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifContext, HeifError,
-    HeifErrorCode, HeifErrorSubCode, Image, Result,
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
+    HeifErrorSubCode, Image, Result,
 };
 
 /// Encoded image.
-pub struct ImageHandle<'a> {
+pub struct ImageHandle {
     pub(crate) inner: *mut lh::heif_image_handle,
-    // All instances of ImageHandle MUST have lifetime of their
-    // parent HeifContext instance.
-    phantom_context: PhantomData<&'a HeifContext>,
 }
 
 pub type ItemId = lh::heif_item_id;
@@ -35,12 +32,9 @@ pub type ItemId = lh::heif_item_id;
 //    pub depth_nonlinear_representation_model: *mut u8,
 //}
 
-impl<'a> ImageHandle<'a> {
-    pub(crate) fn new(_context: &'a HeifContext, handle: *mut lh::heif_image_handle) -> Self {
-        ImageHandle {
-            inner: handle,
-            phantom_context: PhantomData,
-        }
+impl ImageHandle {
+    pub(crate) fn new(handle: *mut lh::heif_image_handle) -> Self {
+        ImageHandle { inner: handle }
     }
 
     pub fn decode(
@@ -146,7 +140,6 @@ impl<'a> ImageHandle<'a> {
         let out_depth_handler = unsafe { out_depth_handler.assume_init() };
         Ok(ImageHandle {
             inner: out_depth_handler,
-            phantom_context: self.phantom_context,
         })
     }
 
@@ -193,21 +186,28 @@ impl<'a> ImageHandle<'a> {
         let out_thumbnail_handler = unsafe { out_thumbnail_handler.assume_init() };
         Ok(ImageHandle {
             inner: out_thumbnail_handler,
-            phantom_context: self.phantom_context,
         })
     }
 
     // Metadata
 
-    #[inline]
-    fn convert_type_filter(type_filter: &str) -> Option<CString> {
-        match type_filter {
-            "" => None,
-            _ => Some(CString::new(type_filter).unwrap()),
+    fn convert_type_filter<T>(type_filter: T) -> Option<CString>
+    where
+        T: Into<FourCC>,
+    {
+        let type_filter = type_filter.into();
+        if type_filter.0.contains(&0) {
+            // We can't convert FourCC with zero byte into valid C-string
+            None
+        } else {
+            CString::new(type_filter.to_string()).ok()
         }
     }
 
-    pub fn number_of_metadata_blocks(&self, type_filter: &str) -> i32 {
+    pub fn number_of_metadata_blocks<T>(&self, type_filter: T) -> i32
+    where
+        T: Into<FourCC>,
+    {
         let c_type_filter = Self::convert_type_filter(type_filter);
         let filter_ptr: *const c_char = match &c_type_filter {
             Some(s) => s.as_ptr(),
@@ -216,7 +216,10 @@ impl<'a> ImageHandle<'a> {
         unsafe { lh::heif_image_handle_get_number_of_metadata_blocks(self.inner, filter_ptr) }
     }
 
-    pub fn metadata_block_ids(&self, type_filter: &str, item_ids: &mut [ItemId]) -> usize {
+    pub fn metadata_block_ids<T>(&self, item_ids: &mut [ItemId], type_filter: T) -> usize
+    where
+        T: Into<FourCC>,
+    {
         if item_ids.is_empty() {
             0
         } else {
@@ -316,7 +319,7 @@ impl<'a> ImageHandle<'a> {
     }
 }
 
-impl<'a> Drop for ImageHandle<'a> {
+impl Drop for ImageHandle {
     fn drop(&mut self) {
         unsafe { lh::heif_image_handle_release(self.inner) };
     }
