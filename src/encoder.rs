@@ -1,10 +1,15 @@
 use std::collections::HashMap;
 use std::ffi::CString;
+use std::fmt::{Debug, Formatter};
+use std::marker::PhantomData;
+use std::sync::Mutex;
 
 use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
 use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageOrientation, Result};
+
+static ENCODER_MUTEX: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
 #[repr(C)]
@@ -39,39 +44,48 @@ pub enum EncoderQuality {
 
 pub type EncoderParametersTypes = HashMap<String, EncoderParameterType>;
 
-pub struct Encoder {
+pub struct Encoder<'a> {
     pub(crate) inner: *mut lh::heif_encoder,
     pub(crate) parameters_types: EncoderParametersTypes,
+    phantom: PhantomData<&'a mut lh::heif_encoder>,
 }
 
-impl Encoder {
-    pub(crate) fn new(c_encoder: *mut lh::heif_encoder) -> Result<Encoder> {
-        Ok(Encoder {
+impl<'a> Encoder<'a> {
+    pub(crate) fn new(c_encoder: &'a mut lh::heif_encoder) -> Result<Self> {
+        let parameters_types = parameters_types(c_encoder)?;
+        Ok(Self {
             inner: c_encoder,
-            parameters_types: parameters_types(c_encoder)?,
+            parameters_types,
+            phantom: PhantomData::default(),
         })
     }
+}
 
+impl<'a> Drop for Encoder<'a> {
+    fn drop(&mut self) {
+        unsafe { lh::heif_encoder_release(self.inner) };
+    }
+}
+
+impl<'a> Encoder<'a> {
     /// Name of encoder.
-    pub fn name(&self) -> &str {
+    pub fn name(&self) -> String {
+        // Name of encoder in `libheif` is mutable static array of chars.
+        // So we must use mutex to get access this array.
+        let _lock = ENCODER_MUTEX.lock();
         let res = unsafe { lh::heif_encoder_get_name(self.inner) };
-        cstr_to_str(res).unwrap_or("")
+        cstr_to_str(res).unwrap_or("").to_owned()
     }
 
     pub fn set_quality(&mut self, quality: EncoderQuality) -> Result<()> {
-        let err;
-        match quality {
-            EncoderQuality::LossLess => {
-                err = unsafe { lh::heif_encoder_set_lossless(self.inner, 1) };
-            }
-            EncoderQuality::Lossy(value) => {
-                unsafe {
-                    let middle_err = lh::heif_encoder_set_lossless(self.inner, 0);
-                    HeifError::from_heif_error(middle_err)?;
-                    err = lh::heif_encoder_set_lossy_quality(self.inner, i32::from(value))
-                };
-            }
-        }
+        let err = match quality {
+            EncoderQuality::LossLess => unsafe { lh::heif_encoder_set_lossless(self.inner, 1) },
+            EncoderQuality::Lossy(value) => unsafe {
+                let middle_err = lh::heif_encoder_set_lossless(self.inner, 0);
+                HeifError::from_heif_error(middle_err)?;
+                lh::heif_encoder_set_lossy_quality(self.inner, i32::from(value))
+            },
+        };
         HeifError::from_heif_error(err)
     }
 
@@ -165,13 +179,7 @@ impl Encoder {
     }
 }
 
-impl Drop for Encoder {
-    fn drop(&mut self) {
-        unsafe { lh::heif_encoder_release(self.inner) };
-    }
-}
-
-fn parameters_types(c_encoder: *mut lh::heif_encoder) -> Result<EncoderParametersTypes> {
+fn parameters_types(c_encoder: &mut lh::heif_encoder) -> Result<EncoderParametersTypes> {
     let mut res = EncoderParametersTypes::new();
     unsafe {
         let mut param_pointers = lh::heif_encoder_list_parameters(c_encoder);
@@ -203,13 +211,23 @@ pub struct EncodingOptions {
     pub(crate) inner: *mut lh::heif_encoding_options,
 }
 
-impl Default for EncodingOptions {
-    fn default() -> Self {
+impl EncodingOptions {
+    pub fn new() -> Result<Self> {
         let inner = unsafe { lh::heif_encoding_options_alloc() };
         if inner.is_null() {
-            panic!("heif_encoding_options_alloc() returns a null pointer")
+            return Err(HeifError {
+                code: HeifErrorCode::MemoryAllocationError,
+                sub_code: HeifErrorSubCode::Unspecified,
+                message: Default::default(),
+            });
         }
-        Self { inner }
+        Ok(Self { inner })
+    }
+}
+
+impl Default for EncodingOptions {
+    fn default() -> Self {
+        Self::new().expect("heif_encoding_options_alloc() returns a null pointer")
     }
 }
 
@@ -284,5 +302,58 @@ impl EncodingOptions {
         unsafe {
             (*self.inner).image_orientation = orientation as _;
         }
+    }
+}
+
+#[derive(Copy, Clone)]
+pub struct EncoderDescriptor<'a> {
+    pub(crate) inner: &'a lh::heif_encoder_descriptor,
+}
+
+impl<'a> EncoderDescriptor<'a> {
+    pub(crate) fn new(inner: &'a lh::heif_encoder_descriptor) -> Self {
+        Self { inner }
+    }
+
+    /// A short, symbolic name for identifying the encoder.
+    /// This name should stay constant over different encoder versions.
+    pub fn id(&self) -> &str {
+        let name = unsafe { lh::heif_encoder_descriptor_get_id_name(self.inner) };
+        cstr_to_str(name).unwrap_or_default()
+    }
+
+    /// A long, descriptive name of the encoder
+    /// (including version information).
+    pub fn name(&self) -> String {
+        // Name of encoder in `libheif` is mutable static array of chars.
+        // So we must use mutex to get access this array.
+        let _lock = ENCODER_MUTEX.lock();
+        let name = unsafe { lh::heif_encoder_descriptor_get_name(self.inner) };
+        cstr_to_str(name).unwrap_or_default().to_owned()
+    }
+
+    pub fn compression_format(&self) -> CompressionFormat {
+        let c_format = unsafe { lh::heif_encoder_descriptor_get_compression_format(self.inner) };
+        match CompressionFormat::n(c_format) {
+            Some(res) => res,
+            None => CompressionFormat::Undefined,
+        }
+    }
+
+    pub fn supports_lossy_compression(&self) -> bool {
+        unsafe { lh::heif_encoder_descriptor_supports_lossy_compression(self.inner) != 0 }
+    }
+
+    pub fn supports_lossless_compression(&self) -> bool {
+        unsafe { lh::heif_encoder_descriptor_supports_lossless_compression(self.inner) != 0 }
+    }
+}
+
+impl<'a> Debug for EncoderDescriptor<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EncoderDescriptor")
+            .field("id", &self.id())
+            .field("name", &self.name())
+            .finish()
     }
 }

@@ -6,7 +6,7 @@ use exif::parse_exif;
 use libheif_rs::{
     check_file_type, color_profile_types, Chroma, ColorPrimaries, ColorProfile, ColorSpace,
     CompressionFormat, EncoderParameterValue, EncoderQuality, FileTypeResult, HeifContext,
-    ImageHandle, ItemId, MatrixCoefficients, Result, RgbChroma, StreamReader,
+    ImageHandle, ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader,
     TransferCharacteristics,
 };
 
@@ -22,6 +22,7 @@ fn read_from_file() -> Result<()> {
 
 #[test]
 fn read_from_reader() -> Result<()> {
+    let lib_heif = LibHeif::new();
     let mut file = BufReader::new(File::open("./data/test.heic").unwrap());
     let total_size = file.seek(SeekFrom::End(0)).unwrap();
     file.rewind().unwrap();
@@ -32,7 +33,7 @@ fn read_from_reader() -> Result<()> {
     assert_eq!(handle.width(), 3024);
     assert_eq!(handle.height(), 4032);
 
-    let src_img = handle.decode(ColorSpace::Undefined, None)?;
+    let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
     assert_eq!(
         src_img.color_space(),
         Some(ColorSpace::Rgb(RgbChroma::C444))
@@ -124,11 +125,12 @@ fn get_exif() -> Result<()> {
 
 #[test]
 fn decode_and_scale_image() -> Result<()> {
+    let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
 
     // Decode the image
-    let src_img = handle.decode(ColorSpace::YCbCr(Chroma::C420), None)?;
+    let src_img = lib_heif.decode(&handle, ColorSpace::YCbCr(Chroma::C420), None)?;
     assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
     let planes = src_img.planes();
     let y_plane = planes.y.unwrap();
@@ -185,9 +187,8 @@ fn top_level_images() -> Result<()> {
 
 #[test]
 fn test_encoder() -> Result<()> {
-    let ctx = HeifContext::new()?;
-
-    let mut encoder = ctx.encoder_for_format(CompressionFormat::Hevc)?;
+    let lib_heif = LibHeif::new();
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
     assert!(encoder.name().starts_with("x265 HEVC encoder"));
 
     let mut params = encoder.parameters_names();
@@ -295,9 +296,10 @@ fn test_nclx_color_profile_of_image_handle() -> Result<()> {
 
 #[test]
 fn test_raw_color_profile_of_image() -> Result<()> {
+    let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
-    let image = handle.decode(ColorSpace::Undefined, None)?;
+    let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
     // Hmm... It's strange. Decoded image doesn't have color profile.
     assert!(image.color_profile_raw().is_none());
     assert!(image.color_profile_nclx().is_none());
@@ -306,6 +308,7 @@ fn test_raw_color_profile_of_image() -> Result<()> {
 
 #[test]
 fn test_read_avif_image() -> Result<()> {
+    let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test_nclx.avif")?;
     let handle = ctx.primary_image_handle()?;
 
@@ -317,7 +320,7 @@ fn test_read_avif_image() -> Result<()> {
     let nclx_profile = handle.color_profile_nclx();
     assert!(nclx_profile.is_some());
 
-    let image = handle.decode(ColorSpace::Undefined, None)?;
+    let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::C444)));
     let planes = image.planes();
     let r_plane = planes.r.unwrap();

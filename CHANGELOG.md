@@ -1,5 +1,27 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added `LibHeif` structure to initialise internals of `libheif`, load
+  plugins, get instances of encoders, decode `ImageHandle` into `Image`,
+  get version of linked `libheif`.
+- Added `EncoderDescriptor` structure that describe some properties of
+  encoder and  may be used to get `Encoder` instance from `LibHeif`.
+- Added `EncodingOptions::new()` method.
+
+### Changed
+
+- **BREAKING**: Removed method `HeifContext::encoder_for_format()`. Use
+  `LibHeif::encoder_for_format()` method instead.
+- **BREAKING**: Removed method `ImageHandle::decode()`. Use
+  `LibHeif::decode()` method instead.
+- **BREAKING**: Lifetime of `Encoder` structure now bounds by lifetime of
+  `LibHeif` instance. 
+- **BREAKING**: Method `Encoder::name()` now returns `String` instead `&str`.
+- Structure `DecodingOptions` was exposed in public interface of the crate.
+
 ## [0.18.0] - 2023-03-02
 
 ### Added

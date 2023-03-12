@@ -1,16 +1,15 @@
-use four_cc::FourCC;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 use std::ptr;
 
+use four_cc::FourCC;
 use libheif_sys as lh;
 
-use crate::decoder::DecodingOptions;
 use crate::utils::cstr_to_str;
 use crate::{
-    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
-    HeifErrorSubCode, Image, Result,
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, HeifError, HeifErrorCode,
+    HeifErrorSubCode, Result,
 };
 
 /// Encoded image.
@@ -35,30 +34,6 @@ pub type ItemId = lh::heif_item_id;
 impl ImageHandle {
     pub(crate) fn new(handle: *mut lh::heif_image_handle) -> Self {
         ImageHandle { inner: handle }
-    }
-
-    pub fn decode(
-        &self,
-        color_space: ColorSpace,
-        decoding_options: Option<DecodingOptions>,
-    ) -> Result<Image> {
-        let decoding_options_ptr = decoding_options
-            .map(|o| o.inner)
-            .unwrap_or_else(ptr::null_mut);
-        let mut c_image = MaybeUninit::<_>::uninit();
-        let err;
-        unsafe {
-            err = lh::heif_decode_image(
-                self.inner,
-                c_image.as_mut_ptr(),
-                color_space.heif_color_space(),
-                color_space.heif_chroma(),
-                decoding_options_ptr,
-            );
-        }
-        HeifError::from_heif_error(err)?;
-        let c_image = unsafe { c_image.assume_init() };
-        Ok(Image::from_heif_image(c_image))
     }
 
     pub fn width(&self) -> u32 {

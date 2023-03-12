@@ -13,9 +13,12 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 ### Read HEIF file
 
 ```rust
-use libheif_rs::{Channel, RgbChroma, ColorSpace, HeifContext, Result, ItemId};
+use libheif_rs::{
+    Channel, RgbChroma, ColorSpace, HeifContext, Result, ItemId, LibHeif
+};
 
 fn main() -> Result<()> {
+    let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
@@ -28,7 +31,7 @@ fn main() -> Result<()> {
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
+    let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     assert_eq!(image.width(), 3024);
     assert_eq!(image.height(), 4032);
@@ -55,8 +58,8 @@ fn main() -> Result<()> {
 ```rust
 use tempfile::NamedTempFile;
 use libheif_rs::{
-    Channel, RgbChroma, ColorSpace, CompressionFormat, EncoderQuality, HeifContext,
-    Image, Result
+    Channel, RgbChroma, ColorSpace, CompressionFormat, EncoderQuality, 
+    HeifContext, Image, Result, LibHeif
 };
 
 fn main() -> Result<()> {
@@ -90,8 +93,9 @@ fn main() -> Result<()> {
     }
 
     // Encode image and save it into file.
+    let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     context.encode_image(&image, &mut encoder, None)?;
 

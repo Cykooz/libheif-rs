@@ -1,6 +1,6 @@
 use libheif_rs::{
     Channel, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, EncodingOptions,
-    HeifContext, Image, Result, RgbChroma,
+    HeifContext, Image, LibHeif, Result, RgbChroma,
 };
 
 fn create_image(width: u32, height: u32) -> Result<Image> {
@@ -29,10 +29,10 @@ fn create_image(width: u32, height: u32) -> Result<Image> {
 fn create_and_encode_image() -> Result<()> {
     let width = 640;
     let height = 480;
-
     let image = create_image(width, height)?;
+    let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     let encoding_options: EncodingOptions = Default::default();
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
@@ -46,7 +46,7 @@ fn create_and_encode_image() -> Result<()> {
     assert_eq!(handle.height(), height);
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
+    let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     let planes = image.planes();
     let plan = planes.interleaved.unwrap();
@@ -79,11 +79,12 @@ fn create_and_encode_monochrome_image() -> Result<()> {
         }
     }
 
+    let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
 
     encoder.set_quality(EncoderQuality::LossLess)?;
-    let encoding_options: EncodingOptions = Default::default();
+    let encoding_options = EncodingOptions::new()?;
 
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
     let _buf = context.write_to_bytes()?;
@@ -95,13 +96,13 @@ fn create_and_encode_monochrome_image() -> Result<()> {
 fn set_encoder_param() -> Result<()> {
     let width = 640;
     let height = 480;
-
     let image = create_image(width, height)?;
 
+    let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = context.encoder_for_format(CompressionFormat::Av1)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
     encoder.set_parameter_value("speed", EncoderParameterValue::Int(5))?;
-    let encoding_options: EncodingOptions = Default::default();
+    let encoding_options = EncodingOptions::new()?;
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
 
     let buf = context.write_to_bytes()?;
@@ -113,7 +114,7 @@ fn set_encoder_param() -> Result<()> {
     assert_eq!(handle.height(), height);
 
     // Decode the image
-    let image = handle.decode(ColorSpace::Rgb(RgbChroma::Rgb), None)?;
+    let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
     let planes = image.planes();
     let plan = planes.interleaved.unwrap();
@@ -128,8 +129,10 @@ fn add_metadata() -> Result<()> {
     let width = 640;
     let height = 480;
     let image = create_image(width, height)?;
+
+    let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = context.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
     let handle = context.encode_image(&image, &mut encoder, None)?;
 
     let item_type = b"MyDt";

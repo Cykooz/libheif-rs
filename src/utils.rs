@@ -1,5 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+use std::path::Path;
 
 use libheif_sys as lh;
 
@@ -24,6 +25,28 @@ pub(crate) fn str_to_cstring(s: &str, name: &str) -> Result<CString, HeifError> 
         sub_code: HeifErrorSubCode::InvalidParameterValue,
         message: format!("Invalid value of '{}': {}", name, e),
     })
+}
+
+pub(crate) fn path_to_cstring(path: &Path) -> CString {
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        CString::new(path.as_os_str().as_bytes()).unwrap_or_default()
+    }
+
+    #[cfg(windows)]
+    {
+        use std::os::windows::ffi::OsStrExt;
+        let mut buf = Vec::new();
+        buf.extend(
+            path.as_os_str()
+                .encode_wide()
+                .chain(Some(0))
+                .map(|b| b.to_ne_bytes().iter())
+                .flatten(),
+        );
+        CString::new(buf).unwrap_or_default()
+    }
 }
 
 /// Check file type by it first bytes.

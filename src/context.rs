@@ -1,16 +1,15 @@
-use four_cc::FourCC;
 use std::ffi;
-use std::mem::MaybeUninit;
 use std::os::raw::c_void;
 use std::ptr;
 
+use four_cc::FourCC;
 use libheif_sys as lh;
 
 use crate::reader::{Reader, HEIF_READER};
 use crate::utils::str_to_cstring;
 use crate::{
-    CompressionFormat, Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image,
-    ImageHandle, ItemId, Result,
+    Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image, ImageHandle,
+    ItemId, Result,
 };
 
 pub struct HeifContext {
@@ -131,32 +130,17 @@ impl HeifContext {
     }
 
     pub fn image_handle(&self, item_id: ItemId) -> Result<ImageHandle> {
-        let mut handle = MaybeUninit::<_>::uninit();
-        let err =
-            unsafe { lh::heif_context_get_image_handle(self.inner, item_id, handle.as_mut_ptr()) };
+        let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
+        let err = unsafe { lh::heif_context_get_image_handle(self.inner, item_id, &mut handle) };
         HeifError::from_heif_error(err)?;
-        let handle = unsafe { handle.assume_init() };
         Ok(ImageHandle::new(handle))
     }
 
     pub fn primary_image_handle(&self) -> Result<ImageHandle> {
-        let mut handle = MaybeUninit::<_>::uninit();
-        let err =
-            unsafe { lh::heif_context_get_primary_image_handle(self.inner, handle.as_mut_ptr()) };
+        let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
+        let err = unsafe { lh::heif_context_get_primary_image_handle(self.inner, &mut handle) };
         HeifError::from_heif_error(err)?;
-        let handle = unsafe { handle.assume_init() };
         Ok(ImageHandle::new(handle))
-    }
-
-    pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder> {
-        let mut c_encoder = MaybeUninit::<_>::uninit();
-        let err = unsafe {
-            lh::heif_context_get_encoder_for_format(self.inner, format as _, c_encoder.as_mut_ptr())
-        };
-        HeifError::from_heif_error(err)?;
-        let c_encoder = unsafe { c_encoder.assume_init() };
-        let encoder = Encoder::new(c_encoder)?;
-        Ok(encoder)
     }
 
     /// Compress the input image.
@@ -172,18 +156,17 @@ impl HeifContext {
             Some(options) => options.inner,
             None => ptr::null(),
         };
-        let mut handle = MaybeUninit::<_>::uninit();
+        let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
         unsafe {
             let err = lh::heif_context_encode_image(
                 self.inner,
                 image.inner,
                 encoder.inner,
                 encoding_options_ptr,
-                handle.as_mut_ptr(),
+                &mut handle,
             );
             HeifError::from_heif_error(err)?;
         }
-        let handle = unsafe { handle.assume_init() };
         Ok(ImageHandle::new(handle))
     }
 
