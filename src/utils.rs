@@ -42,8 +42,7 @@ pub(crate) fn path_to_cstring(path: &Path) -> CString {
             path.as_os_str()
                 .encode_wide()
                 .chain(Some(0))
-                .map(|b| b.to_ne_bytes().iter())
-                .flatten(),
+                .flat_map(|b| b.to_ne_bytes()),
         );
         CString::new(buf).unwrap_or_default()
     }

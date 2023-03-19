@@ -1,5 +1,12 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Fixed
+
+- Fixed `path_to_cstring()` function for building on Windows
+  ([#11](https://github.com/Cykooz/libheif-rs/issues/11)).
+
 ## [0.19.0] - 2023-03-12
 
 ### Added
