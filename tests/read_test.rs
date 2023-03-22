@@ -28,11 +28,12 @@ fn read_from_reader() -> Result<()> {
     file.rewind().unwrap();
     let stream_reader = StreamReader::new(file, total_size);
 
-    let ctx = HeifContext::read_from_reader(Box::new(stream_reader))?;
+    let mut ctx = HeifContext::read_from_reader(Box::new(stream_reader))?;
     let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 3024);
     assert_eq!(handle.height(), 4032);
 
+    ctx.set_max_decoding_threads(2);
     let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
     assert_eq!(
         src_img.color_space(),

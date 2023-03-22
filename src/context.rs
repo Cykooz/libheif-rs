@@ -239,6 +239,19 @@ impl HeifContext {
         };
         HeifError::from_heif_error(error)
     }
+
+    /// If the maximum threads number is set to 0, the image tiles are
+    /// decoded in the main thread. This is different from setting it to 1,
+    /// which will generate a single background thread to decode the tiles.
+    ///
+    /// Note that this setting only affects libheif itself. The codecs itself
+    /// may still use multi-threaded decoding. You can use it, for example,
+    /// in cases where you are decoding several images in parallel anyway you
+    /// thus want to minimize parallelism in each decoder.
+    pub fn set_max_decoding_threads(&mut self, max_threads: u32) {
+        let max_threads = max_threads.min(libc::c_int::MAX as u32) as libc::c_int;
+        unsafe { lh::heif_context_set_max_decoding_threads(self.inner, max_threads) };
+    }
 }
 
 impl Drop for HeifContext {

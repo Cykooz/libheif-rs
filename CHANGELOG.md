@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added method `HeifContext::set_max_decoding_threads()`.
+
 ## [0.19.1] - 2023-03-19
 
 ### Fixed
