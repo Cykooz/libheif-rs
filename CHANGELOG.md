@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Fixed
+
+- **BREAKING**: Added lifetime for ``HeifContext`` structure to
+  exclude "use after free" in case it is created from ``&[u8]``
+  ([#13](https://github.com/Cykooz/libheif-rs/issues/13)).
+
 ## [0.19.2] - 2023-03-22
 
 ### Added

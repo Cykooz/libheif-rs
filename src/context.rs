@@ -12,14 +12,21 @@ use crate::{
     ItemId, Result,
 };
 
-pub struct HeifContext {
-    pub(crate) inner: *mut lh::heif_context,
-    reader: Option<Box<Box<dyn Reader>>>,
+enum Source<'a> {
+    None,
+    File,
+    Memory(&'a [u8]),
+    Reader(Box<Box<dyn Reader>>),
 }
 
-impl HeifContext {
+pub struct HeifContext<'a> {
+    pub(crate) inner: *mut lh::heif_context,
+    source: Source<'a>,
+}
+
+impl HeifContext<'static> {
     /// Create a new empty context.
-    pub fn new() -> Result<HeifContext> {
+    pub fn new() -> Result<HeifContext<'static>> {
         let ctx = unsafe { lh::heif_context_alloc() };
         if ctx.is_null() {
             Err(HeifError {
@@ -30,14 +37,45 @@ impl HeifContext {
         } else {
             Ok(HeifContext {
                 inner: ctx,
-                reader: None,
+                source: Source::None,
             })
         }
     }
 
+    /// Create a new context from file.
+    pub fn read_from_file(name: &str) -> Result<HeifContext<'static>> {
+        let mut context = HeifContext::new()?;
+        context.source = Source::File;
+        let c_name = ffi::CString::new(name).unwrap();
+        let err =
+            unsafe { lh::heif_context_read_from_file(context.inner, c_name.as_ptr(), ptr::null()) };
+        HeifError::from_heif_error(err)?;
+        Ok(context)
+    }
+
+    /// Create a new context from reader.
+    pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext<'static>> {
+        let mut context = HeifContext::new()?;
+        let mut reader_box = Box::new(reader);
+        let user_data = reader_box.as_mut() as *mut _ as *mut c_void;
+        let err = unsafe {
+            lh::heif_context_read_from_reader(context.inner, &HEIF_READER, user_data, ptr::null())
+        };
+        HeifError::from_heif_error(err)?;
+        context.source = Source::Reader(reader_box);
+        Ok(context)
+    }
+}
+
+impl<'a> HeifContext<'a> {
     /// Create a new context from bytes.
+    ///
+    /// The provided memory buffer is not copied.
+    /// That means, you will have to keep the memory buffer alive as
+    /// long as you use the context.
     pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext> {
-        let context = HeifContext::new()?;
+        let mut context = HeifContext::new()?;
+        context.source = Source::Memory(bytes);
         let err = unsafe {
             lh::heif_context_read_from_memory_without_copy(
                 context.inner,
@@ -47,29 +85,6 @@ impl HeifContext {
             )
         };
         HeifError::from_heif_error(err)?;
-        Ok(context)
-    }
-
-    /// Create a new context from file.
-    pub fn read_from_file(name: &str) -> Result<HeifContext> {
-        let context = HeifContext::new()?;
-        let c_name = ffi::CString::new(name).unwrap();
-        let err =
-            unsafe { lh::heif_context_read_from_file(context.inner, c_name.as_ptr(), ptr::null()) };
-        HeifError::from_heif_error(err)?;
-        Ok(context)
-    }
-
-    /// Create a new context from reader.
-    pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext> {
-        let mut context = HeifContext::new()?;
-        let mut reader_box = Box::new(reader);
-        let user_data = reader_box.as_mut() as *mut _ as *mut c_void;
-        let err = unsafe {
-            lh::heif_context_read_from_reader(context.inner, &HEIF_READER, user_data, ptr::null())
-        };
-        HeifError::from_heif_error(err)?;
-        context.reader = Some(reader_box);
         Ok(context)
     }
 
@@ -254,10 +269,10 @@ impl HeifContext {
     }
 }
 
-impl Drop for HeifContext {
+impl<'a> Drop for HeifContext<'a> {
     fn drop(&mut self) {
         unsafe { lh::heif_context_free(self.inner) };
     }
 }
 
-unsafe impl Send for HeifContext {}
+unsafe impl<'a> Send for HeifContext<'a> {}

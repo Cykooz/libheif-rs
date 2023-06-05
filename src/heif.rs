@@ -107,16 +107,15 @@ impl LibHeif {
             .map(|o| o.inner)
             .unwrap_or_else(ptr::null_mut);
         let mut c_image: *mut lh::heif_image = ptr::null_mut();
-        let err;
-        unsafe {
-            err = lh::heif_decode_image(
+        let err = unsafe {
+            lh::heif_decode_image(
                 image_handle.inner,
                 &mut c_image,
                 color_space.heif_color_space(),
                 color_space.heif_chroma(),
                 decoding_options_ptr,
-            );
-        }
+            )
+        };
         HeifError::from_heif_error(err)?;
         Ok(Image::from_heif_image(c_image))
     }

@@ -21,6 +21,21 @@ fn read_from_file() -> Result<()> {
 }
 
 #[test]
+fn read_from_memory() -> Result<()> {
+    let mut buffer = Vec::new();
+    File::open("./data/test.heic")
+        .unwrap()
+        .read_to_end(&mut buffer)
+        .unwrap();
+    let ctx = HeifContext::read_from_bytes(&buffer)?;
+    let handle = ctx.primary_image_handle()?;
+    assert_eq!(handle.width(), 3024);
+    assert_eq!(handle.height(), 4032);
+
+    Ok(())
+}
+
+#[test]
 fn read_from_reader() -> Result<()> {
     let lib_heif = LibHeif::new();
     let mut file = BufReader::new(File::open("./data/test.heic").unwrap());

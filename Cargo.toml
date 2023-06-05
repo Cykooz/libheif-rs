@@ -13,12 +13,12 @@ documentation = "https://docs.rs/crate/libheif-rs"
 
 [dependencies]
 enumn = "0.1"
-four-cc = "0.2"
+four-cc = "0.3"
 libc = "0.2"
 
 
 [dependencies.libheif-sys]
-version = "1.14.2"
+version = "1.14"
 
 
 [dev-dependencies]
