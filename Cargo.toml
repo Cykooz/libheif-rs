@@ -18,7 +18,7 @@ libc = "0.2"
 
 
 [dependencies.libheif-sys]
-version = "1.14"
+version = "1.16"
 
 
 [dev-dependencies]

@@ -6,7 +6,27 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
-- libheif-dev >= 1.14.2
+- libheif-dev >= 1.16.0
+
+### Linux
+
+Crate `libheif-sys` uses `pkg-confing` to find installed `libheif`.
+
+### Windows
+
+Crate `libheif-sys` uses [vcpkg crate](https://crates.io/crates/vcpkg)
+to find `libheif` installed with help of `vcpkg`.
+
+You can use [cargo-vcpkg](https://crates.io/crates/cargo-vcpkg)
+to install `libheif` with help of `cargo` command:
+
+```shell
+cargo vcpkg -v build
+```
+
+`cargo-vcpkg` can fetch and build a `vcpkg` installation of required
+packages from scratch. It merges package requirements specified in
+the `Cargo.toml` of crates in the dependency tree.
 
 ## Examples
 

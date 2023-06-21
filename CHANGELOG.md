@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Changed
+
+- `libheif-sys` updated to version 1.16.
+
 ## [0.20.0] - 2023-06-05
 
 ### Fixed
