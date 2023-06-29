@@ -1,6 +1,7 @@
 use libheif_rs::{
-    Channel, ColorSpace, CompressionFormat, EncoderParameterValue, EncoderQuality, EncodingOptions,
-    HeifContext, Image, LibHeif, Result, RgbChroma,
+    Channel, ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorSpace, CompressionFormat,
+    EncoderParameterValue, EncoderQuality, EncodingOptions, HeifContext, Image, ImageOrientation,
+    LibHeif, Result, RgbChroma,
 };
 
 fn create_image(width: u32, height: u32) -> Result<Image> {
@@ -173,6 +174,77 @@ fn add_metadata() -> Result<()> {
     assert_eq!(&md_data, item_data);
     let md_content_type = handle.metadata_content_type(item_ids[0]);
     assert_eq!(md_content_type, Some("application/rdf+xml"));
+
+    Ok(())
+}
+
+#[test]
+fn test_encoder() -> Result<()> {
+    let lib_heif = LibHeif::new();
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
+    assert!(encoder.name().starts_with("x265 HEVC encoder"));
+
+    let mut params = encoder.parameters_names();
+    params.sort();
+    assert_eq!(params.len(), 7);
+    let expect = vec![
+        "chroma".to_string(),
+        "complexity".to_string(),
+        "lossless".to_string(),
+        "preset".to_string(),
+        "quality".to_string(),
+        "tu-intra-depth".to_string(),
+        "tune".to_string(),
+    ];
+    assert_eq!(params, expect);
+
+    assert_eq!(
+        encoder.parameter("lossless")?,
+        Some(EncoderParameterValue::Bool(false))
+    );
+
+    encoder.set_quality(EncoderQuality::LossLess)?;
+    assert_eq!(
+        encoder.parameter("lossless")?,
+        Some(EncoderParameterValue::Bool(true))
+    );
+
+    //    let expect = vec!{
+    //        "quality".to_string() => EncoderParameterValue::Int(50),
+    //        "lossless".to_string() => EncoderParameterValue::Bool(false),
+    //        "preset".to_string() => EncoderParameterValue::String("slow".to_string()),
+    //        "tune".to_string() => EncoderParameterValue::String("ssim".to_string()),
+    //        "tu-intra-depth".to_string() => EncoderParameterValue::Int(2),
+    //        "complexity".to_string() => EncoderParameterValue::Int(0),
+    //    };
+
+    //    encoder.set_lossless(true)?;
+    //
+    //    assert_eq!(encoder.get_parameter("lossless")?, Some(&EncoderParameterValue::Bool(true)));
+
+    Ok(())
+}
+
+#[test]
+fn test_encoding_options() -> Result<()> {
+    let enc_options = EncodingOptions::new().unwrap();
+    assert!(enc_options.version() >= 5);
+    // Test defaults
+    assert!(enc_options.save_alpha_channel());
+    assert!(!enc_options.mac_os_compatibility_workaround());
+    assert!(enc_options.mac_os_compatibility_workaround_no_nclx_profile());
+    assert!(!enc_options.save_two_colr_boxes_when_icc_and_nclx_available());
+    assert_eq!(enc_options.image_orientation(), ImageOrientation::Normal);
+    let color_options = enc_options.color_conversion_options();
+    assert_eq!(
+        color_options.preferred_chroma_downsampling_algorithm,
+        ChromaDownsamplingAlgorithm::Average
+    );
+    assert_eq!(
+        color_options.preferred_chroma_upsampling_algorithm,
+        ChromaUpsamplingAlgorithm::Bilinear
+    );
+    assert!(!color_options.only_use_preferred_chroma_algorithm);
 
     Ok(())
 }

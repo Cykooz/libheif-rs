@@ -4,10 +4,10 @@ use std::io::{BufReader, Read, Seek, SeekFrom};
 use exif::parse_exif;
 
 use libheif_rs::{
-    check_file_type, color_profile_types, Chroma, ColorPrimaries, ColorProfile, ColorSpace,
-    CompressionFormat, EncoderParameterValue, EncoderQuality, FileTypeResult, HeifContext,
-    ImageHandle, ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader,
-    TransferCharacteristics,
+    check_file_type, color_profile_types, Chroma, ChromaDownsamplingAlgorithm,
+    ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile, ColorSpace, DecodingOptions,
+    FileTypeResult, HeifContext, ImageHandle, ItemId, LibHeif, MatrixCoefficients, Result,
+    RgbChroma, StreamReader, TransferCharacteristics,
 };
 
 #[test]
@@ -202,53 +202,6 @@ fn top_level_images() -> Result<()> {
 }
 
 #[test]
-fn test_encoder() -> Result<()> {
-    let lib_heif = LibHeif::new();
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
-    assert!(encoder.name().starts_with("x265 HEVC encoder"));
-
-    let mut params = encoder.parameters_names();
-    params.sort();
-    assert_eq!(params.len(), 7);
-    let expect = vec![
-        "chroma".to_string(),
-        "complexity".to_string(),
-        "lossless".to_string(),
-        "preset".to_string(),
-        "quality".to_string(),
-        "tu-intra-depth".to_string(),
-        "tune".to_string(),
-    ];
-    assert_eq!(params, expect);
-
-    assert_eq!(
-        encoder.parameter("lossless")?,
-        Some(EncoderParameterValue::Bool(false))
-    );
-
-    encoder.set_quality(EncoderQuality::LossLess)?;
-    assert_eq!(
-        encoder.parameter("lossless")?,
-        Some(EncoderParameterValue::Bool(true))
-    );
-
-    //    let expect = vec!{
-    //        "quality".to_string() => EncoderParameterValue::Int(50),
-    //        "lossless".to_string() => EncoderParameterValue::Bool(false),
-    //        "preset".to_string() => EncoderParameterValue::String("slow".to_string()),
-    //        "tune".to_string() => EncoderParameterValue::String("ssim".to_string()),
-    //        "tu-intra-depth".to_string() => EncoderParameterValue::Int(2),
-    //        "complexity".to_string() => EncoderParameterValue::Int(0),
-    //    };
-
-    //    encoder.set_lossless(true)?;
-    //
-    //    assert_eq!(encoder.get_parameter("lossless")?, Some(&EncoderParameterValue::Bool(true)));
-
-    Ok(())
-}
-
-#[test]
 fn test_check_file_type() {
     let mut data = vec![0u8; 16];
     assert_eq!(check_file_type(&data), FileTypeResult::No);
@@ -342,6 +295,32 @@ fn test_read_avif_image() -> Result<()> {
     let r_plane = planes.r.unwrap();
     assert_eq!(r_plane.width, 2048);
     assert_eq!(r_plane.height, 1440);
+
+    Ok(())
+}
+
+#[test]
+fn test_decoding_options() -> Result<()> {
+    let mut dec_options = DecodingOptions::new().unwrap();
+    assert!(dec_options.version() >= 5);
+    // Test defaults
+    assert!(!dec_options.ignore_transformations());
+    assert!(!dec_options.convert_hdr_to_8bit());
+    assert!(!dec_options.strict_decoding());
+    assert!(dec_options.decoder_id().is_none());
+    let color_options = dec_options.color_conversion_options();
+    assert_eq!(
+        color_options.preferred_chroma_downsampling_algorithm,
+        ChromaDownsamplingAlgorithm::Average
+    );
+    assert_eq!(
+        color_options.preferred_chroma_upsampling_algorithm,
+        ChromaUpsamplingAlgorithm::Bilinear
+    );
+    assert!(!color_options.only_use_preferred_chroma_algorithm);
+
+    dec_options.set_decoder_id(Some("heif")).unwrap();
+    assert_eq!(dec_options.decoder_id(), Some("heif"));
 
     Ok(())
 }

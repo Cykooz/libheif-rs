@@ -28,6 +28,9 @@ cargo vcpkg -v build
 packages from scratch. It merges package requirements specified in
 the `Cargo.toml` of crates in the dependency tree.
 
+PS: I tried build `libheif` for Windows, but `libheif-rs` tests
+filed because `libheif` does not have any encoder plugins available.
+
 ## Examples
 
 ### Read HEIF file

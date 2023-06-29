@@ -4,6 +4,7 @@ use std::fmt;
 use libheif_sys as lh;
 
 #[derive(Debug, Copy, Clone, enumn::N)]
+#[non_exhaustive]
 #[repr(C)]
 pub enum HeifErrorCode {
     InputDoesNotExist = lh::heif_error_code_heif_error_Input_does_not_exist as _,
@@ -23,6 +24,7 @@ pub enum HeifErrorCode {
 }
 
 #[derive(Debug, Copy, Clone, enumn::N)]
+#[non_exhaustive]
 #[repr(C)]
 pub enum HeifErrorSubCode {
     Unspecified = lh::heif_suberror_code_heif_suberror_Unspecified as _,
@@ -96,6 +98,13 @@ pub enum HeifErrorSubCode {
     PluginIsNotLoaded = lh::heif_suberror_code_heif_suberror_Plugin_is_not_loaded as _,
     CannotReadPluginDirectory =
         lh::heif_suberror_code_heif_suberror_Cannot_read_plugin_directory as _,
+    InvalidRegionData = lh::heif_suberror_code_heif_suberror_Invalid_region_data as _,
+    InvalidProperty = lh::heif_suberror_code_heif_suberror_Invalid_property as _,
+    ItemReferenceCycle = lh::heif_suberror_code_heif_suberror_Item_reference_cycle as _,
+    EncoderInitialization = lh::heif_suberror_code_heif_suberror_Encoder_initialization as _,
+    EncoderEncoding = lh::heif_suberror_code_heif_suberror_Encoder_encoding as _,
+    EncoderCleanup = lh::heif_suberror_code_heif_suberror_Encoder_cleanup as _,
+    TooManyRegions = lh::heif_suberror_code_heif_suberror_Too_many_regions as _,
     /// This value is used when library `libheif` returns unknown value of error sub-code.
     Unknown,
 }

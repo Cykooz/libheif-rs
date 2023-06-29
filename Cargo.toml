@@ -35,6 +35,16 @@ opt-level = 3
 codegen-units = 1
 
 
+[package.metadata.vcpkg]
+git = "https://github.com/microsoft/vcpkg"
+tag = "2023.06.20"
+dependencies = ["libheif"]
+
+
+[package.metadata.vcpkg.target]
+x86_64-pc-windows-msvc = { triplet = "x64-windows-static-md", dependencies = ["libheif"] }
+
+
 [package.metadata.release]
 pre-release-replacements = [
     {file="CHANGELOG.md", search="Unreleased", replace="{{version}}"},

@@ -1,8 +1,13 @@
+use crate::utils::{cstr_to_str, str_to_cstring};
+use crate::{ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, HeifError};
 use libheif_sys as lh;
+use std::ffi::CString;
+use std::ptr;
 
 #[derive(Debug)]
 pub struct DecodingOptions {
     pub(crate) inner: *mut lh::heif_decoding_options,
+    decoder_id: Option<CString>,
 }
 
 impl DecodingOptions {
@@ -11,7 +16,10 @@ impl DecodingOptions {
         if inner.is_null() {
             return None;
         }
-        Some(Self { inner })
+        Some(Self {
+            inner,
+            decoder_id: None,
+        })
     }
 }
 
@@ -59,13 +67,69 @@ impl DecodingOptions {
         self.inner_mut().convert_hdr_to_8bit = if enable { 1 } else { 0 }
     }
 
-    #[inline]
+    /// When strict decoding is enabled, an error is returned for invalid input.
+    /// Otherwise, it will try its best and add decoding warnings to
+    /// the decoded `Image`. Default is non-strict.
     pub fn strict_decoding(&self) -> bool {
         self.inner_ref().strict_decoding != 0
     }
 
-    #[inline]
     pub fn set_strict_decoding(&mut self, enable: bool) {
         self.inner_mut().strict_decoding = if enable { 1 } else { 0 }
     }
+
+    /// ID of the decoder to use for the decoding.
+    /// If set to `None` (default), the highest priority decoder is chosen.
+    /// The priority is defined in the plugin.
+    pub fn decoder_id(&self) -> Option<&str> {
+        cstr_to_str(self.inner_ref().decoder_id)
+    }
+
+    pub fn set_decoder_id(&mut self, decoder_id: Option<&str>) -> Result<(), HeifError> {
+        if let Some(decoder_id) = decoder_id {
+            let c_decoder_id = str_to_cstring(decoder_id, "decoder_id")?;
+            self.inner_mut().decoder_id = c_decoder_id.as_ptr();
+            self.decoder_id = Some(c_decoder_id);
+        } else {
+            self.inner_mut().decoder_id = ptr::null() as _;
+            self.decoder_id = None;
+        }
+        Ok(())
+    }
+
+    pub fn color_conversion_options(&self) -> ColorConversionOptions {
+        let lh_options = self.inner_ref().color_conversion_options;
+        ColorConversionOptions {
+            preferred_chroma_downsampling_algorithm: ChromaDownsamplingAlgorithm::n(
+                lh_options.preferred_chroma_downsampling_algorithm,
+            )
+            .unwrap_or(ChromaDownsamplingAlgorithm::Average),
+            preferred_chroma_upsampling_algorithm: ChromaUpsamplingAlgorithm::n(
+                lh_options.preferred_chroma_upsampling_algorithm,
+            )
+            .unwrap_or(ChromaUpsamplingAlgorithm::Bilinear),
+            only_use_preferred_chroma_algorithm: lh_options.only_use_preferred_chroma_algorithm
+                != 0,
+        }
+    }
+
+    pub fn set_color_conversion_options(&mut self, options: ColorConversionOptions) {
+        let lh_options = &mut self.inner_mut().color_conversion_options;
+        lh_options.preferred_chroma_downsampling_algorithm =
+            options.preferred_chroma_downsampling_algorithm as _;
+        lh_options.preferred_chroma_upsampling_algorithm =
+            options.preferred_chroma_upsampling_algorithm as _;
+        lh_options.only_use_preferred_chroma_algorithm =
+            options.only_use_preferred_chroma_algorithm as _;
+    }
+}
+
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct ColorConversionOptions {
+    pub preferred_chroma_downsampling_algorithm: ChromaDownsamplingAlgorithm,
+    pub preferred_chroma_upsampling_algorithm: ChromaUpsamplingAlgorithm,
+    /// When set to `false`, libheif may also use a different algorithm
+    /// if the preferred one is not available.
+    pub only_use_preferred_chroma_algorithm: bool,
 }

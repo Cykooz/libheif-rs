@@ -130,7 +130,7 @@ pub enum FileTypeResult {
     MayBe = lh::heif_filetype_result_heif_filetype_maybe as _,
 }
 
-#[derive(Debug, Copy, Clone, enumn::N)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
 #[repr(C)]
 pub enum ImageOrientation {
     Normal = lh::heif_orientation_heif_orientation_normal as _,
@@ -145,4 +145,25 @@ pub enum ImageOrientation {
     Rotate270Cw = lh::heif_orientation_heif_orientation_rotate_270_cw as _,
     /// This value is used when library `libheif` returns unknown value of image orientation.
     Unknown,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[non_exhaustive]
+#[repr(C)]
+pub enum ChromaDownsamplingAlgorithm {
+    NearestNeighbor =
+        lh::heif_chroma_downsampling_algorithm_heif_chroma_downsampling_nearest_neighbor as _,
+    Average = lh::heif_chroma_downsampling_algorithm_heif_chroma_downsampling_average as _,
+    /// Combine with `ChromaUpsamplingAlgorithm::Bilinear` for best quality.
+    /// Makes edges look sharper when using YUV 420 with bilinear chroma upsampling.
+    SharpYuv = lh::heif_chroma_downsampling_algorithm_heif_chroma_downsampling_sharp_yuv as _,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[non_exhaustive]
+#[repr(C)]
+pub enum ChromaUpsamplingAlgorithm {
+    NearestNeighbor =
+        lh::heif_chroma_upsampling_algorithm_heif_chroma_upsampling_nearest_neighbor as _,
+    Bilinear = lh::heif_chroma_upsampling_algorithm_heif_chroma_upsampling_bilinear as _,
 }

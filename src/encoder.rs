@@ -7,11 +7,15 @@ use std::sync::Mutex;
 use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
-use crate::{HeifError, HeifErrorCode, HeifErrorSubCode, ImageOrientation, Result};
+use crate::{
+    ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorConversionOptions, HeifError,
+    HeifErrorCode, HeifErrorSubCode, ImageOrientation, Result,
+};
 
 static ENCODER_MUTEX: Mutex<()> = Mutex::new(());
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
+#[non_exhaustive]
 #[repr(C)]
 pub enum CompressionFormat {
     Undefined = lh::heif_compression_format_heif_compression_undefined as _,
@@ -19,6 +23,10 @@ pub enum CompressionFormat {
     Avc = lh::heif_compression_format_heif_compression_AVC as _,
     Jpeg = lh::heif_compression_format_heif_compression_JPEG as _,
     Av1 = lh::heif_compression_format_heif_compression_AV1 as _,
+    Vvc = lh::heif_compression_format_heif_compression_VVC as _,
+    Evc = lh::heif_compression_format_heif_compression_EVC as _,
+    Jpeg2000 = lh::heif_compression_format_heif_compression_JPEG2000 as _,
+    Uncompressed = lh::heif_compression_format_heif_compression_uncompressed as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
@@ -240,68 +248,102 @@ impl Drop for EncodingOptions {
 }
 
 impl EncodingOptions {
+    #[inline(always)]
+    fn inner_ref(&self) -> &lh::heif_encoding_options {
+        unsafe { &(*self.inner) }
+    }
+
+    #[inline(always)]
+    fn inner_mut(&mut self) -> &mut lh::heif_encoding_options {
+        unsafe { &mut (*self.inner) }
+    }
+
     #[inline]
     pub fn version(&self) -> u8 {
-        unsafe { (*self.inner).version }
+        self.inner_ref().version
     }
 
     #[inline]
     pub fn save_alpha_channel(&self) -> bool {
-        unsafe { (*self.inner).save_alpha_channel != 0 }
+        self.inner_ref().save_alpha_channel != 0
     }
 
     #[inline]
     pub fn set_save_alpha_channel(&mut self, enable: bool) {
-        unsafe { (*self.inner).save_alpha_channel = if enable { 1 } else { 0 } }
+        self.inner_mut().save_alpha_channel = if enable { 1 } else { 0 };
     }
 
     #[inline]
     pub fn mac_os_compatibility_workaround(&self) -> bool {
-        unsafe { (*self.inner).macOS_compatibility_workaround != 0 }
+        self.inner_ref().macOS_compatibility_workaround != 0
     }
 
     #[inline]
     pub fn set_mac_os_compatibility_workaround(&mut self, enable: bool) {
-        unsafe { (*self.inner).macOS_compatibility_workaround = if enable { 1 } else { 0 } }
+        self.inner_mut().macOS_compatibility_workaround = if enable { 1 } else { 0 };
     }
 
     #[inline]
     pub fn save_two_colr_boxes_when_icc_and_nclx_available(&self) -> bool {
-        unsafe { (*self.inner).save_two_colr_boxes_when_ICC_and_nclx_available != 0 }
+        self.inner_ref()
+            .save_two_colr_boxes_when_ICC_and_nclx_available
+            != 0
     }
 
     #[inline]
     pub fn set_save_two_colr_boxes_when_icc_and_nclx_available(&mut self, enable: bool) {
-        unsafe {
-            (*self.inner).save_two_colr_boxes_when_ICC_and_nclx_available =
-                if enable { 1 } else { 0 }
-        }
+        self.inner_mut()
+            .save_two_colr_boxes_when_ICC_and_nclx_available = if enable { 1 } else { 0 };
     }
 
     #[inline]
     pub fn mac_os_compatibility_workaround_no_nclx_profile(&self) -> bool {
-        unsafe { (*self.inner).macOS_compatibility_workaround_no_nclx_profile != 0 }
+        self.inner_ref()
+            .macOS_compatibility_workaround_no_nclx_profile
+            != 0
     }
 
     #[inline]
     pub fn set_mac_os_compatibility_workaround_no_nclx_profile(&mut self, enable: bool) {
-        unsafe {
-            (*self.inner).macOS_compatibility_workaround_no_nclx_profile =
-                if enable { 1 } else { 0 }
-        }
+        self.inner_mut()
+            .macOS_compatibility_workaround_no_nclx_profile = if enable { 1 } else { 0 };
     }
 
     #[inline]
     pub fn image_orientation(&self) -> ImageOrientation {
-        let orientation = unsafe { (*self.inner).image_orientation };
+        let orientation = self.inner_ref().image_orientation;
         ImageOrientation::n(orientation).unwrap_or(ImageOrientation::Normal)
     }
 
     #[inline]
     pub fn set_image_orientation(&mut self, orientation: ImageOrientation) {
-        unsafe {
-            (*self.inner).image_orientation = orientation as _;
+        self.inner_mut().image_orientation = orientation as _;
+    }
+
+    pub fn color_conversion_options(&self) -> ColorConversionOptions {
+        let lh_options = self.inner_ref().color_conversion_options;
+        ColorConversionOptions {
+            preferred_chroma_downsampling_algorithm: ChromaDownsamplingAlgorithm::n(
+                lh_options.preferred_chroma_downsampling_algorithm,
+            )
+            .unwrap_or(ChromaDownsamplingAlgorithm::Average),
+            preferred_chroma_upsampling_algorithm: ChromaUpsamplingAlgorithm::n(
+                lh_options.preferred_chroma_upsampling_algorithm,
+            )
+            .unwrap_or(ChromaUpsamplingAlgorithm::Bilinear),
+            only_use_preferred_chroma_algorithm: lh_options.only_use_preferred_chroma_algorithm
+                != 0,
         }
+    }
+
+    pub fn set_color_conversion_options(&mut self, options: ColorConversionOptions) {
+        let lh_options = &mut self.inner_mut().color_conversion_options;
+        lh_options.preferred_chroma_downsampling_algorithm =
+            options.preferred_chroma_downsampling_algorithm as _;
+        lh_options.preferred_chroma_upsampling_algorithm =
+            options.preferred_chroma_upsampling_algorithm as _;
+        lh_options.only_use_preferred_chroma_algorithm =
+            options.only_use_preferred_chroma_algorithm as _;
     }
 }
 

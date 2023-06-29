@@ -51,32 +51,32 @@ jobs:
           cargo test
 
 
-  run_tests_on_windows:
-    name: Run `cargo check/test` on Windows
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Cache rust artifacts
-        uses: Swatinem/rust-cache@v2
-        with:
-          cache-all-crates: true
-          cache-on-failure: "true"
-
-      - name: Cache vcpkg
-        id: cache-vcpkg
-        uses: actions/cache@v3
-        with:
-          path: "target/vcpkg"
-          key: ${{ runner.os }}-vcpkg
-
-      - name: Install cargo-vcpkg
-        run: cargo install cargo-vcpkg
-
-      - name: Build libheif
-        run: cargo vcpkg -v build
-
-      - name: Run tests
-        run: |
-          cargo check -p libheif-rs
-          cargo test
+#  run_tests_on_windows:
+#    name: Run `cargo check/test` on Windows
+#    runs-on: windows-latest
+#    steps:
+#      - uses: actions/checkout@v3
+#
+#      - name: Cache rust artifacts
+#        uses: Swatinem/rust-cache@v2
+#        with:
+#          cache-all-crates: true
+#          cache-on-failure: "true"
+#
+#      - name: Cache vcpkg
+#        id: cache-vcpkg
+#        uses: actions/cache@v3
+#        with:
+#          path: "target/vcpkg"
+#          key: ${{ runner.os }}-vcpkg
+#
+#      - name: Install cargo-vcpkg
+#        run: cargo install cargo-vcpkg
+#
+#      - name: Build libheif
+#        run: cargo vcpkg -v build
+#
+#      - name: Run tests
+#        run: |
+#          cargo check -p libheif-rs
+#          cargo test

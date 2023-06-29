@@ -2,16 +2,44 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Added `ColorConversionOptions` structure.
+- Added `DecodingOptions` methods: `decoder_id()`, `set_decoder_id`,
+  `color_conversion_options`, `set_color_conversion_options`.
+- Added `EncodingOptions` methods: `color_conversion_options`, 
+  `set_color_conversion_options`. 
+- Added enums: 
+  - `ChromaDownsamplingAlgorithm`
+  - `ChromaUpsamplingAlgorithm`
+- **BREAKING**: Added new values of `CompressionFormat` enum:
+  - `Vvc`
+  - `Evc`
+  - `Jpeg2000`
+  - `Uncompressed`
+- **BREAKING**: Added new values of `HeifErrorSubCode` enum:
+  - `InvalidRegionData`
+  - `InvalidProperty`
+  - `ItemReferenceCycle`
+  - `EncoderInitialization`
+  - `EncoderEncoding`
+  - `EncoderCleanup`
+  - `TooManyRegions`
+- Added support of [cargo-vcpkg](https://crates.io/crates/cargo-vcpkg)
+  to install `libheif` with help of `cargo`.
+
 ### Changed
 
 - `libheif-sys` updated to version 1.16.
+- **BREAKING**: Enums `HeifErrorCode`, `HeifErrorSubCode`, `CompressionFormat`
+  marked as `non_exhaustive`
 
 ## [0.20.0] - 2023-06-05
 
 ### Fixed
 
-- **BREAKING**: Added lifetime for ``HeifContext`` structure to
-  exclude "use after free" in case it is created from ``&[u8]``
+- **BREAKING**: Added lifetime for `HeifContext` structure to
+  exclude "use after free" in case it is created from `&[u8]`
   ([#13](https://github.com/Cykooz/libheif-rs/issues/13)).
 
 ## [0.19.2] - 2023-03-22
