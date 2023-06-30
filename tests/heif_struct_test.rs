@@ -35,3 +35,10 @@ fn get_encoder_for_format() {
         assert_eq!(encoder.name(), descriptor.name());
     }
 }
+
+#[test]
+fn get_decoder_descriptors() {
+    let lib_heif = LibHeif::new();
+    let descriptors = lib_heif.decoder_descriptors(100, None);
+    assert!(descriptors.len() >= 2);
+}

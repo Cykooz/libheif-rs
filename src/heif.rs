@@ -6,8 +6,8 @@ use libheif_sys as lh;
 
 use crate::utils::path_to_cstring;
 use crate::{
-    ColorSpace, CompressionFormat, DecodingOptions, Encoder, EncoderDescriptor, HeifError, Image,
-    ImageHandle, Result,
+    ColorSpace, CompressionFormat, DecoderDescriptor, DecodingOptions, Encoder, EncoderDescriptor,
+    HeifError, Image, ImageHandle, Result,
 };
 
 /// Guard structure used for `libheif` initialization, working with plugins,
@@ -120,6 +120,35 @@ impl LibHeif {
         Ok(Image::from_heif_image(c_image))
     }
 
+    /// Get a list of available decoders.
+    /// You can filter the decoders by compression format.
+    ///
+    /// The returned list of decoders is sorted by their priority
+    /// (which is a plugin property).
+    pub fn decoder_descriptors(
+        &self,
+        max_count: usize,
+        format_filter: Option<CompressionFormat>,
+    ) -> Vec<DecoderDescriptor> {
+        let format_filter = format_filter.unwrap_or(CompressionFormat::Undefined);
+        let max_count = max_count.min(libc::c_int::MAX as usize);
+
+        let mut descriptors_ptr = Vec::with_capacity(max_count);
+        unsafe {
+            let count = lh::heif_get_decoder_descriptors(
+                format_filter as _,
+                descriptors_ptr.as_mut_ptr(),
+                max_count as _,
+            );
+            descriptors_ptr.set_len(count as usize);
+        }
+
+        descriptors_ptr
+            .into_iter()
+            .filter_map(|d_ptr| unsafe { d_ptr.as_ref().map(DecoderDescriptor::new) })
+            .collect()
+    }
+
     /// Get a list of available encoders.
     /// You can filter the encoders by compression format and name.
     ///
@@ -143,8 +172,7 @@ impl LibHeif {
 
         let mut descriptors_ptr = Vec::with_capacity(max_count);
         unsafe {
-            let count = lh::heif_context_get_encoder_descriptors(
-                ptr::null_mut(),
+            let count = lh::heif_get_encoder_descriptors(
                 format_filter as _,
                 name_filter_ptr,
                 descriptors_ptr.as_mut_ptr(),

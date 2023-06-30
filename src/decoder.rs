@@ -2,7 +2,11 @@ use crate::utils::{cstr_to_str, str_to_cstring};
 use crate::{ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, HeifError};
 use libheif_sys as lh;
 use std::ffi::CString;
+use std::fmt::{Debug, Formatter};
 use std::ptr;
+use std::sync::Mutex;
+
+static DECODER_MUTEX: Mutex<()> = Mutex::new(());
 
 #[derive(Debug)]
 pub struct DecodingOptions {
@@ -132,4 +136,41 @@ pub struct ColorConversionOptions {
     /// When set to `false`, libheif may also use a different algorithm
     /// if the preferred one is not available.
     pub only_use_preferred_chroma_algorithm: bool,
+}
+
+#[derive(Copy, Clone)]
+pub struct DecoderDescriptor<'a> {
+    inner: &'a lh::heif_decoder_descriptor,
+}
+
+impl<'a> DecoderDescriptor<'a> {
+    pub(crate) fn new(inner: &'a lh::heif_decoder_descriptor) -> Self {
+        Self { inner }
+    }
+
+    /// A short, symbolic name for identifying the decoder.
+    /// This name should stay constant over different decoder versions.
+    pub fn id(&self) -> &str {
+        let name = unsafe { lh::heif_decoder_descriptor_get_id_name(self.inner) };
+        cstr_to_str(name).unwrap_or_default()
+    }
+
+    /// A long, descriptive name of the decoder
+    /// (including version information).
+    pub fn name(&self) -> String {
+        // Name of decoder in `libheif` is mutable static array of chars.
+        // So we must use mutex to get access this array.
+        let _lock = DECODER_MUTEX.lock();
+        let name = unsafe { lh::heif_decoder_descriptor_get_name(self.inner) };
+        cstr_to_str(name).unwrap_or_default().to_owned()
+    }
+}
+
+impl<'a> Debug for DecoderDescriptor<'a> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DecoderDescriptor")
+            .field("id", &self.id())
+            .field("name", &self.name())
+            .finish()
+    }
 }
