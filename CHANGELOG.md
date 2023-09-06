@@ -5,15 +5,23 @@
 ### Added
 
 - Added `ColorConversionOptions` structure.
-- Added `DecodingOptions` methods: `decoder_id`, `set_decoder_id`,
-  `color_conversion_options`, `set_color_conversion_options`.
-- Added `EncodingOptions` methods: `color_conversion_options`, 
-  `set_color_conversion_options`. 
+- Added `DecodingOptions` methods: 
+  - `decoder_id` 
+  - `set_decoder_id`
+  - `color_conversion_options` 
+  - `set_color_conversion_options`
+- Added `EncodingOptions` methods:
+  - `color_conversion_options`
+  - `set_color_conversion_options`
 - Added enums: 
   - `ChromaDownsamplingAlgorithm`
   - `ChromaUpsamplingAlgorithm`
 - Added `DecoderDescriptor` structure.
 - Added method `decoder_descriptors` for `LibHeif` structure.
+- Added method `item_id` for `ImageHandle` structure.
+- Added `Image` methods: 
+  - `pixel_aspect_ratio`
+  - `set_pixel_aspect_ratio`
 - **BREAKING**: Added new values of `CompressionFormat` enum:
   - `Vvc`
   - `Evc`

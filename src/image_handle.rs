@@ -36,6 +36,10 @@ impl ImageHandle {
         ImageHandle { inner: handle }
     }
 
+    pub fn item_id(&self) -> ItemId {
+        unsafe { lh::heif_image_handle_get_item_id(self.inner) }
+    }
+
     pub fn width(&self) -> u32 {
         unsafe { lh::heif_image_handle_get_width(self.inner) as _ }
     }

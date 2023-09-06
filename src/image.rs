@@ -323,6 +323,25 @@ impl Image {
         let err = unsafe { lh::heif_image_set_nclx_color_profile(self.inner, profile.inner) };
         HeifError::from_heif_error(err)
     }
+
+    pub fn pixel_aspect_ratio(&self) -> (u32, u32) {
+        let mut aspect_h = 0;
+        let mut aspect_v = 0;
+        unsafe {
+            lh::heif_image_get_pixel_aspect_ratio(
+                self.inner,
+                &mut aspect_h as _,
+                &mut aspect_v as _,
+            );
+        }
+        (aspect_h, aspect_v)
+    }
+
+    pub fn set_pixel_aspect_ratio(&mut self, aspect_h: u32, aspect_v: u32) {
+        unsafe {
+            lh::heif_image_set_pixel_aspect_ratio(self.inner, aspect_h, aspect_v);
+        }
+    }
 }
 
 impl Drop for Image {
