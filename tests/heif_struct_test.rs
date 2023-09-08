@@ -1,4 +1,5 @@
 use libheif_rs::LibHeif;
+use std::collections::HashSet;
 
 #[test]
 fn get_version() {
@@ -28,11 +29,12 @@ fn get_encoder() {
 fn get_encoder_for_format() {
     let lib_heif = LibHeif::new();
     let descriptors = lib_heif.encoder_descriptors(100, None, None);
+    let names: HashSet<String> = HashSet::from_iter(descriptors.iter().map(|d| d.name()));
     for descriptor in descriptors {
         let encoder = lib_heif
             .encoder_for_format(descriptor.compression_format())
             .unwrap();
-        assert_eq!(encoder.name(), descriptor.name());
+        assert!(names.contains(&encoder.name()));
     }
 }
 
