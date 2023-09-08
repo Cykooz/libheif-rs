@@ -212,21 +212,18 @@ fn top_decode_heic() -> Result<()> {
 }
 
 #[test]
-fn top_level_images() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/4_chunks-wo_exif.heic")?;
-    assert_eq!(ctx.number_of_top_level_images(), 5);
-    let mut image_ids: Vec<ItemId> = vec![0; 6];
+fn sequence_of_images() -> Result<()> {
+    let ctx = HeifContext::read_from_file("./data/sequence.heif")?;
+    assert_eq!(ctx.number_of_top_level_images(), 4);
+    let mut image_ids: Vec<ItemId> = vec![0; 5];
     let count = ctx.top_level_image_ids(&mut image_ids);
-    assert_eq!(count, 5);
+    assert_eq!(count, 4);
 
     for &image_id in image_ids[0..4].iter() {
         let handle = ctx.image_handle(image_id)?;
         assert_eq!(handle.width(), 480);
+        assert_eq!(handle.height(), 360);
     }
-
-    // Primary image
-    let handle = ctx.image_handle(image_ids[4])?;
-    assert_eq!(handle.width(), 960);
 
     Ok(())
 }
