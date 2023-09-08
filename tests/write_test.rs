@@ -33,7 +33,7 @@ fn create_and_encode_image() -> Result<()> {
     let image = create_image(width, height)?;
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     let encoding_options: EncodingOptions = Default::default();
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
@@ -82,7 +82,7 @@ fn create_and_encode_monochrome_image() -> Result<()> {
 
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
 
     encoder.set_quality(EncoderQuality::LossLess)?;
     let encoding_options = EncodingOptions::new()?;
@@ -133,7 +133,7 @@ fn add_metadata() -> Result<()> {
 
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
     let handle = context.encode_image(&image, &mut encoder, None)?;
 
     let item_type = b"MyDt";

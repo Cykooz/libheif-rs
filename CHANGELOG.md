@@ -19,6 +19,9 @@
 - Added `DecoderDescriptor` structure.
 - Added method `decoder_descriptors` for `LibHeif` structure.
 - Added method `item_id` for `ImageHandle` structure.
+- Added `HeifContext` methods:
+  - `top_level_image_handles`
+  - `encode_thumbnail`
 - Added `Image` methods: 
   - `pixel_aspect_ratio`
   - `set_pixel_aspect_ratio`
@@ -43,6 +46,11 @@
 - `libheif-sys` updated to version 1.16.
 - **BREAKING**: Enums `HeifErrorCode`, `HeifErrorSubCode`, `CompressionFormat`
   marked as `non_exhaustive`
+
+### Fixed
+
+- Fixed conversion of `profile` argument of `Image.set_color_profile_raw`
+  method into C-version of this argument.
 
 ## [0.20.0] - 2023-06-05
 

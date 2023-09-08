@@ -158,6 +158,26 @@ impl<'a> HeifContext<'a> {
         Ok(ImageHandle::new(handle))
     }
 
+    pub fn top_level_image_handles(&self) -> Vec<ImageHandle> {
+        let max_count = self.number_of_top_level_images();
+        let mut item_ids = Vec::with_capacity(max_count);
+        unsafe {
+            let count = lh::heif_context_get_list_of_top_level_image_IDs(
+                self.inner,
+                item_ids.as_mut_ptr(),
+                max_count as _,
+            ) as usize;
+            item_ids.set_len(count);
+        }
+        let mut handles = Vec::with_capacity(item_ids.len());
+        for item_id in item_ids {
+            if let Ok(handle) = self.image_handle(item_id) {
+                handles.push(handle);
+            }
+        }
+        handles
+    }
+
     /// Compress the input image.
     /// The first image added to the context is also automatically set as the primary image, but
     /// you can change the primary image later with [`HeifContext::set_primary_image`] method.
@@ -185,6 +205,43 @@ impl<'a> HeifContext<'a> {
         Ok(ImageHandle::new(handle))
     }
 
+    /// Encode the `image` as a scaled down thumbnail image.
+    /// The image is scaled down to fit into a square area of width `bbox_size`.
+    /// If the input image is already so small that it fits into this bounding
+    /// box, no thumbnail image is encoded and `Ok(None)` is returned.
+    /// No error is returned in this case.
+    ///
+    /// The encoded thumbnail is automatically assigned to the
+    /// `master_image_handle`. Hence, you do not have to call
+    /// [`HeifContext::assign_thumbnail()`] method.
+    pub fn encode_thumbnail(
+        &mut self,
+        image: &Image,
+        master_image_handle: &ImageHandle,
+        bbox_size: u32,
+        encoder: &mut Encoder,
+        encoding_options: Option<EncodingOptions>,
+    ) -> Result<Option<ImageHandle>> {
+        let encoding_options_ptr = match encoding_options {
+            Some(options) => options.inner,
+            None => ptr::null(),
+        };
+        let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
+        unsafe {
+            let err = lh::heif_context_encode_thumbnail(
+                self.inner,
+                image.inner,
+                master_image_handle.inner,
+                encoder.inner,
+                encoding_options_ptr,
+                bbox_size.min(i32::MAX as _) as _,
+                &mut handle,
+            );
+            HeifError::from_heif_error(err)?;
+        }
+        Ok(Some(ImageHandle::new(handle)))
+    }
+
     pub fn set_primary_image(&mut self, image_handle: &mut ImageHandle) -> Result<()> {
         unsafe {
             let err = lh::heif_context_set_primary_image(self.inner, image_handle.inner);
@@ -198,8 +255,7 @@ impl<'a> HeifContext<'a> {
     ///
     /// For example, this function can be used to add IPTC metadata
     /// (IIM stream, not XMP) to an image. Although not standard, we propose
-    /// to store IPTC data with `item_type=FourCC::from(b"iptc")`
-    /// and `content_type=None`.
+    /// to store IPTC data with `item_type=b"iptc"` and `content_type=None`.
     pub fn add_generic_metadata<T>(
         &mut self,
         master_image: &ImageHandle,

@@ -47,6 +47,8 @@ pub enum EncoderParameterValue {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum EncoderQuality {
     LossLess,
+    /// Value inside variant is a 'quality' factor (0-100).
+    /// How this is mapped to actual encoding parameters is encoder dependent.
     Lossy(u8),
 }
 

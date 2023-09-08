@@ -5,17 +5,17 @@ use exif::parse_exif;
 
 use libheif_rs::{
     check_file_type, color_profile_types, Chroma, ChromaDownsamplingAlgorithm,
-    ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile, ColorSpace, DecodingOptions,
-    FileTypeResult, HeifContext, ImageHandle, ItemId, LibHeif, MatrixCoefficients, Result,
-    RgbChroma, StreamReader, TransferCharacteristics,
+    ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile, ColorSpace, CompressionFormat,
+    DecodingOptions, FileTypeResult, HeifContext, ImageHandle, ItemId, LibHeif, MatrixCoefficients,
+    Result, RgbChroma, StreamReader, TransferCharacteristics,
 };
 
 #[test]
 fn read_from_file() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
-    assert_eq!(handle.width(), 3024);
-    assert_eq!(handle.height(), 4032);
+    assert_eq!(handle.width(), 1652);
+    assert_eq!(handle.height(), 1791);
 
     Ok(())
 }
@@ -23,14 +23,14 @@ fn read_from_file() -> Result<()> {
 #[test]
 fn read_from_memory() -> Result<()> {
     let mut buffer = Vec::new();
-    File::open("./data/test.heic")
+    File::open("./data/test.heif")
         .unwrap()
         .read_to_end(&mut buffer)
         .unwrap();
     let ctx = HeifContext::read_from_bytes(&buffer)?;
     let handle = ctx.primary_image_handle()?;
-    assert_eq!(handle.width(), 3024);
-    assert_eq!(handle.height(), 4032);
+    assert_eq!(handle.width(), 1652);
+    assert_eq!(handle.height(), 1791);
 
     Ok(())
 }
@@ -38,15 +38,15 @@ fn read_from_memory() -> Result<()> {
 #[test]
 fn read_from_reader() -> Result<()> {
     let lib_heif = LibHeif::new();
-    let mut file = BufReader::new(File::open("./data/test.heic").unwrap());
+    let mut file = BufReader::new(File::open("./data/test.heif").unwrap());
     let total_size = file.seek(SeekFrom::End(0)).unwrap();
     file.rewind().unwrap();
     let stream_reader = StreamReader::new(file, total_size);
 
     let mut ctx = HeifContext::read_from_reader(Box::new(stream_reader))?;
     let handle = ctx.primary_image_handle()?;
-    assert_eq!(handle.width(), 3024);
-    assert_eq!(handle.height(), 4032);
+    assert_eq!(handle.width(), 1652);
+    assert_eq!(handle.height(), 1791);
 
     ctx.set_max_decoding_threads(2);
     let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
@@ -60,14 +60,14 @@ fn read_from_reader() -> Result<()> {
 
 #[test]
 fn get_image_handler() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
 
     // Get a handle to the primary image
     let handle = ctx.primary_image_handle()?;
-    assert_eq!(handle.width(), 3024);
-    assert_eq!(handle.height(), 4032);
-    assert_eq!(handle.ispe_width(), 4032);
-    assert_eq!(handle.ispe_height(), 3024);
+    assert_eq!(handle.width(), 1652);
+    assert_eq!(handle.height(), 1791);
+    assert_eq!(handle.ispe_width(), 1652);
+    assert_eq!(handle.ispe_height(), 1791);
     assert!(!handle.has_alpha_channel());
     assert!(!handle.is_premultiplied_alpha());
     assert!(handle.is_primary());
@@ -83,7 +83,7 @@ fn get_image_handler() -> Result<()> {
 
 #[test]
 fn get_thumbnail() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let thumb_handle: ImageHandle;
 
     // All instances of ImageHandle MUST have lifetime of their
@@ -99,14 +99,14 @@ fn get_thumbnail() -> Result<()> {
         thumb_handle = handle.thumbnail(thumb_ids[0])?;
     }
 
-    assert_eq!(thumb_handle.width(), 240);
-    assert_eq!(thumb_handle.height(), 320);
+    assert_eq!(thumb_handle.width(), 236);
+    assert_eq!(thumb_handle.height(), 256);
     Ok(())
 }
 
 #[test]
 fn get_exif() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
 
     // Metadata blocks
@@ -118,7 +118,7 @@ fn get_exif() -> Result<()> {
     assert_eq!(meta_type, Some("Exif"));
     let meta_content_type = handle.metadata_content_type(meta_ids[0]);
     assert_eq!(meta_content_type, Some(""));
-    assert_eq!(handle.metadata_size(meta_ids[0]), 2030);
+    assert_eq!(handle.metadata_size(meta_ids[0]), 2330);
 
     assert_eq!(handle.number_of_metadata_blocks(b"Unkn"), 0);
     let count = handle.metadata_block_ids(&mut meta_ids, b"Unkn");
@@ -129,12 +129,12 @@ fn get_exif() -> Result<()> {
     let count = handle.metadata_block_ids(&mut meta_ids, b"Exif");
     assert_eq!(count, 1);
     let exif = handle.metadata(meta_ids[0])?;
-    assert_eq!(exif.len(), 2030);
-    assert_eq!(exif[0..4], [0, 0, 0, 6]);
-    let tiff_exif = &exif[10..]; // Skip header
+    assert_eq!(exif.len(), 2330);
+    assert_eq!(exif[0..8], [0, 0, 0, 0, b'M', b'M', 0, b'*']);
+    let tiff_exif = &exif[4..]; // Skip header
     let (exif_fields, is_le) = parse_exif(tiff_exif).unwrap();
     assert!(!is_le);
-    assert_eq!(exif_fields.len(), 56);
+    assert_eq!(exif_fields.len(), 45);
 
     Ok(())
 }
@@ -142,7 +142,7 @@ fn get_exif() -> Result<()> {
 #[test]
 fn decode_and_scale_image() -> Result<()> {
     let lib_heif = LibHeif::new();
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
 
     // Decode the image
@@ -150,16 +150,16 @@ fn decode_and_scale_image() -> Result<()> {
     assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
     let planes = src_img.planes();
     let y_plane = planes.y.unwrap();
-    assert_eq!(y_plane.width, 3024);
-    assert_eq!(y_plane.height, 4032);
+    assert_eq!(y_plane.width, 1652);
+    assert_eq!(y_plane.height, 1791);
 
     let cb_plane = planes.cb.unwrap();
-    assert_eq!(cb_plane.width, 3024 / 2);
-    assert_eq!(cb_plane.height, 4032 / 2);
+    assert_eq!(cb_plane.width, 1652 / 2);
+    assert_eq!(cb_plane.height, 1791 / 2 + 1);
 
     let cr_plane = planes.cr.unwrap();
-    assert_eq!(cr_plane.width, 3024 / 2);
-    assert_eq!(cr_plane.height, 4032 / 2);
+    assert_eq!(cr_plane.width, 1652 / 2);
+    assert_eq!(cr_plane.height, 1791 / 2 + 1);
 
     // Scale the image
     let img = src_img.scale(1024, 800, None)?;
@@ -177,6 +177,36 @@ fn decode_and_scale_image() -> Result<()> {
     let cr_plane = planes.cr.unwrap();
     assert_eq!(cr_plane.width, 1024 / 2);
     assert_eq!(cr_plane.height, 800 / 2);
+
+    Ok(())
+}
+
+#[test]
+fn top_decode_heic() -> Result<()> {
+    let lib_heif = LibHeif::new();
+    if lib_heif
+        .decoder_descriptors(1, Some(CompressionFormat::Hevc))
+        .is_empty()
+    {
+        println!(
+            "WARNING: Hevc decoder is absent. The test that check decoding of heic file has skipped."
+        );
+        return Ok(());
+    }
+
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
+    let handle = ctx.primary_image_handle()?;
+
+    // Decode the image
+    let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
+    assert_eq!(
+        src_img.color_space(),
+        Some(ColorSpace::Rgb(RgbChroma::C444))
+    );
+    let planes = src_img.planes();
+    let r_plane = planes.r.unwrap();
+    assert_eq!(r_plane.width, 1652);
+    assert_eq!(r_plane.height, 1791);
 
     Ok(())
 }
@@ -206,7 +236,7 @@ fn test_check_file_type() {
     let mut data = vec![0u8; 16];
     assert_eq!(check_file_type(&data), FileTypeResult::No);
 
-    let mut f = File::open("./data/test.heic").unwrap();
+    let mut f = File::open("./data/test.heif").unwrap();
     let len = f.read(&mut data).unwrap();
     assert_eq!(len, 16);
 
@@ -217,12 +247,12 @@ fn test_check_file_type() {
 
 #[test]
 fn test_raw_color_profile_of_image_handle() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
 
     let raw_profile = handle.color_profile_raw().unwrap();
     assert_eq!(raw_profile.profile_type(), color_profile_types::PROF);
-    assert_eq!(raw_profile.data.len(), 548);
+    assert_eq!(raw_profile.data.len(), 536);
 
     let nclx_profile = handle.color_profile_nclx();
     assert!(nclx_profile.is_none());
@@ -266,11 +296,10 @@ fn test_nclx_color_profile_of_image_handle() -> Result<()> {
 #[test]
 fn test_raw_color_profile_of_image() -> Result<()> {
     let lib_heif = LibHeif::new();
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
     let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
-    // Hmm... It's strange. Decoded image doesn't have color profile.
-    assert!(image.color_profile_raw().is_none());
+    assert!(image.color_profile_raw().is_some());
     assert!(image.color_profile_nclx().is_none());
     Ok(())
 }

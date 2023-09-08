@@ -42,10 +42,10 @@ use libheif_rs::{
 
 fn main() -> Result<()> {
     let lib_heif = LibHeif::new();
-    let ctx = HeifContext::read_from_file("./data/test.heic")?;
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
-    assert_eq!(handle.width(), 3024);
-    assert_eq!(handle.height(), 4032);
+    assert_eq!(handle.width(), 1652);
+    assert_eq!(handle.height(), 1791);
 
     // Get Exif
     let mut meta_ids: Vec<ItemId> = vec![0; 1];
@@ -56,8 +56,8 @@ fn main() -> Result<()> {
     // Decode the image
     let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
     assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
-    assert_eq!(image.width(), 3024);
-    assert_eq!(image.height(), 4032);
+    assert_eq!(image.width(), 1652);
+    assert_eq!(image.height(), 1791);
 
     // Scale the image
     let small_img = image.scale(1024, 800, None)?;
@@ -118,7 +118,7 @@ fn main() -> Result<()> {
     // Encode image and save it into file.
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     context.encode_image(&image, &mut encoder, None)?;
 

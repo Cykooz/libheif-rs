@@ -297,9 +297,11 @@ impl Image {
 
     pub fn set_color_profile_raw(&mut self, profile: &ColorProfileRaw) -> Result<()> {
         let err = unsafe {
+            let mut c_profile_type = [0u8; 5];
+            c_profile_type[0..4].copy_from_slice(&profile.typ.0);
             lh::heif_image_set_raw_color_profile(
                 self.inner,
-                profile.typ.0.as_ptr() as _,
+                c_profile_type.as_ptr() as _,
                 profile.data.as_ptr() as _,
                 profile.data.len(),
             )
