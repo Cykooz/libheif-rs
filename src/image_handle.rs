@@ -270,7 +270,8 @@ impl ImageHandle {
             result.set_len(size);
         }
         let c_profile_type = unsafe { lh::heif_image_handle_get_color_profile_type(self.inner) };
-        let profile_type = ColorProfileType::from(c_profile_type);
+        // `c_profile_type` on Windows will be i32, so we need to cast it to u32
+        let profile_type = ColorProfileType::from(c_profile_type as u32);
 
         Some(ColorProfileRaw {
             typ: profile_type,

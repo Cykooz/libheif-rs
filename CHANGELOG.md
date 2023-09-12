@@ -1,5 +1,19 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added method `assign_thumbnail` for `HeifContext` structure.
+- **BREAKING**: Added default feature `use-bindgen` to control that type of 
+  binding will be used by `libheif-sys` crate (pre-generated or
+  generated on the fly by `bindgen`)
+
+### Fixed
+
+- Fixed creating instance of `ColorProfileType` from instance of 
+  `heif_color_profile_type` on Windows.
+
 ## [0.21.0] - 2023-09-08
 
 ### Added

@@ -242,6 +242,22 @@ impl<'a> HeifContext<'a> {
         Ok(Some(ImageHandle::new(handle)))
     }
 
+    /// Assign `master_image_handle` as the thumbnail image of `thumbnail_image_handle`.
+    pub fn assign_thumbnail(
+        &mut self,
+        master_image_handle: &ImageHandle,
+        thumbnail_image_handle: &ImageHandle,
+    ) -> Result<()> {
+        unsafe {
+            let err = lh::heif_context_assign_thumbnail(
+                self.inner,
+                master_image_handle.inner,
+                thumbnail_image_handle.inner,
+            );
+            HeifError::from_heif_error(err)
+        }
+    }
+
     pub fn set_primary_image(&mut self, image_handle: &mut ImageHandle) -> Result<()> {
         unsafe {
             let err = lh::heif_context_set_primary_image(self.inner, image_handle.inner);

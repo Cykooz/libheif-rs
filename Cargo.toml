@@ -17,8 +17,16 @@ four-cc = "0.3"
 libc = "0.2"
 
 
+[features]
+default = ["use-bindgen"]
+# Use bindgen to generate bindings for libheif,
+# instead using of pre-generated bindings.rs.
+use-bindgen = ["libheif-sys/use-bindgen"]
+
+
 [dependencies.libheif-sys]
-version = "1.16"
+version = "2"
+default-features = false
 
 
 [dev-dependencies]
