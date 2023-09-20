@@ -179,9 +179,17 @@ fn add_metadata() -> Result<()> {
 }
 
 #[test]
-fn test_encoder() -> Result<()> {
+fn test_encoder_hevc() -> Result<()> {
     let lib_heif = LibHeif::new();
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Hevc)?;
+    let mut encoder = match lib_heif.encoder_for_format(CompressionFormat::Hevc) {
+        Ok(e) => e,
+        Err(_) => {
+            println!(
+                "WARNING: Hevc encoder is absent. The test that check encoding of heic file has skipped."
+            );
+            return Ok(());
+        }
+    };
     assert!(encoder.name().starts_with("x265 HEVC encoder"));
 
     let mut params = encoder.parameters_names();
@@ -208,20 +216,28 @@ fn test_encoder() -> Result<()> {
         encoder.parameter("lossless")?,
         Some(EncoderParameterValue::Bool(true))
     );
+    Ok(())
+}
 
-    //    let expect = vec!{
-    //        "quality".to_string() => EncoderParameterValue::Int(50),
-    //        "lossless".to_string() => EncoderParameterValue::Bool(false),
-    //        "preset".to_string() => EncoderParameterValue::String("slow".to_string()),
-    //        "tune".to_string() => EncoderParameterValue::String("ssim".to_string()),
-    //        "tu-intra-depth".to_string() => EncoderParameterValue::Int(2),
-    //        "complexity".to_string() => EncoderParameterValue::Int(0),
-    //    };
+#[test]
+fn test_encoder_av1() -> Result<()> {
+    let lib_heif = LibHeif::new();
+    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
+    assert!(encoder.name().starts_with("AOMedia Project AV1 Encoder"));
 
-    //    encoder.set_lossless(true)?;
-    //
-    //    assert_eq!(encoder.get_parameter("lossless")?, Some(&EncoderParameterValue::Bool(true)));
+    let params = encoder.parameters_names();
+    assert!(params.len() >= 13);
 
+    assert_eq!(
+        encoder.parameter("lossless")?,
+        Some(EncoderParameterValue::Bool(false))
+    );
+
+    encoder.set_quality(EncoderQuality::LossLess)?;
+    assert_eq!(
+        encoder.parameter("lossless")?,
+        Some(EncoderParameterValue::Bool(true))
+    );
     Ok(())
 }
 
