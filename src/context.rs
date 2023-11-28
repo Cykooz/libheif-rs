@@ -102,7 +102,7 @@ impl<'a> HeifContext<'a> {
         lh::heif_error {
             code: lh::heif_error_code_heif_error_Ok,
             subcode: lh::heif_suberror_code_heif_suberror_Unspecified,
-            message: ptr::null(),
+            message: "Success\0".as_ptr() as *const i8,
         }
     }
 
