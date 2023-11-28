@@ -39,7 +39,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: libheif-dev libdav1d-dev
-          version: 1.16.2
+          version: 1.17.4
 
       - uses: Swatinem/rust-cache@v2
         with:
