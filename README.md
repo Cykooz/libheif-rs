@@ -46,7 +46,8 @@ filed because `libheif` doesn't have any encoder plugins available.
 
 ```rust
 use libheif_rs::{
-    Channel, RgbChroma, ColorSpace, HeifContext, Result, ItemId, LibHeif
+    Channel, RgbChroma, ColorSpace, HeifContext, Result, 
+    ItemId, LibHeif
 };
 
 fn main() -> Result<()> {
@@ -63,8 +64,15 @@ fn main() -> Result<()> {
     let exif: Vec<u8> = handle.metadata(meta_ids[0])?;
 
     // Decode the image
-    let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
-    assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
+    let image = lib_heif.decode(
+        &handle, 
+        ColorSpace::Rgb(RgbChroma::Rgb), 
+        None,
+    )?;
+    assert_eq!(
+        image.color_space(), 
+        Some(ColorSpace::Rgb(RgbChroma::Rgb)),
+    );
     assert_eq!(image.width(), 1652);
     assert_eq!(image.height(), 1791);
 
@@ -90,15 +98,19 @@ fn main() -> Result<()> {
 ```rust
 use tempfile::NamedTempFile;
 use libheif_rs::{
-    Channel, RgbChroma, ColorSpace, CompressionFormat, EncoderQuality, 
-    HeifContext, Image, Result, LibHeif
+    Channel, RgbChroma, ColorSpace, CompressionFormat, 
+    EncoderQuality, HeifContext, Image, Result, LibHeif
 };
 
 fn main() -> Result<()> {
     let width = 640;
     let height = 480;
 
-    let mut image = Image::new(width, height, ColorSpace::Rgb(RgbChroma::C444))?;
+    let mut image = Image::new(
+        width, 
+        height, 
+        ColorSpace::Rgb(RgbChroma::C444)
+    )?;
 
     image.create_plane(Channel::R, width, height, 8)?;
     image.create_plane(Channel::G, width, height, 8)?;
@@ -114,20 +126,22 @@ fn main() -> Result<()> {
 
     // Fill data of planes by some "pixels"
     for y in 0..height {
-        let mut row_start = stride * y as usize;
+        let mut pixel_index = stride * y as usize;
         for x in 0..width {
-            let color = (x * y) as u32;
-            data_r[row_start] = ((color & 0x00_ff_00_00) >> 16) as u8;
-            data_g[row_start] = ((color & 0x00_00_ff_00) >> 8) as u8;
-            data_b[row_start] = (color & 0x00_00_00_ff) as u8;
-            row_start += 1;
+            let color = ((x * y) as u32).to_le_bytes();
+            data_r[pixel_index] = color[0];
+            data_g[pixel_index] = color[1];
+            data_b[pixel_index] = color[2];
+            pixel_index += 1;
         }
     }
 
     // Encode image and save it into file.
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
+    let mut encoder = lib_heif.encoder_for_format(
+      CompressionFormat::Av1,
+    )?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     context.encode_image(&image, &mut encoder, None)?;
 
