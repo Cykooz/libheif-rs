@@ -1,5 +1,27 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added `ImageMetadata` structure.
+- Added `ImageHandle` methods:
+  - `metadata_item_uri_type`
+  - `all_metadata`
+  - `item_metadata`
+  - `preferred_decoding_colorspace`
+
+### Changes
+
+- `libheif-sys` updated to version 2.1.
+- `vcpkg` updated to version 2023.11.20.
+
+### Fixed
+
+- Fix null error message from `libheif` v1.17: `heif_writer` should
+  return `heif_error` with non-null pointer to message
+  ([#18](https://github.com/Cykooz/libheif-rs/pull/18)).
+
 ## [0.22.0] - 2023-09-12
 
 ### Added

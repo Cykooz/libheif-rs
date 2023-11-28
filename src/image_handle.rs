@@ -8,8 +8,8 @@ use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
 use crate::{
-    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, HeifError, HeifErrorCode,
-    HeifErrorSubCode, Result,
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
+    HeifErrorSubCode, ImageMetadata, Result,
 };
 
 /// Encoded image.
@@ -18,18 +18,6 @@ pub struct ImageHandle {
 }
 
 pub type ItemId = lh::heif_item_id;
-
-//pub struct DepthRepresentationInfo {
-//    pub version: u8,
-//    pub z_near: Option<f64>,
-//    pub z_far: Option<f64>,
-//    pub d_min: Option<f64>,
-//    pub d_max: Option<f64>,
-//    pub depth_representation_type: DepthRepresentationType,
-//    pub disparity_reference_view: u32,
-//    pub depth_nonlinear_representation_model_size: u32,
-//    pub depth_nonlinear_representation_model: *mut u8,
-//}
 
 impl ImageHandle {
     pub(crate) fn new(handle: *mut lh::heif_image_handle) -> Self {
@@ -122,16 +110,6 @@ impl ImageHandle {
         })
     }
 
-    //    pub fn get_depth_image_representation_info(&self, depth_image_id: ItemId) {
-    //        let mut out = unsafe { mem::uninitialized() };
-    //        let res = unsafe {
-    //            heif_image_handle_get_depth_image_representation_info(
-    //                self.inner, depth_image_id,
-    //                &mut out,
-    //            )
-    //        };
-    //    }
-
     // Thumbnails
 
     pub fn number_of_thumbnails(&self) -> usize {
@@ -218,20 +196,34 @@ impl ImageHandle {
         }
     }
 
+    /// Return a string indicating the type of the metadata, as specified in the HEIF file.
+    /// Exif data will have the type string "Exif".
+    /// This string will be valid until the next call to a libheif function.
     pub fn metadata_type(&self, metadata_id: ItemId) -> Option<&str> {
         let c_type: *const c_char =
             unsafe { lh::heif_image_handle_get_metadata_type(self.inner, metadata_id) };
         cstr_to_str(c_type)
     }
 
+    /// For EXIF, the content type is `Some("")`.
+    ///
+    /// For XMP, the content type is `Some("application/rdf+xml")`.
     pub fn metadata_content_type(&self, metadata_id: ItemId) -> Option<&str> {
         let c_type =
             unsafe { lh::heif_image_handle_get_metadata_content_type(self.inner, metadata_id) };
         cstr_to_str(c_type)
     }
 
+    /// Get the size of the raw metadata, as stored in the HEIF file.
     pub fn metadata_size(&self, metadata_id: ItemId) -> usize {
         unsafe { lh::heif_image_handle_get_metadata_size(self.inner, metadata_id) }
+    }
+
+    /// Only valid for item type == "uri ", an absolute URI.
+    pub fn metadata_item_uri_type(&self, metadata_id: ItemId) -> Option<&str> {
+        let c_type =
+            unsafe { lh::heif_image_handle_get_metadata_item_uri_type(self.inner, metadata_id) };
+        cstr_to_str(c_type)
     }
 
     pub fn metadata(&self, metadata_id: ItemId) -> Result<Vec<u8>> {
@@ -251,6 +243,61 @@ impl ImageHandle {
             result.set_len(size);
         }
         Ok(result)
+    }
+
+    /// Return vector with all image's metadata items.
+    pub fn all_metadata(&self) -> Vec<ImageMetadata> {
+        let count = self.number_of_metadata_blocks(0).max(0) as usize;
+        let mut item_ids = vec![0; count];
+        let count = self.metadata_block_ids(&mut item_ids, 0);
+        let mut result = Vec::with_capacity(count);
+        for item_id in item_ids {
+            if item_id == 0 {
+                continue;
+            }
+            if let Some(item) = self.item_metadata(item_id) {
+                result.push(item);
+            }
+        }
+        result
+    }
+
+    fn item_metadata(&self, item_id: ItemId) -> Option<ImageMetadata> {
+        let item_type = self
+            .metadata_type(item_id)
+            .filter(|t| t.len() == 4)
+            .map(|t| FourCC::from(t.as_bytes()))?;
+        let content_type = self.metadata_content_type(item_id).map(|s| s.to_string())?;
+        let uri_type = self
+            .metadata_item_uri_type(item_id)
+            .map(|s| s.to_string())?;
+        let raw_data = self.metadata(item_id).ok()?;
+        Some(ImageMetadata {
+            item_type,
+            content_type,
+            uri_type,
+            raw_data,
+        })
+    }
+
+    /// Return the colorspace that `libheif` proposes to use for decoding.
+    /// Usually, these will be either [YCbCr](ColorSpace::YCbCr)
+    /// or [Monochrome](ColorSpace::Monochrome), but it may also
+    /// propose [RGB](ColorSpace::RGB) for images encoded with `matrix_coefficients=0`.
+    /// It may also return [Undefined](ColorSpace::Undefined) if the file misses
+    /// relevant information to determine this without decoding.
+    pub fn preferred_decoding_colorspace(&self) -> Result<ColorSpace> {
+        let mut lh_colorspace = lh::heif_colorspace_heif_colorspace_undefined;
+        let mut lh_chroma = lh::heif_chroma_heif_chroma_undefined;
+        let err = unsafe {
+            lh::heif_image_handle_get_preferred_decoding_colorspace(
+                self.inner,
+                &mut lh_colorspace,
+                &mut lh_chroma,
+            )
+        };
+        HeifError::from_heif_error(err)?;
+        Ok(ColorSpace::from_libheif(lh_colorspace, lh_chroma).unwrap_or(ColorSpace::Undefined))
     }
 
     pub fn color_profile_raw(&self) -> Option<ColorProfileRaw> {

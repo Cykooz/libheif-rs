@@ -248,7 +248,7 @@ fn test_encoding_options() -> Result<()> {
     // Test defaults
     assert!(enc_options.save_alpha_channel());
     assert!(!enc_options.mac_os_compatibility_workaround());
-    assert!(enc_options.mac_os_compatibility_workaround_no_nclx_profile());
+    assert!(!enc_options.mac_os_compatibility_workaround_no_nclx_profile());
     assert!(!enc_options.save_two_colr_boxes_when_icc_and_nclx_available());
     assert_eq!(enc_options.image_orientation(), ImageOrientation::Normal);
     let color_options = enc_options.color_conversion_options();

@@ -6,7 +6,7 @@ fn get_version() {
     let lib_heif = LibHeif::new();
     let version = lib_heif.version();
     assert!(version[0] >= 1);
-    assert!(version[1] >= 14);
+    assert!(version[1] >= 17);
 }
 
 #[test]

@@ -9,6 +9,7 @@ pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 pub use heif::*;
 pub use image::*;
 pub use image_handle::{ImageHandle, ItemId};
+pub use metadata::ImageMetadata;
 pub use reader::{Reader, StreamReader};
 pub use utils::check_file_type;
 
@@ -21,5 +22,6 @@ mod errors;
 mod heif;
 mod image;
 mod image_handle;
+mod metadata;
 mod reader;
 mod utils;

@@ -49,10 +49,12 @@ fn read_from_reader() -> Result<()> {
     assert_eq!(handle.height(), 1791);
 
     ctx.set_max_decoding_threads(2);
+    let preferred_colorspace = handle.preferred_decoding_colorspace().unwrap();
+    assert_eq!(preferred_colorspace, ColorSpace::YCbCr(Chroma::C444));
     let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
     assert_eq!(
         src_img.color_space(),
-        Some(ColorSpace::Rgb(RgbChroma::C444))
+        Some(ColorSpace::Rgb(RgbChroma::C444)) // Hmm... It doesn't equal to preferred_colorspace. It's weird.
     );
 
     Ok(())
@@ -62,7 +64,7 @@ fn read_from_reader() -> Result<()> {
 fn get_image_handler() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heif")?;
 
-    // Get a handle to the primary image
+    // Get the handle to the primary image
     let handle = ctx.primary_image_handle()?;
     assert_eq!(handle.width(), 1652);
     assert_eq!(handle.height(), 1791);
@@ -140,6 +142,20 @@ fn get_exif() -> Result<()> {
 }
 
 #[test]
+fn get_all_metadata() -> Result<()> {
+    let ctx = HeifContext::read_from_file("./data/test.heif")?;
+    let handle = ctx.primary_image_handle()?;
+    let metadata_items = handle.all_metadata();
+    assert_eq!(metadata_items.len(), 1);
+    let exif = &metadata_items[0];
+    assert_eq!(exif.item_type, b"Exif".into());
+    assert_eq!(exif.content_type, "");
+    assert_eq!(exif.raw_data.len(), 2330);
+    assert_eq!(exif.raw_data[0..8], [0, 0, 0, 0, b'M', b'M', 0, b'*']);
+    Ok(())
+}
+
+#[test]
 fn decode_and_scale_image() -> Result<()> {
     let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test.heif")?;
@@ -189,7 +205,7 @@ fn top_decode_heic() -> Result<()> {
         .is_empty()
     {
         println!(
-            "WARNING: Hevc decoder is absent. The test that check decoding of heic file has skipped."
+            "WARNING: Hevc decoder is absent. The test checking decoding of heic file has been skipped."
         );
         return Ok(());
     }
@@ -297,7 +313,26 @@ fn test_raw_color_profile_of_image() -> Result<()> {
     let handle = ctx.primary_image_handle()?;
     let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
     assert!(image.color_profile_raw().is_some());
-    assert!(image.color_profile_nclx().is_none());
+    let libheif_version = lib_heif.version();
+    if libheif_version[0] == 1 && libheif_version[1] < 17 {
+        assert!(image.color_profile_nclx().is_none());
+    } else {
+        assert!(image.color_profile_nclx().is_some());
+        let nclx_profile = image.color_profile_nclx().unwrap();
+        // Hmm, unspecified profile
+        assert_eq!(
+            nclx_profile.color_primaries(),
+            ColorPrimaries::ITU_R_BT_709_5
+        );
+        assert_eq!(
+            nclx_profile.transfer_characteristics(),
+            TransferCharacteristics::IEC_61966_2_1
+        );
+        assert_eq!(
+            nclx_profile.matrix_coefficients(),
+            MatrixCoefficients::ITU_R_BT_601_6
+        );
+    }
     Ok(())
 }
 

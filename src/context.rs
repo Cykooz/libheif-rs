@@ -102,7 +102,7 @@ impl<'a> HeifContext<'a> {
         lh::heif_error {
             code: lh::heif_error_code_heif_error_Ok,
             subcode: lh::heif_suberror_code_heif_suberror_Unspecified,
-            message: "Success\0".as_ptr() as *const i8,
+            message: b"\0".as_ptr() as _,
         }
     }
 
@@ -274,7 +274,7 @@ impl<'a> HeifContext<'a> {
     /// to store IPTC data with `item_type=b"iptc"` and `content_type=None`.
     pub fn add_generic_metadata<T>(
         &mut self,
-        master_image: &ImageHandle,
+        image_handle: &ImageHandle,
         data: &[u8],
         item_type: T,
         content_type: Option<&str>,
@@ -291,7 +291,7 @@ impl<'a> HeifContext<'a> {
         let error = unsafe {
             lh::heif_context_add_generic_metadata(
                 self.inner,
-                master_image.inner,
+                image_handle.inner,
                 data.as_ptr() as _,
                 data.len() as _,
                 c_item_type.as_ptr(),

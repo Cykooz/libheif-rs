@@ -18,15 +18,26 @@ static ENCODER_MUTEX: Mutex<()> = Mutex::new(());
 #[non_exhaustive]
 #[repr(C)]
 pub enum CompressionFormat {
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_undefined]
     Undefined = lh::heif_compression_format_heif_compression_undefined as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_HEVC]
     Hevc = lh::heif_compression_format_heif_compression_HEVC as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_AVC]
     Avc = lh::heif_compression_format_heif_compression_AVC as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_JPEG]
     Jpeg = lh::heif_compression_format_heif_compression_JPEG as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_AV1]    
     Av1 = lh::heif_compression_format_heif_compression_AV1 as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_VVC]
     Vvc = lh::heif_compression_format_heif_compression_VVC as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_EVC]
     Evc = lh::heif_compression_format_heif_compression_EVC as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_JPEG2000]
     Jpeg2000 = lh::heif_compression_format_heif_compression_JPEG2000 as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_uncompressed]
     Uncompressed = lh::heif_compression_format_heif_compression_uncompressed as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_mask]
+    Mask = lh::heif_compression_format_heif_compression_mask as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]
