@@ -1,6 +1,6 @@
 [package]
 name = "libheif-rs"
-version = "0.22.0"
+version = "1.0.0"
 authors = ["Kirill Kuzminykh <cykooz@gmail.com>"]
 edition = "2021"
 description = "Safe wrapper around the libheif-sys crate for parsing heif/heic files"
