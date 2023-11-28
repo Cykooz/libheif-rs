@@ -8,7 +8,6 @@
 - Added `ImageHandle` methods:
   - `metadata_item_uri_type`
   - `all_metadata`
-  - `item_metadata`
   - `preferred_decoding_colorspace`
 
 ### Changes

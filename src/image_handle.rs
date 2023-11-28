@@ -283,7 +283,7 @@ impl ImageHandle {
     /// Return the colorspace that `libheif` proposes to use for decoding.
     /// Usually, these will be either [YCbCr](ColorSpace::YCbCr)
     /// or [Monochrome](ColorSpace::Monochrome), but it may also
-    /// propose [RGB](ColorSpace::RGB) for images encoded with `matrix_coefficients=0`.
+    /// propose [Rgb](ColorSpace::Rgb) for images encoded with `matrix_coefficients=0`.
     /// It may also return [Undefined](ColorSpace::Undefined) if the file misses
     /// relevant information to determine this without decoding.
     pub fn preferred_decoding_colorspace(&self) -> Result<ColorSpace> {

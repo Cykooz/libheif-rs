@@ -6,13 +6,13 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
-- `libheif-dev` >= 1.16.0
+- `libheif-dev` >= 1.17.0
 - `clang` - to generate rust bindings for `libheif` in `libheif-sys` crate.
   [See bindgen requirements.](https://rust-lang.github.io/rust-bindgen/requirements.html)
 
 `clang` wouldn't be needed if you disable `use-bindgen` feature.
 In this case the pre-generated file `bindings.rs` will be used  
-instead of generating it on the fly with help of `binden` crate.
+instead of generating it on the fly with help of `bindgen` crate.
 
 Warning: `bindings.rs` file was generated under x64 linux and may
 not work as expected under x32 architectures or other operating systems.
@@ -38,7 +38,7 @@ packages from scratch. It merges package requirements specified in
 the `Cargo.toml` of crates in the dependency tree.
 
 PS: I tried build `libheif` for Windows, but `libheif-rs` tests
-filed because `libheif` does not have any encoder plugins available.
+filed because `libheif` doesn't have any encoder plugins available.
 
 ## Examples
 
