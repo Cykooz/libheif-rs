@@ -104,6 +104,7 @@ impl LibHeif {
         decoding_options: Option<DecodingOptions>,
     ) -> Result<Image> {
         let decoding_options_ptr = decoding_options
+            .as_ref()
             .map(|o| o.inner)
             .unwrap_or_else(ptr::null_mut);
         let mut c_image: *mut lh::heif_image = ptr::null_mut();
