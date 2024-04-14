@@ -1,14 +1,22 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Fixed
+
+- Fixed use-after-free in `LibHeif::decode()` method due to incorrect converting
+  `Option<DecodingOptions>` into pointer
+  ([21](https://github.com/Cykooz/libheif-rs/pull/21)).
+
 ## [1.0.0] - 2023-11-28
 
 ### Added
 
 - Added `ImageMetadata` structure.
 - Added `ImageHandle` methods:
-  - `metadata_item_uri_type`
-  - `all_metadata`
-  - `preferred_decoding_colorspace`
+    - `metadata_item_uri_type`
+    - `all_metadata`
+    - `preferred_decoding_colorspace`
 
 ### Changes
 
@@ -26,13 +34,13 @@
 ### Added
 
 - Added method `assign_thumbnail` for `HeifContext` structure.
-- **BREAKING**: Added default feature `use-bindgen` to control that type of 
+- **BREAKING**: Added default feature `use-bindgen` to control that type of
   binding will be used by `libheif-sys` crate (pre-generated or
   generated on the fly by `bindgen`)
 
 ### Fixed
 
-- Fixed creating instance of `ColorProfileType` from instance of 
+- Fixed creating instance of `ColorProfileType` from instance of
   `heif_color_profile_type` on Windows.
 
 ## [0.21.0] - 2023-09-08
@@ -40,39 +48,39 @@
 ### Added
 
 - Added `ColorConversionOptions` structure.
-- Added `DecodingOptions` methods: 
-  - `decoder_id` 
-  - `set_decoder_id`
-  - `color_conversion_options` 
-  - `set_color_conversion_options`
+- Added `DecodingOptions` methods:
+    - `decoder_id`
+    - `set_decoder_id`
+    - `color_conversion_options`
+    - `set_color_conversion_options`
 - Added `EncodingOptions` methods:
-  - `color_conversion_options`
-  - `set_color_conversion_options`
-- Added enums: 
-  - `ChromaDownsamplingAlgorithm`
-  - `ChromaUpsamplingAlgorithm`
+    - `color_conversion_options`
+    - `set_color_conversion_options`
+- Added enums:
+    - `ChromaDownsamplingAlgorithm`
+    - `ChromaUpsamplingAlgorithm`
 - Added `DecoderDescriptor` structure.
 - Added method `decoder_descriptors` for `LibHeif` structure.
 - Added method `item_id` for `ImageHandle` structure.
 - Added `HeifContext` methods:
-  - `top_level_image_handles`
-  - `encode_thumbnail`
-- Added `Image` methods: 
-  - `pixel_aspect_ratio`
-  - `set_pixel_aspect_ratio`
+    - `top_level_image_handles`
+    - `encode_thumbnail`
+- Added `Image` methods:
+    - `pixel_aspect_ratio`
+    - `set_pixel_aspect_ratio`
 - **BREAKING**: Added new values of `CompressionFormat` enum:
-  - `Vvc`
-  - `Evc`
-  - `Jpeg2000`
-  - `Uncompressed`
+    - `Vvc`
+    - `Evc`
+    - `Jpeg2000`
+    - `Uncompressed`
 - **BREAKING**: Added new values of `HeifErrorSubCode` enum:
-  - `InvalidRegionData`
-  - `InvalidProperty`
-  - `ItemReferenceCycle`
-  - `EncoderInitialization`
-  - `EncoderEncoding`
-  - `EncoderCleanup`
-  - `TooManyRegions`
+    - `InvalidRegionData`
+    - `InvalidProperty`
+    - `ItemReferenceCycle`
+    - `EncoderInitialization`
+    - `EncoderEncoding`
+    - `EncoderCleanup`
+    - `TooManyRegions`
 - Added support of [cargo-vcpkg](https://crates.io/crates/cargo-vcpkg)
   to install `libheif` with help of `cargo`.
 
@@ -116,7 +124,7 @@
   plugins, get instances of encoders, decode `ImageHandle` into `Image`,
   get version of linked `libheif`.
 - Added `EncoderDescriptor` structure that describe some properties of
-  encoder and  may be used to get `Encoder` instance from `LibHeif`.
+  encoder and may be used to get `Encoder` instance from `LibHeif`.
 - Added `EncodingOptions::new()` method.
 
 ### Changed
@@ -126,7 +134,7 @@
 - **BREAKING**: Removed method `ImageHandle::decode()`. Use
   `LibHeif::decode()` method instead.
 - **BREAKING**: Lifetime of `Encoder` structure now bounds by lifetime of
-  `LibHeif` instance. 
+  `LibHeif` instance.
 - **BREAKING**: Method `Encoder::name()` now returns `String` instead `&str`.
 - Structure `DecodingOptions` was exposed in public interface of the crate.
 
@@ -134,23 +142,23 @@
 
 ### Added
 
-- Added methods `add_generic_metadata()`, `add_exif_metadata()` 
+- Added methods `add_generic_metadata()`, `add_exif_metadata()`
   and `add_xmp_metadata()` for `HeifContext`.
 
 ### Changed
 
 - **BREAKING**: Changed type of argument `type_filer` of methods
-  ``ImageHandle::number_of_metadata_blocks()`` and 
-  ``ImageHandle::metadata_block_ids()``. Now it must be something that 
-  implements `Into<FourCC>`. For example - `b"Exif"`. 
-- **BREAKING**: Changed order of arguments of method 
+  ``ImageHandle::number_of_metadata_blocks()`` and
+  ``ImageHandle::metadata_block_ids()``. Now it must be something that
+  implements `Into<FourCC>`. For example - `b"Exif"`.
+- **BREAKING**: Changed order of arguments of method
   ``ImageHandle::metadata_block_ids()``.
 
 ## [0.17.0] - 2023-02-25
 
 ### Added
 
-- Added methods `Image::width()` and `Image::height()` for  receiving
+- Added methods `Image::width()` and `Image::height()` for receiving
   width and height of the main image channel (Y in YCbCr, or any in RGB).
 - Added method `Image::storage_bits_per_pixel()`. This method returns the
   number of bits used for storage of each pixel.
@@ -178,7 +186,7 @@
 ## [0.16.0] - 2023-02-16
 
 - `libheif-sys` updated to version 1.14.2.
-- Added new value of `HeifErrorCode` enum - `PluginLoadingError`. 
+- Added new value of `HeifErrorCode` enum - `PluginLoadingError`.
 - Added new value of `HeifErrorSubCode` enum:
   `UnknownNclxColorPrimaries`, `UnknownNclxTransferCharacteristics`,
   `UnknownNclxMatrixCoefficients`, `UnsupportedHeaderCompressionMethod`,
@@ -198,7 +206,7 @@
 - Argument `ignore_transformations` of `ImageHandle::decode()` method was
   replaced on argument `decoding_options`.
 - Removed deprecated methods: `ImageHandle::list_of_depth_image_ids()`,
-  `ImageHandle::list_of_thumbnail_ids()`, 
+  `ImageHandle::list_of_thumbnail_ids()`,
   `ImageHandle::list_of_metadata_block_ids()`.
 
 ## [0.15.1] - 2022-10-21
@@ -209,7 +217,7 @@
 
 - `libheif-sys` updated to version 1.12.
 - Added new value of `HeifErrorSubCode` enum -
-  `WrongTileImagePixelDepth`.  
+  `WrongTileImagePixelDepth`.
 - Added methods:
   `Image::set_premultiplied_alpha()`, `Image::is_premultiplied_alpha()`,
   `ImageHandle::is_premultiplied_alpha()`.
@@ -228,7 +236,7 @@
 ## [0.13.1] - 2021-02-03
 
 - `libheif-sys` updated to version 1.11.
-- Added methods: 
+- Added methods:
   `EncodingOptions::mac_os_compatibility_workaround_no_nclx_profile()`,
   `EncodingOptions::set_mac_os_compatibility_workaround_no_nclx_profile()`.
 
@@ -245,7 +253,7 @@
 
 ### Breaking changes
 
-- All fields of `EncodingOptions` struct are made private. Added 
+- All fields of `EncodingOptions` struct are made private. Added
   corresponding methods for access to these fields.
 - Method `HeifContext::encode_image()` now returns `Result<ImageHandle>`.
 
@@ -304,7 +312,7 @@
 
 ## [0.4.0] - 2019-06-28
 
-- Added method `HeifContext::read_from_reader()` to create context 
+- Added method `HeifContext::read_from_reader()` to create context
   form any object that implements the `Reader` trait.
 
 ## [0.3.0] - 2019-06-25
