@@ -46,6 +46,12 @@ pub(crate) fn path_to_cstring(path: &Path) -> CString {
         );
         CString::new(buf).unwrap_or_default()
     }
+
+    #[cfg(all(target_arch = "wasm32", target_os = "wasi"))]
+    {
+        use std::os::wasi::ffi::OsStrExt;
+        CString::new(path.as_os_str().as_bytes()).unwrap_or_default()
+    }
 }
 
 /// Check file type by it first bytes.
