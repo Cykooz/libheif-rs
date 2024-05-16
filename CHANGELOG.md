@@ -5,7 +5,7 @@
 ### Fixes
 
 - Fixed error in `libheif-rs::reader::read()` function in case then `libheif`
-  calls them with `null` pointer to buffer (fix #7).
+  calls them with `null` pointer to buffer (fixes Cykooz/libheif-sys#7).
 
 ## [1.0.1] - 2024-04-14
 
