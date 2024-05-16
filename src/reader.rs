@@ -73,6 +73,9 @@ unsafe extern "C" fn get_position(user_data: *mut c_void) -> i64 {
 }
 
 unsafe extern "C" fn read(data: *mut c_void, size: usize, user_data: *mut c_void) -> c_int {
+    if data.is_null() || size == 0 {
+        return 0;
+    }
     let reader = &mut *(user_data as *mut Box<dyn Reader>);
     let buf = slice::from_raw_parts_mut(data as *mut u8, size);
     match reader.read(buf) {

@@ -12,6 +12,7 @@ use crate::{
     ItemId, Result,
 };
 
+#[allow(dead_code)]
 enum Source<'a> {
     None,
     File,
