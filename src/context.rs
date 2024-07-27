@@ -5,6 +5,7 @@ use std::ptr;
 use four_cc::FourCC;
 use libheif_sys as lh;
 
+use crate::encoder::get_encoding_options_ptr;
 use crate::reader::{Reader, HEIF_READER};
 use crate::utils::str_to_cstring;
 use crate::{
@@ -188,17 +189,13 @@ impl<'a> HeifContext<'a> {
         encoder: &mut Encoder,
         encoding_options: Option<EncodingOptions>,
     ) -> Result<ImageHandle> {
-        let encoding_options_ptr = match encoding_options {
-            Some(options) => options.inner,
-            None => ptr::null(),
-        };
         let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
         unsafe {
             let err = lh::heif_context_encode_image(
                 self.inner,
                 image.inner,
                 encoder.inner,
-                encoding_options_ptr,
+                get_encoding_options_ptr(&encoding_options),
                 &mut handle,
             );
             HeifError::from_heif_error(err)?;
@@ -223,10 +220,6 @@ impl<'a> HeifContext<'a> {
         encoder: &mut Encoder,
         encoding_options: Option<EncodingOptions>,
     ) -> Result<Option<ImageHandle>> {
-        let encoding_options_ptr = match encoding_options {
-            Some(options) => options.inner,
-            None => ptr::null(),
-        };
         let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
         unsafe {
             let err = lh::heif_context_encode_thumbnail(
@@ -234,7 +227,7 @@ impl<'a> HeifContext<'a> {
                 image.inner,
                 master_image_handle.inner,
                 encoder.inner,
-                encoding_options_ptr,
+                get_encoding_options_ptr(&encoding_options),
                 bbox_size.min(i32::MAX as _) as _,
                 &mut handle,
             );

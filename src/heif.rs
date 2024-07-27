@@ -4,6 +4,7 @@ use std::ptr;
 
 use libheif_sys as lh;
 
+use crate::decoder::get_decoding_options_ptr;
 use crate::utils::path_to_cstring;
 use crate::{
     ColorSpace, CompressionFormat, DecoderDescriptor, DecodingOptions, Encoder, EncoderDescriptor,
@@ -103,10 +104,6 @@ impl LibHeif {
         color_space: ColorSpace,
         decoding_options: Option<DecodingOptions>,
     ) -> Result<Image> {
-        let decoding_options_ptr = decoding_options
-            .as_ref()
-            .map(|o| o.inner)
-            .unwrap_or_else(ptr::null_mut);
         let mut c_image: *mut lh::heif_image = ptr::null_mut();
         let err = unsafe {
             lh::heif_decode_image(
@@ -114,7 +111,7 @@ impl LibHeif {
                 &mut c_image,
                 color_space.heif_color_space(),
                 color_space.heif_chroma(),
-                decoding_options_ptr,
+                get_decoding_options_ptr(&decoding_options),
             )
         };
         HeifError::from_heif_error(err)?;

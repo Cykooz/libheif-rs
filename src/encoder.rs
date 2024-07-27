@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use std::ffi::CString;
 use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
+use std::ptr;
 use std::sync::Mutex;
 
 use libheif_sys as lh;
@@ -229,20 +230,20 @@ fn parameters_types(c_encoder: &mut lh::heif_encoder) -> Result<EncoderParameter
 
 #[derive(Debug)]
 pub struct EncodingOptions {
-    pub(crate) inner: *mut lh::heif_encoding_options,
+    inner: ptr::NonNull<lh::heif_encoding_options>,
 }
 
 impl EncodingOptions {
     pub fn new() -> Result<Self> {
-        let inner = unsafe { lh::heif_encoding_options_alloc() };
-        if inner.is_null() {
-            return Err(HeifError {
+        let inner_ptr = unsafe { lh::heif_encoding_options_alloc() };
+        match ptr::NonNull::new(inner_ptr) {
+            Some(inner) => Ok(Self { inner }),
+            None => Err(HeifError {
                 code: HeifErrorCode::MemoryAllocationError,
                 sub_code: HeifErrorSubCode::Unspecified,
                 message: Default::default(),
-            });
+            }),
         }
-        Ok(Self { inner })
     }
 }
 
@@ -255,7 +256,7 @@ impl Default for EncodingOptions {
 impl Drop for EncodingOptions {
     fn drop(&mut self) {
         unsafe {
-            lh::heif_encoding_options_free(self.inner);
+            lh::heif_encoding_options_free(self.inner.as_ptr());
         }
     }
 }
@@ -263,12 +264,12 @@ impl Drop for EncodingOptions {
 impl EncodingOptions {
     #[inline(always)]
     fn inner_ref(&self) -> &lh::heif_encoding_options {
-        unsafe { &(*self.inner) }
+        unsafe { self.inner.as_ref() }
     }
 
     #[inline(always)]
     fn inner_mut(&mut self) -> &mut lh::heif_encoding_options {
-        unsafe { &mut (*self.inner) }
+        unsafe { self.inner.as_mut() }
     }
 
     #[inline]
@@ -358,6 +359,17 @@ impl EncodingOptions {
         lh_options.only_use_preferred_chroma_algorithm =
             options.only_use_preferred_chroma_algorithm as _;
     }
+}
+
+/// This function makes sure the encoding options
+/// won't be freed too early.
+pub(crate) fn get_encoding_options_ptr(
+    options: &Option<EncodingOptions>,
+) -> *mut lh::heif_encoding_options {
+    options
+        .as_ref()
+        .map(|o| o.inner.as_ptr())
+        .unwrap_or_else(ptr::null_mut)
 }
 
 #[derive(Copy, Clone)]

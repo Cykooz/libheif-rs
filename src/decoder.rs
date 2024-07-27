@@ -10,17 +10,14 @@ static DECODER_MUTEX: Mutex<()> = Mutex::new(());
 
 #[derive(Debug)]
 pub struct DecodingOptions {
-    pub(crate) inner: *mut lh::heif_decoding_options,
+    inner: ptr::NonNull<lh::heif_decoding_options>,
     decoder_id: Option<CString>,
 }
 
 impl DecodingOptions {
     pub fn new() -> Option<Self> {
-        let inner = unsafe { lh::heif_decoding_options_alloc() };
-        if inner.is_null() {
-            return None;
-        }
-        Some(Self {
+        let inner_ptr = unsafe { lh::heif_decoding_options_alloc() };
+        ptr::NonNull::new(inner_ptr).map(|inner| Self {
             inner,
             decoder_id: None,
         })
@@ -30,7 +27,7 @@ impl DecodingOptions {
 impl Drop for DecodingOptions {
     fn drop(&mut self) {
         unsafe {
-            lh::heif_decoding_options_free(self.inner);
+            lh::heif_decoding_options_free(self.inner.as_ptr());
         }
     }
 }
@@ -38,12 +35,12 @@ impl Drop for DecodingOptions {
 impl DecodingOptions {
     #[inline(always)]
     fn inner_ref(&self) -> &lh::heif_decoding_options {
-        unsafe { &(*self.inner) }
+        unsafe { self.inner.as_ref() }
     }
 
     #[inline(always)]
-    fn inner_mut(&mut self) -> &mut lh::heif_decoding_options {
-        unsafe { &mut (*self.inner) }
+    pub(crate) fn inner_mut(&mut self) -> &mut lh::heif_decoding_options {
+        unsafe { self.inner.as_mut() }
     }
 
     #[inline]
@@ -51,6 +48,8 @@ impl DecodingOptions {
         self.inner_ref().version
     }
 
+    /// Ignore geometric transformations like cropping, rotation, mirroring.
+    /// Default: false (do not ignore).
     #[inline]
     pub fn ignore_transformations(&self) -> bool {
         self.inner_ref().ignore_transformations != 0
@@ -126,6 +125,17 @@ impl DecodingOptions {
         lh_options.only_use_preferred_chroma_algorithm =
             options.only_use_preferred_chroma_algorithm as _;
     }
+}
+
+/// This function makes sure the decoding options
+/// won't be freed too early.
+pub(crate) fn get_decoding_options_ptr(
+    options: &Option<DecodingOptions>,
+) -> *mut lh::heif_decoding_options {
+    options
+        .as_ref()
+        .map(|o| o.inner.as_ptr())
+        .unwrap_or_else(ptr::null_mut)
 }
 
 #[repr(C)]

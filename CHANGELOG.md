@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Fixed
+
+- Fixed use-after-free in `HeifContext::encode_image()` and
+  `HeifContext::encode_thumbnail()` methods due to incorrect converting
+  `Option<EncodingOptions>` into a pointer.
+
 ## [1.0.2] - 2024-05-16
 
 ### Fixes
