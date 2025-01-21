@@ -12,6 +12,7 @@ pub use image_handle::{ImageHandle, ItemId};
 pub use metadata::ImageMetadata;
 pub use reader::{Reader, StreamReader};
 pub use utils::check_file_type;
+pub use auxiliary_image_handle::AuxiliaryImageHandle;
 
 mod color_profile;
 mod context;
@@ -25,3 +26,4 @@ mod image_handle;
 mod metadata;
 mod reader;
 mod utils;
+mod auxiliary_image_handle;

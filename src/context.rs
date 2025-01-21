@@ -13,16 +13,16 @@ use crate::{
 };
 
 #[allow(dead_code)]
-enum Source<'a> {
+pub(crate) enum Source<'a> {
     None,
     File,
-    Memory(&'a [u8]),
+    Memory(&'a ()),
     Reader(Box<Box<dyn Reader>>),
 }
 
 pub struct HeifContext<'a> {
     pub(crate) inner: *mut lh::heif_context,
-    source: Source<'a>,
+    pub(crate) source: Source<'a>,
 }
 
 impl HeifContext<'static> {
@@ -76,7 +76,7 @@ impl<'a> HeifContext<'a> {
     /// long as you use the context.
     pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext> {
         let mut context = HeifContext::new()?;
-        context.source = Source::Memory(bytes);
+        context.source = Source::Memory(&());
         let err = unsafe {
             lh::heif_context_read_from_memory_without_copy(
                 context.inner,

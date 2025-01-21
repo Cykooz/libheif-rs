@@ -8,11 +8,15 @@ use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
 use crate::{
-    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
-    HeifErrorSubCode, ImageMetadata, Result,
+    AuxiliaryImageHandle, ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace,
+    HeifError, HeifErrorCode, HeifErrorSubCode, ImageMetadata, Result,
 };
 
+const LIBHEIF_AUX_IMAGE_FILTER_OMIT_ALPHA: i32 = 1 << 1;
+const LIBHEIF_AUX_IMAGE_FILTER_OMIT_DEPTH: i32 = 2 << 1;
+
 /// Encoded image.
+#[derive(Debug)]
 pub struct ImageHandle {
     pub(crate) inner: *mut lh::heif_image_handle,
 }
@@ -22,6 +26,43 @@ pub type ItemId = lh::heif_item_id;
 impl ImageHandle {
     pub(crate) fn new(handle: *mut lh::heif_image_handle) -> Self {
         ImageHandle { inner: handle }
+    }
+
+    pub fn get_number_of_auxiliary_images(&self) -> i32 {
+        let aux_filter = LIBHEIF_AUX_IMAGE_FILTER_OMIT_ALPHA | LIBHEIF_AUX_IMAGE_FILTER_OMIT_DEPTH;
+        unsafe { lh::heif_image_handle_get_number_of_auxiliary_images(self.inner, aux_filter) }
+    }
+
+    pub fn get_auxiliary_image_ids(&self) -> Vec<lh::heif_item_id> {
+        let aux_filter = LIBHEIF_AUX_IMAGE_FILTER_OMIT_ALPHA | LIBHEIF_AUX_IMAGE_FILTER_OMIT_DEPTH;
+        let mut n_aux = self.get_number_of_auxiliary_images();
+        if n_aux == 0 {
+            return vec![];
+        }
+        let mut ids = vec![0; n_aux as usize];
+        n_aux = unsafe {
+            lh::heif_image_handle_get_list_of_auxiliary_image_IDs(
+                self.inner,
+                aux_filter,
+                ids.as_mut_ptr(),
+                n_aux,
+            )
+        };
+        ids.truncate(n_aux as usize);
+        ids
+    }
+
+    pub fn get_auxiliary_image_handle(
+        &self,
+        aux_id: lh::heif_item_id,
+    ) -> Result<AuxiliaryImageHandle> {
+        let mut handle = core::ptr::null_mut();
+        let err = unsafe {
+            lh::heif_image_handle_get_auxiliary_image_handle(self.inner, aux_id, &mut handle)
+        };
+        HeifError::from_heif_error(err)?;
+        let aux_handle = unsafe { AuxiliaryImageHandle::new(handle) };
+        Ok(aux_handle)
     }
 
     pub fn item_id(&self) -> ItemId {

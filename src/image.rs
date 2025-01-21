@@ -32,6 +32,7 @@ pub struct Planes<T> {
     pub interleaved: Option<Plane<T>>,
 }
 
+#[derive(Debug)]
 pub struct Image {
     pub(crate) inner: *mut lh::heif_image,
 }
