@@ -39,7 +39,7 @@ impl AuxiliaryImageHandle {
         unsafe { lh::heif_image_handle_get_chroma_bits_per_pixel(self.inner) as _ }
     }
 
-    pub fn get_image(&self) -> Result<Image> {
+    pub fn decode_image(&self) -> Result<Image> {
         let mut out_img = core::ptr::null_mut();
         let err = unsafe {
             lh::heif_decode_image(
