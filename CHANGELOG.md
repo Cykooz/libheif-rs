@@ -2,6 +2,33 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Added `HeifContext` methods:
+    - `encode_grid`
+- Added new values of `CompressionFormat` enum:
+    - `HtJ2k`
+- Added new values of `HeifErrorSubCode` enum:
+    - `NoIspeProperty`
+    - `CameraIntrinsicMatrixUndefined`
+    - `CameraExtrinsicMatrixUndefined`
+    - `InvalidJ2kCodeStream`
+    - `NoVvccBox`
+    - `NoIcbrBox`
+    - `DecompressionInvalidData`
+    - `CompressionInitialisationError`
+    - `UnsupportedGenericCompressionMethod`
+    - `NoMatchingDecoderInstalled`
+- Added `ImageHandle` methods:
+    - `add_region_item`
+    - `region_items`
+- Added module `regions` with types required to work with HEIF regions.
+
+### Changes
+
+- `libheif-sys` updated to version 3.1.0.
+- `vcpkg` updated to version 2024.10.21.
+
 ### Fixed
 
 - Fixed use-after-free in `HeifContext::encode_image()` and

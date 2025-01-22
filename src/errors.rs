@@ -105,6 +105,21 @@ pub enum HeifErrorSubCode {
     EncoderEncoding = lh::heif_suberror_code_heif_suberror_Encoder_encoding as _,
     EncoderCleanup = lh::heif_suberror_code_heif_suberror_Encoder_cleanup as _,
     TooManyRegions = lh::heif_suberror_code_heif_suberror_Too_many_regions as _,
+    NoIspeProperty = lh::heif_suberror_code_heif_suberror_No_ispe_property as _,
+    CameraIntrinsicMatrixUndefined =
+        lh::heif_suberror_code_heif_suberror_Camera_intrinsic_matrix_undefined as _,
+    CameraExtrinsicMatrixUndefined =
+        lh::heif_suberror_code_heif_suberror_Camera_extrinsic_matrix_undefined as _,
+    InvalidJ2kCodeStream = lh::heif_suberror_code_heif_suberror_Invalid_J2K_codestream as _,
+    NoVvccBox = lh::heif_suberror_code_heif_suberror_No_vvcC_box as _,
+    NoIcbrBox = lh::heif_suberror_code_heif_suberror_No_icbr_box as _,
+    DecompressionInvalidData = lh::heif_suberror_code_heif_suberror_Decompression_invalid_data as _,
+    CompressionInitialisationError =
+        lh::heif_suberror_code_heif_suberror_Compression_initialisation_error as _,
+    UnsupportedGenericCompressionMethod =
+        lh::heif_suberror_code_heif_suberror_Unsupported_generic_compression_method as _,
+    NoMatchingDecoderInstalled =
+        lh::heif_suberror_code_heif_suberror_No_matching_decoder_installed as _,
     /// This value is used when library `libheif` returns unknown value of error sub-code.
     Unknown,
 }

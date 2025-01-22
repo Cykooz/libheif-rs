@@ -24,4 +24,5 @@ mod image;
 mod image_handle;
 mod metadata;
 mod reader;
+pub mod regions;
 mod utils;

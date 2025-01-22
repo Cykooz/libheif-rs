@@ -1,10 +1,10 @@
+use libheif_sys as lh;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::path::Path;
+use std::ptr;
 
-use libheif_sys as lh;
-
-use crate::{FileTypeResult, HeifError, HeifErrorCode, HeifErrorSubCode};
+use crate::{FileTypeResult, HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 
 #[inline]
 pub(crate) fn cstr_to_str<'a>(c_str: *const c_char) -> Option<&'a str> {
@@ -19,7 +19,7 @@ pub(crate) fn cstr_to_str<'a>(c_str: *const c_char) -> Option<&'a str> {
     }
 }
 
-pub(crate) fn str_to_cstring(s: &str, name: &str) -> Result<CString, HeifError> {
+pub(crate) fn str_to_cstring(s: &str, name: &str) -> Result<CString> {
     CString::new(s).map_err(|e| HeifError {
         code: HeifErrorCode::UsageError,
         sub_code: HeifErrorSubCode::InvalidParameterValue,
@@ -48,7 +48,15 @@ pub(crate) fn path_to_cstring(path: &Path) -> CString {
     }
 }
 
-/// Check file type by it first bytes.
+pub(crate) fn get_non_null_ptr<T>(ptr: *mut T) -> Result<ptr::NonNull<T>> {
+    ptr::NonNull::new(ptr).ok_or_else(|| HeifError {
+        code: HeifErrorCode::MemoryAllocationError,
+        sub_code: HeifErrorSubCode::Unspecified,
+        message: "".to_string(),
+    })
+}
+
+/// Check a file type by it first bytes.
 /// Input data should be at least 12 bytes.
 pub fn check_file_type(data: &[u8]) -> FileTypeResult {
     let res = unsafe { lh::heif_check_filetype(data.as_ptr(), data.len() as _) };

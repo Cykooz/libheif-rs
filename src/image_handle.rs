@@ -1,15 +1,15 @@
+use four_cc::FourCC;
+use libheif_sys as lh;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 use std::ptr;
 
-use four_cc::FourCC;
-use libheif_sys as lh;
-
+use crate::regions::RegionItem;
 use crate::utils::cstr_to_str;
 use crate::{
-    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
-    HeifErrorSubCode, ImageMetadata, Result,
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifContext, HeifError,
+    HeifErrorCode, HeifErrorSubCode, ImageMetadata, Result,
 };
 
 /// Encoded image.
@@ -22,6 +22,10 @@ pub type ItemId = lh::heif_item_id;
 impl ImageHandle {
     pub(crate) fn new(handle: *mut lh::heif_image_handle) -> Self {
         ImageHandle { inner: handle }
+    }
+
+    fn context(&self) -> HeifContext {
+        unsafe { HeifContext::from_ptr(lh::heif_image_handle_get_context(self.inner)) }
     }
 
     pub fn item_id(&self) -> ItemId {
@@ -267,7 +271,7 @@ impl ImageHandle {
             .metadata_type(item_id)
             .filter(|t| t.len() == 4)
             .map(|t| FourCC::from(t.as_bytes()))?;
-        let content_type = self.metadata_content_type(item_id).map(|s| s.to_string())?;
+        let content_type = self.metadata_content_type(item_id).map(String::from)?;
         let uri_type = self
             .metadata_item_uri_type(item_id)
             .map(|s| s.to_string())?;
@@ -343,6 +347,67 @@ impl ImageHandle {
             return None;
         }
         Some(ColorProfileNCLX { inner: profile_ptr })
+    }
+
+    /// Add a region item to an image.
+    ///
+    /// The region item is a collection of regions (point, polyline, polygon,
+    /// rectangle, ellipse or mask) along with a reference size
+    /// (width and height) that forms the coordinate basis for the regions.
+    ///
+    /// The concept is to add the region item, then add one or more regions
+    /// to the region item.
+    pub fn add_region_item(
+        &mut self,
+        reference_width: u32,
+        reference_height: u32,
+    ) -> Result<RegionItem> {
+        let mut lh_region_item_ptr: *mut lh::heif_region_item = ptr::null_mut();
+        let err = unsafe {
+            lh::heif_image_handle_add_region_item(
+                self.inner,
+                reference_width,
+                reference_height,
+                &mut lh_region_item_ptr,
+            )
+        };
+        HeifError::from_heif_error(err)?;
+        let item_ptr = ptr::NonNull::new(lh_region_item_ptr).ok_or(HeifError {
+            code: HeifErrorCode::MemoryAllocationError,
+            sub_code: HeifErrorSubCode::Unspecified,
+            message: "".to_string(),
+        })?;
+        Ok(RegionItem::new(item_ptr))
+    }
+
+    /// Get the region items attached to the image.
+    pub fn region_items(&self) -> Vec<RegionItem> {
+        let num_items = unsafe { lh::heif_image_handle_get_number_of_region_items(self.inner) };
+        let size = num_items.max(0) as usize;
+        let mut item_ids: Vec<ItemId> = Vec::with_capacity(size);
+        let mut items: Vec<RegionItem> = Vec::with_capacity(size);
+        if size > 0 {
+            unsafe {
+                lh::heif_image_handle_get_list_of_region_item_ids(
+                    self.inner,
+                    item_ids.as_mut_ptr(),
+                    num_items,
+                );
+                item_ids.set_len(size);
+            }
+            for item_id in item_ids {
+                let mut item_ptr = ptr::null_mut();
+                let err = unsafe {
+                    lh::heif_context_get_region_item(self.context().inner, item_id, &mut item_ptr)
+                };
+                if HeifError::from_heif_error(err).is_ok() {
+                    if let Some(region_item_ptr) = ptr::NonNull::new(item_ptr) {
+                        items.push(RegionItem::new(region_item_ptr));
+                    }
+                }
+            }
+        }
+        items
     }
 }
 

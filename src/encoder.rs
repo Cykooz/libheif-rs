@@ -39,6 +39,8 @@ pub enum CompressionFormat {
     Uncompressed = lh::heif_compression_format_heif_compression_uncompressed as _,
     /// Rust equivalent of [lh::heif_compression_format_heif_compression_mask]
     Mask = lh::heif_compression_format_heif_compression_mask as _,
+    /// Rust equivalent of [lh::heif_compression_format_heif_compression_HTJ2K]
+    HtJ2k = lh::heif_compression_format_heif_compression_HTJ2K as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]

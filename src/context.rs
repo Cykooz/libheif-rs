@@ -1,4 +1,5 @@
 use std::ffi;
+use std::num::NonZeroU16;
 use std::os::raw::c_void;
 use std::ptr;
 
@@ -66,6 +67,16 @@ impl HeifContext<'static> {
         HeifError::from_heif_error(err)?;
         context.source = Source::Reader(reader_box);
         Ok(context)
+    }
+
+    /// # Safety
+    ///
+    /// The given pointer must be valid.  
+    pub(crate) unsafe fn from_ptr(ctx: *mut lh::heif_context) -> HeifContext<'static> {
+        HeifContext {
+            inner: ctx,
+            source: Source::None,
+        }
     }
 }
 
@@ -236,6 +247,45 @@ impl<'a> HeifContext<'a> {
         Ok(Some(ImageHandle::new(handle)))
     }
 
+    /// Encodes an array of images into a grid.
+    ///
+    /// # Arguments
+    ///
+    /// * `tiles` - User allocated array of images that will form the grid.
+    /// * `rows` - The number of rows in the grid. The number of columns will
+    ///   be calculated from the size of `tiles`.
+    /// * `encoder` - Defines the encoder to use.
+    ///   See [LibHeif::encoder_for_format()](crate::LibHeif::encoder_for_format).
+    /// * `encoding_options` - Optional, may be None.
+    ///
+    /// Returns an error if `tiles` slice is empty.
+    pub fn encode_grid(
+        &mut self,
+        tiles: &[Image],
+        rows: NonZeroU16,
+        encoder: &mut Encoder,
+        encoding_options: Option<EncodingOptions>,
+    ) -> Result<Option<ImageHandle>> {
+        let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
+        let mut tiles_inners: Vec<*mut lh::heif_image> =
+            tiles.iter().map(|img| img.inner).collect();
+        let rows = rows.get();
+        let columns = (tiles_inners.len() as u32 / rows as u32).min(u16::MAX as _) as u16;
+        unsafe {
+            let err = lh::heif_context_encode_grid(
+                self.inner,
+                tiles_inners.as_mut_ptr(),
+                rows,
+                columns,
+                encoder.inner,
+                get_encoding_options_ptr(&encoding_options),
+                &mut handle,
+            );
+            HeifError::from_heif_error(err)?;
+        }
+        Ok(Some(ImageHandle::new(handle)))
+    }
+
     /// Assign `master_image_handle` as the thumbnail image of `thumbnail_image_handle`.
     pub fn assign_thumbnail(
         &mut self,
@@ -325,7 +375,7 @@ impl<'a> HeifContext<'a> {
     /// decoded in the main thread. This is different from setting it to 1,
     /// which will generate a single background thread to decode the tiles.
     ///
-    /// Note that this setting only affects libheif itself. The codecs itself
+    /// Note that this setting only affects `libheif` itself. The codecs itself
     /// may still use multi-threaded decoding. You can use it, for example,
     /// in cases where you are decoding several images in parallel anyway you
     /// thus want to minimize parallelism in each decoder.
