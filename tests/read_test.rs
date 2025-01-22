@@ -4,10 +4,10 @@ use std::io::{BufReader, Read, Seek, SeekFrom};
 use exif::parse_exif;
 
 use libheif_rs::{
-    check_file_type, color_profile_types, Chroma, ChromaDownsamplingAlgorithm,
-    ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile, ColorSpace, CompressionFormat,
-    DecodingOptions, FileTypeResult, HeifContext, ImageHandle, ItemId, LibHeif, MatrixCoefficients,
-    Result, RgbChroma, StreamReader, TransferCharacteristics,
+    check_file_type, color_profile_types, AuxiliaryImagesFilter, Chroma,
+    ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile,
+    ColorSpace, CompressionFormat, DecodingOptions, FileTypeResult, HeifContext, ImageHandle,
+    ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader, TransferCharacteristics,
 };
 
 #[test]
@@ -382,6 +382,36 @@ fn test_decoding_options() -> Result<()> {
 
     dec_options.set_decoder_id(Some("heif")).unwrap();
     assert_eq!(dec_options.decoder_id(), Some("heif"));
+
+    Ok(())
+}
+
+#[test]
+fn get_auxiliary_images() -> Result<()> {
+    let lib_heif = LibHeif::new();
+    let ctx = HeifContext::read_from_file("./data/alpha.heif")?;
+    let handle = ctx.primary_image_handle()?;
+    assert_eq!(handle.auxiliary_type()?, "");
+
+    let mut auxiliary_images = handle.auxiliary_images(None);
+    assert_eq!(auxiliary_images.len(), 1);
+    let alpha_handle = auxiliary_images.pop().unwrap();
+    assert_eq!(alpha_handle.auxiliary_type()?, "urn:mpeg:hevc:2015:auxid:1");
+    assert_eq!(alpha_handle.width(), 256);
+    assert_eq!(alpha_handle.height(), 256);
+    assert!(!alpha_handle.has_alpha_channel());
+    assert_eq!(alpha_handle.chroma_bits_per_pixel(), 8);
+    // Decode the alpha image
+    let alpha_img = lib_heif.decode(&alpha_handle, ColorSpace::Undefined, None)?;
+    assert!(matches!(
+        alpha_img.color_space(),
+        Some(ColorSpace::Monochrome)
+    ));
+
+    // Filter
+    assert!(handle
+        .auxiliary_images(AuxiliaryImagesFilter::OMIT_ALPHA)
+        .is_empty());
 
     Ok(())
 }

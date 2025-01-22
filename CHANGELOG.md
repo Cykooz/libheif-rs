@@ -22,6 +22,9 @@
 - Added `ImageHandle` methods:
     - `add_region_item`
     - `region_items`
+    - `auxiliary_images`
+    - `auxiliary_type`
+- Added struct `AuxiliaryImagesFilter`.
 - Added module `regions` with types required to work with HEIF regions.
 
 ### Changes

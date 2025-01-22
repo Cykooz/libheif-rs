@@ -8,7 +8,7 @@ pub use enums::*;
 pub use errors::{HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 pub use heif::*;
 pub use image::*;
-pub use image_handle::{ImageHandle, ItemId};
+pub use image_handle::{AuxiliaryImagesFilter, ImageHandle, ItemId};
 pub use metadata::ImageMetadata;
 pub use reader::{Reader, StreamReader};
 pub use utils::check_file_type;

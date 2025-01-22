@@ -409,6 +409,90 @@ impl ImageHandle {
         }
         items
     }
+
+    /// Returns the vector of auxiliary image handles assigned to this image handle.
+    pub fn auxiliary_images<T: Into<Option<AuxiliaryImagesFilter>>>(
+        &self,
+        filter: T,
+    ) -> Vec<ImageHandle> {
+        let filter = filter.into().unwrap_or_default();
+        let num_items =
+            unsafe { lh::heif_image_handle_get_number_of_auxiliary_images(self.inner, filter.0) };
+        let size = num_items.max(0) as usize;
+        let mut item_ids: Vec<ItemId> = Vec::with_capacity(size);
+        let mut image_handles = Vec::with_capacity(size);
+        if size > 0 {
+            unsafe {
+                let real_size = lh::heif_image_handle_get_list_of_auxiliary_image_IDs(
+                    self.inner,
+                    filter.0,
+                    item_ids.as_mut_ptr(),
+                    num_items,
+                );
+                item_ids.set_len(real_size as usize);
+            }
+            for item_id in item_ids {
+                let mut handle_ptr = ptr::null_mut();
+                let err = unsafe {
+                    lh::heif_image_handle_get_auxiliary_image_handle(
+                        self.inner,
+                        item_id,
+                        &mut handle_ptr,
+                    )
+                };
+                if HeifError::from_heif_error(err).is_ok() && !handle_ptr.is_null() {
+                    image_handles.push(ImageHandle::new(handle_ptr));
+                }
+            }
+        }
+        image_handles
+    }
+
+    /// Returns type of auxiliary image.
+    ///
+    /// Returns an empty string if the image handle isn't auxiliary.
+    pub fn auxiliary_type(&self) -> Result<String> {
+        let mut type_str_ptr = ptr::null();
+        let err =
+            unsafe { lh::heif_image_handle_get_auxiliary_type(self.inner, &mut type_str_ptr) };
+        HeifError::from_heif_error(err)?;
+        let res = cstr_to_str(type_str_ptr).unwrap_or("").to_owned();
+        if !type_str_ptr.is_null() {
+            unsafe { lh::heif_image_handle_release_auxiliary_type(self.inner, &mut type_str_ptr) };
+        }
+        Ok(res)
+    }
+}
+
+#[derive(Copy, Clone, Default)]
+pub struct AuxiliaryImagesFilter(libc::c_int);
+
+impl AuxiliaryImagesFilter {
+    const ALPHA_MASK: libc::c_int = 1 << 1;
+    const DEPTH_MASK: libc::c_int = 2 << 1;
+
+    pub const OMIT_ALPHA: Self = Self::new().omit_alpha();
+    pub const OMIT_DEPTH: Self = Self::new().omit_depth();
+
+    pub const fn new() -> Self {
+        Self(0)
+    }
+
+    pub const fn is_omit_alpha(&self) -> bool {
+        (self.0 & Self::ALPHA_MASK) > 0
+    }
+
+    pub const fn omit_alpha(self) -> Self {
+        Self(self.0 | Self::ALPHA_MASK)
+    }
+
+    pub const fn is_omit_depth(&self) -> bool {
+        (self.0 & Self::DEPTH_MASK) > 0
+    }
+
+    pub const fn omit_depth(self) -> Self {
+        Self(self.0 | Self::DEPTH_MASK)
+    }
 }
 
 impl Drop for ImageHandle {
