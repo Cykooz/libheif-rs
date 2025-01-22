@@ -5,7 +5,7 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
-  workflow_dispatch: {}
+  workflow_dispatch: { }
 
 
 env:
@@ -47,8 +47,8 @@ jobs:
 
       - name: Run tests
         run: |
-          cargo check -p libheif-rs
-          cargo test
+          cargo check -p libheif-rs --features embedded-libheif-plugins
+          cargo test --features embedded-libheif-plugins
 
 
 #  run_tests_on_windows:
