@@ -32,7 +32,7 @@ jobs:
           key: ${{ runner.os }}-apt
 
       - name: Install system dependencies
-        uses: awalsh128/cache-apt-pkgs-action@latest
+        uses: awalsh128/cache-apt-pkgs-action@v1.4.3
         with:
           packages:
             libheif-dev libdav1d-dev libheif-plugin-aomdec
