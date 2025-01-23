@@ -4,6 +4,13 @@
 
 ### Added
 
+- Added `ImageHandle` methods:
+    - `auxiliary_images`
+    - `auxiliary_type`
+    - `add_region_item`
+    - `region_items`
+- Added struct `AuxiliaryImagesFilter`.
+- Added module `regions` with types required to work with HEIF regions.
 - Added `HeifContext` methods:
     - `encode_grid`
 - Added new values of `CompressionFormat` enum:
@@ -19,17 +26,10 @@
     - `CompressionInitialisationError`
     - `UnsupportedGenericCompressionMethod`
     - `NoMatchingDecoderInstalled`
-- Added `ImageHandle` methods:
-    - `add_region_item`
-    - `region_items`
-    - `auxiliary_images`
-    - `auxiliary_type`
-- Added struct `AuxiliaryImagesFilter`.
-- Added module `regions` with types required to work with HEIF regions.
 
 ### Changes
 
-- `libheif-sys` updated to version 3.1.0.
+- `libheif-sys` updated to version 3.1.0+1.18.2.
 - `vcpkg` updated to version 2024.10.21.
 
 ### Fixed

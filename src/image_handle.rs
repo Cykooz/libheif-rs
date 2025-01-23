@@ -482,6 +482,8 @@ impl AuxiliaryImagesFilter {
         (self.0 & Self::ALPHA_MASK) > 0
     }
 
+    /// Adds a flag to the filter to exclude auxiliary images that
+    /// are an alpha channel.
     pub const fn omit_alpha(self) -> Self {
         Self(self.0 | Self::ALPHA_MASK)
     }
@@ -490,6 +492,8 @@ impl AuxiliaryImagesFilter {
         (self.0 & Self::DEPTH_MASK) > 0
     }
 
+    /// Adds a flag to the filter to exclude auxiliary images that
+    /// are a depth channel.
     pub const fn omit_depth(self) -> Self {
         Self(self.0 | Self::DEPTH_MASK)
     }

@@ -6,16 +6,7 @@ Safe wrapper around the libheif-sys crate for parsing heif/heic files.
 
 ## System dependencies
 
-- `libheif-dev` >= 1.17.0
-- `clang` - to generate rust bindings for `libheif` in `libheif-sys` crate.
-  [See bindgen requirements.](https://rust-lang.github.io/rust-bindgen/requirements.html)
-
-`clang` wouldn't be needed if you disable `use-bindgen` feature.
-In this case the pre-generated file `bindings.rs` will be used  
-instead of generating it on the fly with help of `bindgen` crate.
-
-Warning: `bindings.rs` file was generated under x64 linux and may
-not work as expected under x32 architectures or other operating systems.
+- `libheif-dev` >= 1.18.0
 
 ### Linux
 
@@ -46,7 +37,7 @@ filed because `libheif` doesn't have any encoder plugins available.
 
 ```rust
 use libheif_rs::{
-    Channel, RgbChroma, ColorSpace, HeifContext, Result, 
+    Channel, RgbChroma, ColorSpace, HeifContext, Result,
     ItemId, LibHeif
 };
 
@@ -65,8 +56,8 @@ fn main() -> Result<()> {
 
     // Decode the image
     let image = lib_heif.decode(
-        &handle, 
-        ColorSpace::Rgb(RgbChroma::Rgb), 
+        &handle,
+        ColorSpace::Rgb(RgbChroma::Rgb),
         None,
     )?;
     assert_eq!(
@@ -98,7 +89,7 @@ fn main() -> Result<()> {
 ```rust
 use tempfile::NamedTempFile;
 use libheif_rs::{
-    Channel, RgbChroma, ColorSpace, CompressionFormat, 
+    Channel, RgbChroma, ColorSpace, CompressionFormat,
     EncoderQuality, HeifContext, Image, Result, LibHeif
 };
 
@@ -107,8 +98,8 @@ fn main() -> Result<()> {
     let height = 480;
 
     let mut image = Image::new(
-        width, 
-        height, 
+        width,
+        height,
         ColorSpace::Rgb(RgbChroma::C444)
     )?;
 
@@ -140,7 +131,7 @@ fn main() -> Result<()> {
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
     let mut encoder = lib_heif.encoder_for_format(
-      CompressionFormat::Av1,
+        CompressionFormat::Av1,
     )?;
     encoder.set_quality(EncoderQuality::LossLess)?;
     context.encode_image(&image, &mut encoder, None)?;

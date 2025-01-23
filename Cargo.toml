@@ -15,20 +15,15 @@ documentation = "https://docs.rs/crate/libheif-rs"
 enumn = "0.1.14"
 four-cc = "0.4"
 libc = "0.2.169"
+libheif-sys = { version = "3.1", default-features = false }
 
 
 [features]
-default = ["embedded-libheif-plugins"]
+compile-libheif = ["libheif-sys/compile-libheif"]
+embedded-libheif-plugins = ["libheif-sys/embedded-libheif-plugins"]
 # Use bindgen to generate bindings for libheif,
 # instead using of pre-generated bindings.rs.
 use-bindgen = ["libheif-sys/use-bindgen"]
-compile-libheif = ["libheif-sys/compile-libheif"]
-embedded-libheif-plugins = ["libheif-sys/embedded-libheif-plugins"]
-
-
-[dependencies.libheif-sys]
-version = "3.1.0"
-default-features = false
 
 
 [dev-dependencies]
@@ -47,7 +42,7 @@ codegen-units = 1
 
 [package.metadata.vcpkg]
 git = "https://github.com/microsoft/vcpkg"
-tag = "2024.10.21"
+tag = "2025.01.13"
 dependencies = ["libheif"]
 
 
