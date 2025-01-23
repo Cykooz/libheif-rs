@@ -30,7 +30,7 @@
 ### Changes
 
 - `libheif-sys` updated to version 3.1.0+1.18.2.
-- `vcpkg` updated to version 2024.10.21.
+- `vcpkg` updated to version 2025.01.13.
 
 ### Fixed
 
