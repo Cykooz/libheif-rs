@@ -8,8 +8,8 @@ use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
 use crate::{
-    AuxiliaryImageHandle, ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace,
-    HeifError, HeifErrorCode, HeifErrorSubCode, ImageMetadata, Result,
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
+    HeifErrorSubCode, ImageMetadata, Result,
 };
 
 const LIBHEIF_AUX_IMAGE_FILTER_OMIT_ALPHA: i32 = 1 << 1;
@@ -52,17 +52,26 @@ impl ImageHandle {
         ids
     }
 
-    pub fn get_auxiliary_image_handle(
-        &self,
-        aux_id: lh::heif_item_id,
-    ) -> Result<AuxiliaryImageHandle> {
+    pub fn get_auxiliary_image_handle(&self, aux_id: lh::heif_item_id) -> Result<ImageHandle> {
         let mut handle = core::ptr::null_mut();
         let err = unsafe {
             lh::heif_image_handle_get_auxiliary_image_handle(self.inner, aux_id, &mut handle)
         };
         HeifError::from_heif_error(err)?;
-        let aux_handle = unsafe { AuxiliaryImageHandle::new(handle) };
+        let aux_handle = ImageHandle::new(handle);
         Ok(aux_handle)
+    }
+
+    pub fn get_auxiliary_type(&self) -> Result<CString> {
+        let mut output = core::ptr::null();
+        let err = unsafe { lh::heif_image_handle_get_auxiliary_type(self.inner, &mut output) };
+        HeifError::from_heif_error(err)?;
+        // copy to rust owned string
+        let s = unsafe { core::ffi::CStr::from_ptr(output) }.to_owned();
+
+        unsafe { lh::heif_image_handle_release_auxiliary_type(self.inner, &mut output) };
+
+        Ok(s)
     }
 
     pub fn item_id(&self) -> ItemId {
