@@ -9,6 +9,8 @@ use libheif_sys as lh;
 use crate::encoder::get_encoding_options_ptr;
 use crate::reader::{Reader, HEIF_READER};
 use crate::utils::str_to_cstring;
+#[cfg(feature = "v1_19")]
+use crate::SecurityLimits;
 use crate::{
     Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image, ImageHandle,
     ItemId, Result,
@@ -261,7 +263,6 @@ impl HeifContext<'_> {
     ///
     /// Returns an error if `tiles` slice is empty.
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     pub fn encode_grid(
         &mut self,
         tiles: &[Image],
@@ -385,6 +386,24 @@ impl HeifContext<'_> {
     pub fn set_max_decoding_threads(&mut self, max_threads: u32) {
         let max_threads = max_threads.min(libc::c_int::MAX as u32) as libc::c_int;
         unsafe { lh::heif_context_set_max_decoding_threads(self.inner, max_threads) };
+    }
+
+    /// Returns the security limits for a context.
+    ///
+    /// By default, the limits are set to the global limits,
+    /// but you can change them with the help of [`HeifContext::set_security_limits()`] method.
+    #[cfg(feature = "v1_19")]
+    pub fn security_limits(&self) -> SecurityLimits {
+        let inner_ptr = unsafe { lh::heif_context_get_security_limits(self.inner) };
+        let inner = ptr::NonNull::new(inner_ptr).unwrap();
+        SecurityLimits::from_inner(inner)
+    }
+
+    /// Overwrites the security limits of a context.
+    #[cfg(feature = "v1_19")]
+    pub fn set_security_limits(&mut self, limits: &SecurityLimits) -> Result<()> {
+        let err = unsafe { lh::heif_context_set_security_limits(self.inner, limits.as_inner()) };
+        HeifError::from_heif_error(err)
     }
 }
 

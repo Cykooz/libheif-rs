@@ -16,20 +16,26 @@ cfg-if = "1.0"
 enumn = "0.1.14"
 four-cc = "0.4"
 libc = "0.2.171"
-libheif-sys = "4.0"
+libheif-sys = "4.0.1"
 
 
 [features]
 default = ["latest"]
 v1_17 = ["libheif-sys/v1_17"]
 v1_18 = ["v1_17", "libheif-sys/v1_18"]
-latest = ["v1_18"]
+v1_19 = ["v1_18", "libheif-sys/v1_19"]
+latest = ["v1_19"]
 embedded-libheif = ["libheif-sys/embedded-libheif"]
 
 
 [dev-dependencies]
 kamadak-exif = "0.6.1"
 tempfile = "3.19"
+
+
+[package.metadata.docs.rs]
+# document all features
+all-features = true
 
 
 [profile.release]

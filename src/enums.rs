@@ -25,6 +25,9 @@ pub enum ColorSpace {
     YCbCr(Chroma),
     Rgb(RgbChroma),
     Monochrome,
+    /// Indicates that this image has no visual channels.
+    #[cfg(feature = "v1_19")]
+    NonVisual,
 }
 
 impl ColorSpace {
@@ -63,6 +66,8 @@ impl ColorSpace {
                 }
                 _ => None,
             },
+            #[cfg(feature = "v1_19")]
+            lh::heif_colorspace_heif_colorspace_nonvisual => Some(ColorSpace::NonVisual),
             _ => None,
         }
     }
@@ -73,6 +78,8 @@ impl ColorSpace {
             ColorSpace::Rgb(_) => lh::heif_colorspace_heif_colorspace_RGB,
             ColorSpace::Monochrome => lh::heif_colorspace_heif_colorspace_monochrome,
             ColorSpace::Undefined => lh::heif_colorspace_heif_colorspace_undefined,
+            #[cfg(feature = "v1_19")]
+            ColorSpace::NonVisual => lh::heif_colorspace_heif_colorspace_nonvisual,
         }
     }
 
@@ -94,6 +101,8 @@ impl ColorSpace {
             },
             ColorSpace::Undefined => lh::heif_chroma_heif_chroma_undefined,
             ColorSpace::Monochrome => lh::heif_chroma_heif_chroma_monochrome,
+            #[cfg(feature = "v1_19")]
+            ColorSpace::NonVisual => lh::heif_chroma_heif_chroma_undefined,
         }
     }
 }
@@ -109,6 +118,12 @@ pub enum Channel {
     B = lh::heif_channel_heif_channel_B as _,
     Alpha = lh::heif_channel_heif_channel_Alpha as _,
     Interleaved = lh::heif_channel_heif_channel_interleaved as _,
+    #[cfg(feature = "v1_19")]
+    FilterArray = lh::heif_channel_heif_channel_filter_array as _,
+    #[cfg(feature = "v1_19")]
+    Depth = lh::heif_channel_heif_channel_depth as _,
+    #[cfg(feature = "v1_19")]
+    Disparity = lh::heif_channel_heif_channel_disparity as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
@@ -116,6 +131,8 @@ pub enum ReaderGrowStatus {
     SizeReached = lh::heif_reader_grow_status_heif_reader_grow_status_size_reached as _,
     Timeout = lh::heif_reader_grow_status_heif_reader_grow_status_timeout as _,
     SizeBeyondEof = lh::heif_reader_grow_status_heif_reader_grow_status_size_beyond_eof as _,
+    #[cfg(feature = "v1_19")]
+    Error = lh::heif_reader_grow_status_heif_reader_grow_status_error as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, enumn::N)]

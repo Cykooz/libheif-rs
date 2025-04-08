@@ -7,17 +7,30 @@ use libheif_sys as lh;
 #[non_exhaustive]
 #[repr(C)]
 pub enum HeifErrorCode {
+    /// Input file does not exist.
     InputDoesNotExist = lh::heif_error_code_heif_error_Input_does_not_exist as _,
+    /// Error in input file. Corrupted or invalid content.
     InvalidInput = lh::heif_error_code_heif_error_Invalid_input as _,
     UnsupportedFileType = lh::heif_error_code_heif_error_Unsupported_filetype as _,
+    /// Image requires an unsupported decoder feature.
     UnsupportedFeature = lh::heif_error_code_heif_error_Unsupported_feature as _,
+    /// Library API has been used in an invalid way.
     UsageError = lh::heif_error_code_heif_error_Usage_error as _,
+    /// Could not allocate enough memory.
     MemoryAllocationError = lh::heif_error_code_heif_error_Memory_allocation_error as _,
+    /// The decoder plugin generated an error.
     DecoderPluginError = lh::heif_error_code_heif_error_Decoder_plugin_error as _,
+    /// The encoder plugin generated an error.
     EncoderPluginError = lh::heif_error_code_heif_error_Encoder_plugin_error as _,
+    /// Error during encoding or when writing to the output.
     EncodingError = lh::heif_error_code_heif_error_Encoding_error as _,
+    /// Application has asked for a color profile type that does not exist.
     ColorProfileDoesNotExist = lh::heif_error_code_heif_error_Color_profile_does_not_exist as _,
+    /// Error loading a dynamic plugin.
     PluginLoadingError = lh::heif_error_code_heif_error_Plugin_loading_error as _,
+    /// Operation has been canceled.
+    #[cfg(feature = "v1_19")]
+    Canceled = lh::heif_error_code_heif_error_Canceled as _,
     ContextCreateFailed,
     /// This value is used when library `libheif` returns unknown value of error code.
     Unknown,
@@ -106,40 +119,37 @@ pub enum HeifErrorSubCode {
     EncoderCleanup = lh::heif_suberror_code_heif_suberror_Encoder_cleanup as _,
     TooManyRegions = lh::heif_suberror_code_heif_suberror_Too_many_regions as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     NoIspeProperty = lh::heif_suberror_code_heif_suberror_No_ispe_property as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     CameraIntrinsicMatrixUndefined =
         lh::heif_suberror_code_heif_suberror_Camera_intrinsic_matrix_undefined as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     CameraExtrinsicMatrixUndefined =
         lh::heif_suberror_code_heif_suberror_Camera_extrinsic_matrix_undefined as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     InvalidJ2kCodeStream = lh::heif_suberror_code_heif_suberror_Invalid_J2K_codestream as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     NoVvccBox = lh::heif_suberror_code_heif_suberror_No_vvcC_box as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     NoIcbrBox = lh::heif_suberror_code_heif_suberror_No_icbr_box as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     DecompressionInvalidData = lh::heif_suberror_code_heif_suberror_Decompression_invalid_data as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     CompressionInitialisationError =
         lh::heif_suberror_code_heif_suberror_Compression_initialisation_error as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     UnsupportedGenericCompressionMethod =
         lh::heif_suberror_code_heif_suberror_Unsupported_generic_compression_method as _,
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     NoMatchingDecoderInstalled =
         lh::heif_suberror_code_heif_suberror_No_matching_decoder_installed as _,
+    #[cfg(feature = "v1_19")]
+    NoAvccBox = lh::heif_suberror_code_heif_suberror_No_avcC_box as _,
+    #[cfg(feature = "v1_19")]
+    InvalidMiniBox = lh::heif_suberror_code_heif_suberror_Invalid_mini_box as _,
+    #[cfg(feature = "v1_19")]
+    UnsupportedEssentialProperty =
+        lh::heif_suberror_code_heif_suberror_Unsupported_essential_property as _,
     /// This value is used when library `libheif` returns unknown value of error sub-code.
     Unknown,
 }

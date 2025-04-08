@@ -16,13 +16,13 @@ But there are some functions in the crate that require a newer version of
 `libheif` library.
 
 You may specify a minimal version of `libheif` library that is required for you.
-To do this, enable the corresponding feature `v1_17` or `v1_18`.
+To do this, enable the corresponding feature `v1_17`, `v1_18` or `v1_19`.
 
 Example:
 
 ```toml
 [dependencies]
-libheif = { version = "2.0", default-features = false, features = ["v1_17"] }
+libheif-rs = { version = "2.1", default-features = false, features = ["v1_17"] }
 ```
 
 There is also the `latest` feature. It always corresponds to

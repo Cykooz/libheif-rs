@@ -1,13 +1,12 @@
-use std::io;
 use std::os::raw::{c_int, c_void};
-use std::slice;
+use std::{io, slice};
 
 use libheif_sys as lh;
 
 use crate::enums::ReaderGrowStatus;
 
 pub trait Reader {
-    /// Current position, in bytes, inside of a source.
+    /// Current position, in bytes, inside a source.
     fn position(&mut self) -> u64;
 
     /// Pull some bytes from a source into the specified buffer, returning
@@ -101,10 +100,24 @@ unsafe extern "C" fn wait_for_file_size(
     reader.wait_for_file_size(target_size) as _
 }
 
+#[cfg(not(feature = "v1_19"))]
 pub(crate) static HEIF_READER: lh::heif_reader = lh::heif_reader {
     reader_api_version: 1,
     get_position: Some(get_position),
     read: Some(read),
     seek: Some(seek),
     wait_for_file_size: Some(wait_for_file_size),
+};
+
+#[cfg(feature = "v1_19")]
+pub(crate) static HEIF_READER: lh::heif_reader = lh::heif_reader {
+    reader_api_version: 1,
+    get_position: Some(get_position),
+    read: Some(read),
+    seek: Some(seek),
+    wait_for_file_size: Some(wait_for_file_size),
+    request_range: None,
+    preload_range_hint: None,
+    release_file_range: None,
+    release_error_msg: None,
 };

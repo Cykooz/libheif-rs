@@ -366,7 +366,6 @@ impl ImageHandle {
     /// The concept is to add the region item, then add one or more regions
     /// to the region item.
     #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     pub fn add_region_item(
         &mut self,
         reference_width: u32,
@@ -390,9 +389,8 @@ impl ImageHandle {
         Ok(RegionItem::new(item_ptr))
     }
 
-    #[cfg(feature = "v1_18")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     /// Get the region items attached to the image.
+    #[cfg(feature = "v1_18")]
     pub fn region_items(&self) -> Vec<RegionItem> {
         let num_items = unsafe { lh::heif_image_handle_get_number_of_region_items(self.inner) };
         let size = num_items.max(0) as usize;

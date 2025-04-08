@@ -1,5 +1,33 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added a new feature `v1_19`.
+- Added structure `SecurityLimits` (feature `v1_19` is required)
+  ([32](https://github.com/Cykooz/libheif-rs/issues/32)).
+- Added methods `HeifContext::security_limits()` and `HeifContext::set_security_limits()`
+  (feature `v1_19` is required) ([32](https://github.com/Cykooz/libheif-rs/issues/32)).
+- Added new values of `HeifErrorCode` enum (`v1_19`):
+    - `Canceled`
+- Added new values of `HeifErrorSubCode` enum (`v1_19`):
+    - `NoAvccBox`
+    - `InvalidMiniBox`
+    - `UnsupportedEssentialProperty`
+- Added new values of `ColorSpace` enum (`v1_19`):
+    - `NonVisual`
+- Added new values of `Channel` enum (`v1_19`):
+    - `FilterArray`
+    - `Depth`
+    - `Disparity`
+- Added new values of `ReaderGrowStatus` enum (`v1_19`):
+    - `Error`
+
+### Fixes
+
+- Fixed `README.md` file.
+
 ## [2.0.0] - 2025-04-08
 
 ### Added

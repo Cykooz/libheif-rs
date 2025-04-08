@@ -54,6 +54,10 @@ jobs:
           cargo check -p libheif-rs --features embedded-libheif,v1_18
           cargo test --features embedded-libheif,v1_18
 
+      - name: Run tests for v1.19
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_19
+          cargo test --features embedded-libheif,v1_19
 
 #  run_tests_on_windows:
 #    name: Run `cargo check/test` on Windows
