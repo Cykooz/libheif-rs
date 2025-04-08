@@ -1,5 +1,21 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added features `v1_17` and `v1_18` to choose a minimal
+  version of supported `libheif`.
+- Added feature `embedded-libheif` to compile and then link statically
+  the embedded sources of `libheif` from the `libheif-sys` crate.
+
+### Changes
+
+- **BREAKING**: Features `compile-libheif`, `embedded-libheif-plugins` and
+  `use-bindgen` were removed.
+- `libheif-sys` updated to version 4.0.0+1.19.7.
+- `vcpkg` updated to version 2025.03.19.
+
 ## [1.1.0] - 2025-01-23
 
 ### Added

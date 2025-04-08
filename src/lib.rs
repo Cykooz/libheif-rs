@@ -24,5 +24,7 @@ mod image;
 mod image_handle;
 mod metadata;
 mod reader;
+#[cfg(feature = "v1_18")]
+#[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
 pub mod regions;
 mod utils;

@@ -1,16 +1,47 @@
 # libheif-rs
 
-Safe wrapper around the libheif-sys crate for parsing heif/heic files.
+Safe wrapper around the [libheif-sys](https://github.com/Cykooz/libheif-sys)
+crate for parsing heif/heic files.
 
 [CHANGELOG](https://github.com/Cykooz/libheif-rs/blob/master/CHANGELOG.md)
 
 ## System dependencies
 
-- `libheif-dev` >= 1.18.0
+- `libheif-dev` >= 1.17.0
+
+## Minimal supported libheif version
+
+Minimal supported version of `libheif` library is 1.17.
+But there are some functions in the crate that require a newer version of
+`libheif` library.
+
+You may specify a minimal version of `libheif` library that is required for you.
+To do this, enable the corresponding feature `v1_17` or `v1_18`.
+
+Example:
+
+```toml
+[dependencies]
+libheif = { version = "2.0", default-features = false, features = ["v1_17"] }
+```
+
+There is also the `latest` feature. It always corresponds to
+the maximal supported by the crate version of `libheif` API.
+This feature is enabled by default.
 
 ### Linux
 
-Crate `libheif-sys` uses `pkg-confing` to find installed `libheif`.
+Crate `libheif-sys` uses `pkg-confing` command to find installed `libheif`.
+
+You can also enable `embedded-libheif` feature to compile `libheif` from
+embedded into `libheif-sys` crate sources and then link it statically.
+
+<div class="warning">
+
+Note: Static linked version of `libheif` doesn't have statically linked
+it dependencies, such as `libde256`, `libaom` and other.
+
+</div>
 
 ### Windows
 
@@ -29,7 +60,7 @@ packages from scratch. It merges package requirements specified in
 the `Cargo.toml` of crates in the dependency tree.
 
 PS: I tried build `libheif` for Windows, but `libheif-rs` tests
-filed because `libheif` doesn't have any encoder plugins available.
+failed because `libheif` for Windows doesn't have any encoder plugins available.
 
 ## Examples
 

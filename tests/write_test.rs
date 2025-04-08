@@ -3,9 +3,8 @@ use libheif_rs::{
     EncoderParameterValue, EncoderQuality, EncodingOptions, HeifContext, Image, ImageOrientation,
     LibHeif, Result, RgbChroma,
 };
-use std::num::NonZeroU16;
 
-fn create_image(width: u32, height: u32) -> Result<Image> {
+pub fn create_image(width: u32, height: u32) -> Result<Image> {
     let mut image = Image::new(width, height, ColorSpace::Rgb(RgbChroma::Rgb))?;
     image.create_plane(Channel::Interleaved, width, height, 24)?;
 
@@ -266,46 +265,52 @@ fn test_encoding_options() -> Result<()> {
     Ok(())
 }
 
-#[test]
-fn test_encode_grid() -> Result<()> {
-    let lib_heif = LibHeif::new();
-    let sequence_ctx = HeifContext::read_from_file("./data/sequence.heif")?;
-    let handles = sequence_ctx.top_level_image_handles();
-    assert_eq!(handles.len(), 4);
+#[cfg(feature = "v1_18")]
+mod v1_18 {
+    use super::*;
+    use std::num::NonZeroU16;
 
-    let mut tiles = Vec::with_capacity(4);
-    for handle in handles {
-        let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
-        assert_eq!(image.width(), 480);
-        assert_eq!(image.height(), 360);
-        assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
-        tiles.push(image);
+    #[test]
+    fn test_encode_grid() -> Result<()> {
+        let lib_heif = LibHeif::new();
+        let sequence_ctx = HeifContext::read_from_file("./data/sequence.heif")?;
+        let handles = sequence_ctx.top_level_image_handles();
+        assert_eq!(handles.len(), 4);
+
+        let mut tiles = Vec::with_capacity(4);
+        for handle in handles {
+            let image = lib_heif.decode(&handle, ColorSpace::Rgb(RgbChroma::Rgb), None)?;
+            assert_eq!(image.width(), 480);
+            assert_eq!(image.height(), 360);
+            assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::Rgb)));
+            tiles.push(image);
+        }
+
+        let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
+        encoder.set_quality(EncoderQuality::LossLess)?;
+        let encoding_options: EncodingOptions = Default::default();
+
+        let mut grid_ctx = HeifContext::new()?;
+        let grid_handle = grid_ctx
+            .encode_grid(
+                &tiles,
+                NonZeroU16::new(2).unwrap(),
+                &mut encoder,
+                Some(encoding_options),
+            )?
+            .unwrap();
+
+        // Hmm, it's strange
+        assert_eq!(grid_handle.width(), 0);
+        assert_eq!(grid_handle.height(), 0);
+
+        let buf = grid_ctx.write_to_bytes()?;
+        // Check the result of encoding with the help of decoding
+        let context = HeifContext::read_from_bytes(&buf)?;
+        let handle = context.primary_image_handle()?;
+        assert_eq!(handle.width(), 480 * 2);
+        assert_eq!(handle.height(), 360 * 2);
+
+        Ok(())
     }
-
-    let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
-    encoder.set_quality(EncoderQuality::LossLess)?;
-    let encoding_options: EncodingOptions = Default::default();
-
-    let mut grid_ctx = HeifContext::new()?;
-    let grid_handle = grid_ctx
-        .encode_grid(
-            &tiles,
-            NonZeroU16::new(2).unwrap(),
-            &mut encoder,
-            Some(encoding_options),
-        )?
-        .unwrap();
-
-    // Hmm, it's strange
-    assert_eq!(grid_handle.width(), 0);
-    assert_eq!(grid_handle.height(), 0);
-
-    let buf = grid_ctx.write_to_bytes()?;
-    // Check the result of encoding with the help of decoding
-    let context = HeifContext::read_from_bytes(&buf)?;
-    let handle = context.primary_image_handle()?;
-    assert_eq!(handle.width(), 480 * 2);
-    assert_eq!(handle.height(), 360 * 2);
-
-    Ok(())
 }

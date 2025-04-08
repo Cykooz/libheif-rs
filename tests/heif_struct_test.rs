@@ -1,12 +1,17 @@
-use libheif_rs::LibHeif;
 use std::collections::HashSet;
+
+use libheif_rs::LibHeif;
 
 #[test]
 fn get_version() {
     let lib_heif = LibHeif::new();
     let version = lib_heif.version();
     assert!(version[0] >= 1);
-    assert!(version[1] >= 18);
+    if cfg!(feature = "v1_18") {
+        assert!(version[1] >= 18);
+    } else if cfg!(feature = "v1_17") {
+        assert!(version[1] >= 17);
+    }
 }
 
 #[test]

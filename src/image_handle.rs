@@ -1,16 +1,23 @@
-use four_cc::FourCC;
-use libheif_sys as lh;
 use std::ffi::CString;
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 use std::ptr;
 
-use crate::regions::RegionItem;
+use four_cc::FourCC;
+use libheif_sys as lh;
+
 use crate::utils::cstr_to_str;
 use crate::{
-    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifContext, HeifError,
-    HeifErrorCode, HeifErrorSubCode, ImageMetadata, Result,
+    ColorProfileNCLX, ColorProfileRaw, ColorProfileType, ColorSpace, HeifError, HeifErrorCode,
+    HeifErrorSubCode, ImageMetadata, Result,
 };
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "v1_18")] {
+        use crate::regions::RegionItem;
+        use crate::HeifContext;
+    }
+}
 
 /// Encoded image.
 pub struct ImageHandle {
@@ -24,6 +31,7 @@ impl ImageHandle {
         ImageHandle { inner: handle }
     }
 
+    #[cfg(feature = "v1_18")]
     fn context(&self) -> HeifContext {
         unsafe { HeifContext::from_ptr(lh::heif_image_handle_get_context(self.inner)) }
     }
@@ -357,6 +365,8 @@ impl ImageHandle {
     ///
     /// The concept is to add the region item, then add one or more regions
     /// to the region item.
+    #[cfg(feature = "v1_18")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     pub fn add_region_item(
         &mut self,
         reference_width: u32,
@@ -380,6 +390,8 @@ impl ImageHandle {
         Ok(RegionItem::new(item_ptr))
     }
 
+    #[cfg(feature = "v1_18")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     /// Get the region items attached to the image.
     pub fn region_items(&self) -> Vec<RegionItem> {
         let num_items = unsafe { lh::heif_image_handle_get_number_of_region_items(self.inner) };

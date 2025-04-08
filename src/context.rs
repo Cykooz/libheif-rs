@@ -1,7 +1,7 @@
-use std::ffi;
+#[cfg(feature = "v1_18")]
 use std::num::NonZeroU16;
 use std::os::raw::c_void;
-use std::ptr;
+use std::{ffi, ptr};
 
 use four_cc::FourCC;
 use libheif_sys as lh;
@@ -71,7 +71,8 @@ impl HeifContext<'static> {
 
     /// # Safety
     ///
-    /// The given pointer must be valid.  
+    /// The given pointer must be valid.
+    #[cfg(feature = "v1_18")]
     pub(crate) unsafe fn from_ptr(ctx: *mut lh::heif_context) -> HeifContext<'static> {
         HeifContext {
             inner: ctx,
@@ -80,7 +81,7 @@ impl HeifContext<'static> {
     }
 }
 
-impl<'a> HeifContext<'a> {
+impl HeifContext<'_> {
     /// Create a new context from bytes.
     ///
     /// The provided memory buffer is not copied.
@@ -259,6 +260,8 @@ impl<'a> HeifContext<'a> {
     /// * `encoding_options` - Optional, may be None.
     ///
     /// Returns an error if `tiles` slice is empty.
+    #[cfg(feature = "v1_18")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "v1_18")))]
     pub fn encode_grid(
         &mut self,
         tiles: &[Image],
@@ -385,10 +388,10 @@ impl<'a> HeifContext<'a> {
     }
 }
 
-impl<'a> Drop for HeifContext<'a> {
+impl Drop for HeifContext<'_> {
     fn drop(&mut self) {
         unsafe { lh::heif_context_free(self.inner) };
     }
 }
 
-unsafe impl<'a> Send for HeifContext<'a> {}
+unsafe impl Send for HeifContext<'_> {}

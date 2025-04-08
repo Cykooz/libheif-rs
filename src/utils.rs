@@ -1,8 +1,8 @@
-use libheif_sys as lh;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::path::Path;
-use std::ptr;
+
+use libheif_sys as lh;
 
 use crate::{FileTypeResult, HeifError, HeifErrorCode, HeifErrorSubCode, Result};
 
@@ -12,10 +12,7 @@ pub(crate) fn cstr_to_str<'a>(c_str: *const c_char) -> Option<&'a str> {
         None
     } else {
         let res = unsafe { CStr::from_ptr(c_str).to_str() };
-        match res {
-            Ok(s) => Some(s),
-            Err(_) => None,
-        }
+        res.ok()
     }
 }
 
@@ -48,8 +45,9 @@ pub(crate) fn path_to_cstring(path: &Path) -> CString {
     }
 }
 
-pub(crate) fn get_non_null_ptr<T>(ptr: *mut T) -> Result<ptr::NonNull<T>> {
-    ptr::NonNull::new(ptr).ok_or_else(|| HeifError {
+#[cfg(feature = "v1_18")]
+pub(crate) fn get_non_null_ptr<T>(ptr: *mut T) -> Result<std::ptr::NonNull<T>> {
+    std::ptr::NonNull::new(ptr).ok_or_else(|| HeifError {
         code: HeifErrorCode::MemoryAllocationError,
         sub_code: HeifErrorSubCode::Unspecified,
         message: "".to_string(),

@@ -12,23 +12,24 @@ documentation = "https://docs.rs/crate/libheif-rs"
 
 
 [dependencies]
+cfg-if = "1.0"
 enumn = "0.1.14"
 four-cc = "0.4"
-libc = "0.2.169"
-libheif-sys = { version = "3.1", default-features = false }
+libc = "0.2.171"
+libheif-sys = "4.0"
 
 
 [features]
-compile-libheif = ["libheif-sys/compile-libheif"]
-embedded-libheif-plugins = ["libheif-sys/embedded-libheif-plugins"]
-# Use bindgen to generate bindings for libheif,
-# instead using of pre-generated bindings.rs.
-use-bindgen = ["libheif-sys/use-bindgen"]
+default = ["latest"]
+v1_17 = ["libheif-sys/v1_17"]
+v1_18 = ["v1_17", "libheif-sys/v1_18"]
+latest = ["v1_18"]
+embedded-libheif = ["libheif-sys/embedded-libheif"]
 
 
 [dev-dependencies]
 kamadak-exif = "0.6.1"
-tempfile = "3.15"
+tempfile = "3.19"
 
 
 [profile.release]
@@ -42,7 +43,7 @@ codegen-units = 1
 
 [package.metadata.vcpkg]
 git = "https://github.com/microsoft/vcpkg"
-tag = "2025.01.13"
+tag = "2025.03.19"
 dependencies = ["libheif"]
 
 

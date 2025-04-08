@@ -2,13 +2,17 @@ use std::fs::File;
 use std::io::{BufReader, Read, Seek, SeekFrom};
 
 use exif::parse_exif;
-
 use libheif_rs::{
     check_file_type, color_profile_types, AuxiliaryImagesFilter, Chroma,
     ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile,
     ColorSpace, CompressionFormat, DecodingOptions, FileTypeResult, HeifContext, ImageHandle,
     ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader, TransferCharacteristics,
 };
+
+fn version(lib_heif: &LibHeif) -> u16 {
+    let version = lib_heif.version();
+    version[0] as u16 * 100 + version[1] as u16
+}
 
 #[test]
 fn read_from_file() -> Result<()> {
@@ -38,6 +42,8 @@ fn read_from_memory() -> Result<()> {
 #[test]
 fn read_from_reader() -> Result<()> {
     let lib_heif = LibHeif::new();
+    let lib_version = version(&lib_heif);
+
     let mut file = BufReader::new(File::open("./data/test.heif").unwrap());
     let total_size = file.seek(SeekFrom::End(0)).unwrap();
     file.rewind().unwrap();
@@ -49,13 +55,23 @@ fn read_from_reader() -> Result<()> {
     assert_eq!(handle.height(), 1791);
 
     ctx.set_max_decoding_threads(2);
-    let preferred_colorspace = handle.preferred_decoding_colorspace().unwrap();
-    assert_eq!(preferred_colorspace, ColorSpace::YCbCr(Chroma::C444));
+    let preferred_colorspace = handle.preferred_decoding_colorspace()?;
+    if lib_version > 118 {
+        assert_eq!(preferred_colorspace, ColorSpace::YCbCr(Chroma::C420));
+    } else {
+        assert_eq!(preferred_colorspace, ColorSpace::YCbCr(Chroma::C444));
+    }
+
     let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
-    assert_eq!(
-        src_img.color_space(),
-        Some(ColorSpace::Rgb(RgbChroma::C444)) // Hmm... It doesn't equal to preferred_colorspace. It's weird.
-    );
+    if lib_version > 118 {
+        assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
+    } else {
+        assert_eq!(
+            src_img.color_space(),
+            // It doesn't equal to preferred_colorspace. This bug was fixed in 1.18.
+            Some(ColorSpace::Rgb(RgbChroma::C444))
+        );
+    }
 
     Ok(())
 }
@@ -210,19 +226,27 @@ fn top_decode_heic() -> Result<()> {
         return Ok(());
     }
 
-    let ctx = HeifContext::read_from_file("./data/test.heif")?;
+    let ctx = HeifContext::read_from_file("./data/test.heic")?;
     let handle = ctx.primary_image_handle()?;
 
     // Decode the image
     let src_img = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
-    assert_eq!(
-        src_img.color_space(),
-        Some(ColorSpace::Rgb(RgbChroma::C444))
-    );
-    let planes = src_img.planes();
-    let r_plane = planes.r.unwrap();
-    assert_eq!(r_plane.width, 1652);
-    assert_eq!(r_plane.height, 1791);
+    if version(&lib_heif) > 118 {
+        assert_eq!(src_img.color_space(), Some(ColorSpace::YCbCr(Chroma::C420)));
+        let planes = src_img.planes();
+        let y_plane = planes.y.unwrap();
+        assert_eq!(y_plane.width, 1652);
+        assert_eq!(y_plane.height, 1791);
+    } else {
+        assert_eq!(
+            src_img.color_space(),
+            Some(ColorSpace::Rgb(RgbChroma::C444))
+        );
+        let planes = src_img.planes();
+        let r_plane = planes.r.unwrap();
+        assert_eq!(r_plane.width, 1652);
+        assert_eq!(r_plane.height, 1791);
+    }
 
     Ok(())
 }
@@ -319,19 +343,31 @@ fn test_raw_color_profile_of_image() -> Result<()> {
     } else {
         assert!(image.color_profile_nclx().is_some());
         let nclx_profile = image.color_profile_nclx().unwrap();
-        // Hmm, unspecified profile
-        assert_eq!(
-            nclx_profile.color_primaries(),
-            ColorPrimaries::ITU_R_BT_709_5
-        );
-        assert_eq!(
-            nclx_profile.transfer_characteristics(),
-            TransferCharacteristics::IEC_61966_2_1
-        );
-        assert_eq!(
-            nclx_profile.matrix_coefficients(),
-            MatrixCoefficients::ITU_R_BT_601_6
-        );
+        if version(&lib_heif) > 118 {
+            assert_eq!(nclx_profile.color_primaries(), ColorPrimaries::Unspecified);
+            assert_eq!(
+                nclx_profile.transfer_characteristics(),
+                TransferCharacteristics::Unspecified,
+            );
+            assert_eq!(
+                nclx_profile.matrix_coefficients(),
+                MatrixCoefficients::Unspecified
+            );
+        } else {
+            // Hmm, unspecified profile
+            assert_eq!(
+                nclx_profile.color_primaries(),
+                ColorPrimaries::ITU_R_BT_709_5
+            );
+            assert_eq!(
+                nclx_profile.transfer_characteristics(),
+                TransferCharacteristics::IEC_61966_2_1
+            );
+            assert_eq!(
+                nclx_profile.matrix_coefficients(),
+                MatrixCoefficients::ITU_R_BT_601_6
+            );
+        }
     }
     Ok(())
 }
@@ -351,12 +387,19 @@ fn test_read_avif_image() -> Result<()> {
     assert!(nclx_profile.is_some());
 
     let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
-    assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::C444)));
-    let planes = image.planes();
-    let r_plane = planes.r.unwrap();
-    assert_eq!(r_plane.width, 2048);
-    assert_eq!(r_plane.height, 1440);
-
+    if version(&lib_heif) > 118 {
+        assert_eq!(image.color_space(), Some(ColorSpace::YCbCr(Chroma::C444)));
+        let planes = image.planes();
+        let y_plane = planes.y.unwrap();
+        assert_eq!(y_plane.width, 2048);
+        assert_eq!(y_plane.height, 1440);
+    } else {
+        assert_eq!(image.color_space(), Some(ColorSpace::Rgb(RgbChroma::C444)));
+        let planes = image.planes();
+        let r_plane = planes.r.unwrap();
+        assert_eq!(r_plane.width, 2048);
+        assert_eq!(r_plane.height, 1440);
+    }
     Ok(())
 }
 

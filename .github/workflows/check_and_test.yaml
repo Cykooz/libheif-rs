@@ -44,10 +44,15 @@ jobs:
         with:
           cache-on-failure: "true"
 
-      - name: Run tests
+      - name: Run tests for v1.17
         run: |
-          cargo check -p libheif-rs --features embedded-libheif-plugins
-          cargo test --features embedded-libheif-plugins
+          cargo check -p libheif-rs --features embedded-libheif,v1_17
+          cargo test --features embedded-libheif,v1_17
+
+      - name: Run tests for v1.18
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_18
+          cargo test --features embedded-libheif,v1_18
 
 
 #  run_tests_on_windows:
