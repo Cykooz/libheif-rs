@@ -5,7 +5,7 @@
 ### Added
 
 - Added new methods of `HeifContext`
-  ([32](https://github.com/Cykooz/libheif-rs/issues/32)):
+  ([#32](https://github.com/Cykooz/libheif-rs/issues/32)):
     - `read_file`
     - `read_reader`
     - `read_bytes`
@@ -16,9 +16,9 @@
 
 - Added a new feature `v1_19`.
 - Added structure `SecurityLimits` (feature `v1_19` is required)
-  ([32](https://github.com/Cykooz/libheif-rs/issues/32)).
+  ([#32](https://github.com/Cykooz/libheif-rs/issues/32)).
 - Added methods `HeifContext::security_limits()` and `HeifContext::set_security_limits()`
-  (feature `v1_19` is required) ([32](https://github.com/Cykooz/libheif-rs/issues/32)).
+  (feature `v1_19` is required) ([#32](https://github.com/Cykooz/libheif-rs/issues/32)).
 - Added new values of `HeifErrorCode` enum (`v1_19`):
     - `Canceled`
 - Added new values of `HeifErrorSubCode` enum (`v1_19`):
@@ -105,7 +105,7 @@
 
 - Fixed use-after-free in `LibHeif::decode()` method due to incorrect converting
   `Option<DecodingOptions>` into pointer
-  ([21](https://github.com/Cykooz/libheif-rs/pull/21)).
+  ([#21](https://github.com/Cykooz/libheif-rs/pull/21)).
 
 ## [1.0.0] - 2023-11-28
 
