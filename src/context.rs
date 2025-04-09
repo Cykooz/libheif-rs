@@ -50,25 +50,37 @@ impl HeifContext<'static> {
     /// Create a new context from file.
     pub fn read_from_file(name: &str) -> Result<HeifContext<'static>> {
         let mut context = HeifContext::new()?;
-        context.source = Source::File;
+        context.read_file(name)?;
+        Ok(context)
+    }
+
+    /// Read a HEIF file from a named disk file.
+    pub fn read_file(&mut self, name: &str) -> Result<()> {
+        self.source = Source::File;
         let c_name = ffi::CString::new(name).unwrap();
         let err =
-            unsafe { lh::heif_context_read_from_file(context.inner, c_name.as_ptr(), ptr::null()) };
+            unsafe { lh::heif_context_read_from_file(self.inner, c_name.as_ptr(), ptr::null()) };
         HeifError::from_heif_error(err)?;
-        Ok(context)
+        Ok(())
     }
 
     /// Create a new context from reader.
     pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext<'static>> {
         let mut context = HeifContext::new()?;
+        context.read_reader(reader)?;
+        Ok(context)
+    }
+
+    /// Read a HEIF file from the reader.
+    pub fn read_reader(&mut self, reader: Box<dyn Reader>) -> Result<()> {
         let mut reader_box = Box::new(reader);
         let user_data = reader_box.as_mut() as *mut _ as *mut c_void;
         let err = unsafe {
-            lh::heif_context_read_from_reader(context.inner, &HEIF_READER, user_data, ptr::null())
+            lh::heif_context_read_from_reader(self.inner, &HEIF_READER, user_data, ptr::null())
         };
         HeifError::from_heif_error(err)?;
-        context.source = Source::Reader(reader_box);
-        Ok(context)
+        self.source = Source::Reader(reader_box);
+        Ok(())
     }
 
     /// # Safety
@@ -83,7 +95,7 @@ impl HeifContext<'static> {
     }
 }
 
-impl HeifContext<'_> {
+impl<'a> HeifContext<'a> {
     /// Create a new context from bytes.
     ///
     /// The provided memory buffer is not copied.
@@ -91,17 +103,27 @@ impl HeifContext<'_> {
     /// long as you use the context.
     pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext> {
         let mut context = HeifContext::new()?;
-        context.source = Source::Memory(bytes);
+        context.read_bytes(bytes)?;
+        Ok(context)
+    }
+
+    /// Read a HEIF file from bytes.
+    ///
+    /// The provided memory buffer is not copied.
+    /// That means, you will have to keep the memory buffer alive as
+    /// long as you use the context.
+    pub fn read_bytes<'b: 'a>(&mut self, bytes: &'b [u8]) -> Result<()> {
+        self.source = Source::Memory(bytes);
         let err = unsafe {
             lh::heif_context_read_from_memory_without_copy(
-                context.inner,
+                self.inner,
                 bytes.as_ptr() as _,
                 bytes.len(),
                 ptr::null(),
             )
         };
         HeifError::from_heif_error(err)?;
-        Ok(context)
+        Ok(())
     }
 
     unsafe extern "C" fn vector_writer(

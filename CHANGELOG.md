@@ -1,5 +1,15 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added new methods of `HeifContext`
+  ([32](https://github.com/Cykooz/libheif-rs/issues/32)):
+    - `read_file`
+    - `read_reader`
+    - `read_bytes`
+
 ## [2.1.0] - 2025-04-08
 
 ### Added
