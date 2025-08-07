@@ -59,32 +59,52 @@ jobs:
           cargo check -p libheif-rs --features embedded-libheif,v1_19
           cargo test --features embedded-libheif,v1_19
 
-#  run_tests_on_windows:
-#    name: Run `cargo check/test` on Windows
-#    runs-on: windows-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#
-#      - name: Cache rust artifacts
-#        uses: Swatinem/rust-cache@v2
-#        with:
-#          cache-all-crates: true
-#          cache-on-failure: "true"
-#
-#      - name: Cache vcpkg
-#        id: cache-vcpkg
-#        uses: actions/cache@v3
-#        with:
-#          path: "target/vcpkg"
-#          key: ${{ runner.os }}-vcpkg
-#
-#      - name: Install cargo-vcpkg
-#        run: cargo install cargo-vcpkg
-#
-#      - name: Build libheif
-#        run: cargo vcpkg -v build
-#
-#      - name: Run tests
-#        run: |
-#          cargo check -p libheif-rs
-#          cargo test
+      - name: Run tests for v1.20
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_20
+          cargo test --features embedded-libheif,v1_20
+
+  run_tests_on_windows:
+    name: Run `cargo check/test` on Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache rust artifacts
+        uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
+          cache-on-failure: "true"
+
+      - name: Cache vcpkg
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: "target/vcpkg"
+          key: ${{ runner.os }}-vcpkg
+
+      - name: Install cargo-vcpkg
+        run: cargo install cargo-vcpkg
+
+      - name: Build libheif
+        run: cargo vcpkg -v build
+
+      - name: Run tests for v1.17
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_17
+          cargo test --features embedded-libheif,v1_17
+
+      - name: Run tests for v1.18
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_18
+          cargo test --features embedded-libheif,v1_18
+
+      - name: Run tests for v1.19
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_19
+          cargo test --features embedded-libheif,v1_19
+
+      - name: Run tests for v1.20
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,v1_20
+          cargo test --features embedded-libheif,v1_20

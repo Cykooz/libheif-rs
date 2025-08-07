@@ -1,5 +1,16 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added a new feature `v1_20`.
+
+### Changes
+
+- `libheif-sys` updated to version 5.0.0+1.20.2.
+- `vcpkg` updated to version 2025.07.25.
+
 ## [2.2.0] - 2025-04-09
 
 ### Added

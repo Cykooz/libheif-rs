@@ -15,8 +15,8 @@ documentation = "https://docs.rs/crate/libheif-rs"
 cfg-if = "1.0"
 enumn = "0.1.14"
 four-cc = "0.4"
-libc = "0.2.171"
-libheif-sys = "4.0.1"
+libc = "0.2.174"
+libheif-sys = "5.0"
 
 
 [features]
@@ -24,13 +24,14 @@ default = ["latest"]
 v1_17 = ["libheif-sys/v1_17"]
 v1_18 = ["v1_17", "libheif-sys/v1_18"]
 v1_19 = ["v1_18", "libheif-sys/v1_19"]
-latest = ["v1_19"]
+v1_20 = ["v1_19", "libheif-sys/v1_20"]
+latest = ["v1_20"]
 embedded-libheif = ["libheif-sys/embedded-libheif"]
 
 
 [dev-dependencies]
 kamadak-exif = "0.6.1"
-tempfile = "3.19"
+tempfile = "3.20"
 
 
 [package.metadata.docs.rs]
@@ -49,15 +50,16 @@ codegen-units = 1
 
 [package.metadata.vcpkg]
 git = "https://github.com/microsoft/vcpkg"
-tag = "2025.03.19"
-dependencies = ["libheif"]
+tag = "2025.07.25"
+dependencies = ["libheif[aom]"]
 
 
 [package.metadata.vcpkg.target]
-x86_64-pc-windows-msvc = { triplet = "x64-windows-static-md", dependencies = ["libheif"] }
+x86_64-pc-windows-msvc = { triplet = "x64-windows-static-md", dependencies = ["libheif[aom]"] }
 
 
 [package.metadata.release]
+enable-features = ["latest", "embedded-libheif"]
 pre-release-replacements = [
     { file = "CHANGELOG.md", search = "Unreleased", replace = "{{version}}" },
     { file = "CHANGELOG.md", search = "ReleaseDate", replace = "{{date}}" }
