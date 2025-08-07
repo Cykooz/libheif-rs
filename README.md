@@ -16,7 +16,7 @@ But there are some functions in the crate that require a newer version of
 `libheif` library.
 
 You may specify a minimal version of `libheif` library that is required for you.
-To do this, enable the corresponding feature `v1_17`, `v1_18` or `v1_19`.
+To do this, enable the corresponding feature `v1_17`, `v1_18`, `v1_19` or `v1_20`.
 
 Example:
 
@@ -58,9 +58,6 @@ cargo vcpkg -v build
 `cargo-vcpkg` can fetch and build a `vcpkg` installation of required
 packages from scratch. It merges package requirements specified in
 the `Cargo.toml` of crates in the dependency tree.
-
-PS: I tried build `libheif` for Windows, but `libheif-rs` tests
-failed because `libheif` for Windows doesn't have any encoder plugins available.
 
 ## Examples
 

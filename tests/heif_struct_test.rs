@@ -7,7 +7,9 @@ fn get_version() {
     let lib_heif = LibHeif::new();
     let version = lib_heif.version();
     assert!(version[0] >= 1);
-    if cfg!(feature = "v1_19") {
+    if cfg!(feature = "v1_20") {
+        assert!(version[1] >= 20);
+    } else if cfg!(feature = "v1_19") {
         assert!(version[1] >= 19);
     } else if cfg!(feature = "v1_18") {
         assert!(version[1] >= 18);
