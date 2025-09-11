@@ -11,13 +11,37 @@ pub trait Reader {
 
     /// Pull some bytes from a source into the specified buffer, returning
     /// how many bytes were read.
+    #[deprecated(since = "2.4.0", note = "use 'read_exact' method instead.")]
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize>;
 
-    /// Seek to an position, in bytes, from start of a source.
+    /// Pull bytes from a source into the specified buffer.
+    fn read_exact(&mut self, mut buf: &mut [u8]) -> io::Result<()> {
+        loop {
+            #[allow(deprecated)]
+            let size = self.read(buf)?;
+            if size == buf.len() {
+                return Ok(());
+            }
+            buf = &mut buf[size..];
+        }
+    }
+
+    /// Seek to a position, in bytes, from the start of a source.
     fn seek(&mut self, position: u64) -> io::Result<u64>;
 
     /// Wait until a source will be ready to read bytes to
     /// the specified position.
+    ///
+    /// When calling this function, `libheif` wants to make sure that it can read the file
+    /// up to `target_size`.
+    /// This is useful when the file is currently downloaded and may
+    /// grow with time.
+    /// You may, for example, extract the image sizes even before the actual
+    /// compressed image data has been completely downloaded.
+    ///
+    /// Even if your input files do not grow, you will have to implement at least
+    /// detection whether the `target_size` is above the (fixed) file length
+    /// (in this case, return 'ReaderGrowStatus::SizeBeyondEof').
     fn wait_for_file_size(&mut self, target_size: u64) -> ReaderGrowStatus;
 }
 
@@ -48,7 +72,11 @@ where
     }
 
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.stream.read(buf)
+        self.stream.read_exact(buf).map(|_| buf.len())
+    }
+
+    fn read_exact(&mut self, buf: &mut [u8]) -> io::Result<()> {
+        self.stream.read_exact(buf)
     }
 
     fn seek(&mut self, position: u64) -> io::Result<u64> {
@@ -77,9 +105,10 @@ unsafe extern "C" fn read(data: *mut c_void, size: usize, user_data: *mut c_void
     }
     let reader = &mut *(user_data as *mut Box<dyn Reader>);
     let buf = slice::from_raw_parts_mut(data as *mut u8, size);
-    match reader.read(buf) {
-        Ok(real_size) if real_size == buf.len() => 0,
-        _ => 1,
+    if reader.read_exact(buf).is_ok() {
+        0
+    } else {
+        1
     }
 }
 

@@ -32,7 +32,7 @@ impl ImageHandle {
     }
 
     #[cfg(feature = "v1_18")]
-    fn context(&self) -> HeifContext {
+    fn context(&self) -> HeifContext<'_> {
         unsafe { HeifContext::from_ptr(lh::heif_image_handle_get_context(self.inner)) }
     }
 

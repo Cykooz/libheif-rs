@@ -1,5 +1,16 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Changes
+
+- Marked `Reader::read` method as deprecated, introduced `Reader::read_exact`
+  as its replacement.
+
+### Fixes
+
+- Fixed implementation of the `Reader::read` method for `StreamReader` struct.
+
 ## [2.3.0] - 2025-08-07
 
 ### Added

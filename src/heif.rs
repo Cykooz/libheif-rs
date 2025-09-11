@@ -127,7 +127,7 @@ impl LibHeif {
         &self,
         max_count: usize,
         format_filter: Option<CompressionFormat>,
-    ) -> Vec<DecoderDescriptor> {
+    ) -> Vec<DecoderDescriptor<'_>> {
         let format_filter = format_filter.unwrap_or(CompressionFormat::Undefined);
         let max_count = max_count.min(libc::c_int::MAX as usize);
 
@@ -160,7 +160,7 @@ impl LibHeif {
         max_count: usize,
         format_filter: Option<CompressionFormat>,
         name_filter: Option<&str>,
-    ) -> Vec<EncoderDescriptor> {
+    ) -> Vec<EncoderDescriptor<'_>> {
         let format_filter = format_filter.unwrap_or(CompressionFormat::Undefined);
         let max_count = max_count.min(libc::c_int::MAX as usize);
         let name_filter = name_filter
@@ -187,7 +187,7 @@ impl LibHeif {
 
     /// Get an encoder instance that can be used to actually
     /// encode images from a descriptor.
-    pub fn encoder(&self, descriptor: EncoderDescriptor) -> Result<Encoder> {
+    pub fn encoder(&self, descriptor: EncoderDescriptor) -> Result<Encoder<'_>> {
         let mut c_encoder: *mut lh::heif_encoder = ptr::null_mut();
         let err = unsafe {
             lh::heif_context_get_encoder(ptr::null_mut(), descriptor.inner, &mut c_encoder)
@@ -200,7 +200,7 @@ impl LibHeif {
     /// Get an encoder for the given compression format.
     /// If there are several encoder plugins for this format,
     /// the encoder with the highest plugin priority will be returned.
-    pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder> {
+    pub fn encoder_for_format(&self, format: CompressionFormat) -> Result<Encoder<'_>> {
         let mut c_encoder: *mut lh::heif_encoder = ptr::null_mut();
         let err = unsafe {
             lh::heif_context_get_encoder_for_format(

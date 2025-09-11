@@ -3,6 +3,7 @@ name = "libheif-rs"
 version = "2.3.0"
 authors = ["Kirill Kuzminykh <cykooz@gmail.com>"]
 edition = "2021"
+rust-version = "1.82.0"
 description = "Safe wrapper around the libheif-sys crate for parsing heif/heic files"
 readme = "README.md"
 keywords = ["heic", "heif", "libheif"]
@@ -15,7 +16,7 @@ documentation = "https://docs.rs/crate/libheif-rs"
 cfg-if = "1.0"
 enumn = "0.1.14"
 four-cc = "0.4"
-libc = "0.2.174"
+libc = "0.2.175"
 libheif-sys = "5.0"
 
 
@@ -31,7 +32,7 @@ embedded-libheif = ["libheif-sys/embedded-libheif"]
 
 [dev-dependencies]
 kamadak-exif = "0.6.1"
-tempfile = "3.20"
+tempfile = "3.22"
 
 
 [package.metadata.docs.rs]
@@ -65,5 +66,5 @@ pre-release-replacements = [
     { file = "CHANGELOG.md", search = "ReleaseDate", replace = "{{date}}" }
 ]
 
-# Header of next release in CHANGELOG.md:
+# Header of the next release in CHANGELOG.md:
 #   ## [Unreleased] - ReleaseDate

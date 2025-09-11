@@ -101,7 +101,7 @@ impl<'a> HeifContext<'a> {
     /// The provided memory buffer is not copied.
     /// That means, you will have to keep the memory buffer alive as
     /// long as you use the context.
-    pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext> {
+    pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext<'_>> {
         let mut context = HeifContext::new()?;
         context.read_bytes(bytes)?;
         Ok(context)
@@ -110,7 +110,7 @@ impl<'a> HeifContext<'a> {
     /// Read a HEIF file from bytes.
     ///
     /// The provided memory buffer is not copied.
-    /// That means, you will have to keep the memory buffer alive as
+    /// That means you will have to keep the memory buffer alive as
     /// long as you use the context.
     pub fn read_bytes<'b: 'a>(&mut self, bytes: &'b [u8]) -> Result<()> {
         self.source = Source::Memory(bytes);
