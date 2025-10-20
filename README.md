@@ -66,10 +66,10 @@ to register decoder hooks for the `image` crate.
 
 ```rust, no_run
 use image::{ColorType, ImageReader};
-use libheif_rs::integration::image::register_all_decoding_hook;
+use libheif_rs::integration::image::register_all_decoding_hooks;
 
 fn main() {
-    register_all_decoding_hook();
+    register_all_decoding_hooks();
 
     let reader = ImageReader::open("data/test.heif").unwrap();
     let image = reader.decode().unwrap();

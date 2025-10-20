@@ -86,7 +86,7 @@ pub fn register_avif_decoding_hook() -> bool {
 
 /// Registers the decoder with the `image` crate for all file types
 /// supported by the crate.
-pub fn register_all_decoding_hook() {
+pub fn register_all_decoding_hooks() {
     register_heif_decoding_hook();
     register_heic_decoding_hook();
     register_avif_decoding_hook();

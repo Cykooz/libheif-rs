@@ -1,14 +1,14 @@
 #[cfg(feature = "image")]
 mod image_integration_tests {
     use image::{ColorType, ImageReader};
-    use libheif_rs::integration::image::register_all_decoding_hook;
+    use libheif_rs::integration::image::register_all_decoding_hooks;
 
     #[test]
     fn test_image_integration() {
         let reader = ImageReader::open("./data/test.heif").unwrap();
         assert!(matches!(reader.decode(), Err(_)));
 
-        register_all_decoding_hook();
+        register_all_decoding_hooks();
         let reader = ImageReader::open("./data/test.heif").unwrap();
         let image = reader.decode().unwrap();
         assert_eq!(image.width(), 1652);
