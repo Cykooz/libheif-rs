@@ -47,19 +47,12 @@ impl HeifContext<'static> {
         }
     }
 
-    /// Create a new context from file.
+    /// Create a new context from a file.
     pub fn read_from_file(name: &str) -> Result<HeifContext<'static>> {
         let mut context = HeifContext::new()?;
         context.read_file(name)?;
         Ok(context)
     }
-
-    /// Create a new context from reader.
-    // pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext<'static>> {
-    //     let mut context = HeifContext::new()?;
-    //     context.read_reader(reader)?;
-    //     Ok(context)
-    // }
 
     /// # Safety
     ///
@@ -106,7 +99,7 @@ impl<'a> HeifContext<'a> {
     /// Create a new context from bytes.
     ///
     /// The provided memory buffer is not copied.
-    /// That means, you will have to keep the memory buffer alive as
+    /// That means you will have to keep the memory buffer alive as
     /// long as you use the context.
     pub fn read_from_bytes(bytes: &[u8]) -> Result<HeifContext<'_>> {
         let mut context = HeifContext::new()?;
