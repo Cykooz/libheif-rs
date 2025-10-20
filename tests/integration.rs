@@ -5,11 +5,11 @@ mod image_integration_tests {
 
     #[test]
     fn test_image_integration() {
-        let reader = ImageReader::open("data/test.heif").unwrap();
+        let reader = ImageReader::open("./data/test.heif").unwrap();
         assert!(matches!(reader.decode(), Err(_)));
 
         register_all_decoding_hook();
-        let reader = ImageReader::open("data/test.heif").unwrap();
+        let reader = ImageReader::open("./data/test.heif").unwrap();
         let image = reader.decode().unwrap();
         assert_eq!(image.width(), 1652);
         assert_eq!(image.height(), 1791);
