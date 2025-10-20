@@ -21,7 +21,7 @@ enum Source<'a> {
     None,
     File,
     Memory(&'a [u8]),
-    Reader(Box<Box<dyn Reader>>),
+    Reader(Box<Box<dyn Reader + 'a>>),
 }
 
 pub struct HeifContext<'a> {
@@ -54,34 +54,12 @@ impl HeifContext<'static> {
         Ok(context)
     }
 
-    /// Read a HEIF file from a named disk file.
-    pub fn read_file(&mut self, name: &str) -> Result<()> {
-        self.source = Source::File;
-        let c_name = ffi::CString::new(name).unwrap();
-        let err =
-            unsafe { lh::heif_context_read_from_file(self.inner, c_name.as_ptr(), ptr::null()) };
-        HeifError::from_heif_error(err)?;
-        Ok(())
-    }
-
     /// Create a new context from reader.
-    pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext<'static>> {
-        let mut context = HeifContext::new()?;
-        context.read_reader(reader)?;
-        Ok(context)
-    }
-
-    /// Read a HEIF file from the reader.
-    pub fn read_reader(&mut self, reader: Box<dyn Reader>) -> Result<()> {
-        let mut reader_box = Box::new(reader);
-        let user_data = reader_box.as_mut() as *mut _ as *mut c_void;
-        let err = unsafe {
-            lh::heif_context_read_from_reader(self.inner, &HEIF_READER, user_data, ptr::null())
-        };
-        HeifError::from_heif_error(err)?;
-        self.source = Source::Reader(reader_box);
-        Ok(())
-    }
+    // pub fn read_from_reader(reader: Box<dyn Reader>) -> Result<HeifContext<'static>> {
+    //     let mut context = HeifContext::new()?;
+    //     context.read_reader(reader)?;
+    //     Ok(context)
+    // }
 
     /// # Safety
     ///
@@ -96,6 +74,35 @@ impl HeifContext<'static> {
 }
 
 impl<'a> HeifContext<'a> {
+    /// Read a HEIF file from a named disk file.
+    pub fn read_file(&mut self, name: &str) -> Result<()> {
+        self.source = Source::File;
+        let c_name = ffi::CString::new(name).unwrap();
+        let err =
+            unsafe { lh::heif_context_read_from_file(self.inner, c_name.as_ptr(), ptr::null()) };
+        HeifError::from_heif_error(err)?;
+        Ok(())
+    }
+
+    /// Read a HEIF file from the reader.
+    pub fn read_reader(&mut self, reader: Box<dyn Reader + 'a>) -> Result<()> {
+        let mut reader_box = Box::new(reader);
+        let user_data = reader_box.as_mut() as *mut _ as *mut c_void;
+        let err = unsafe {
+            lh::heif_context_read_from_reader(self.inner, &HEIF_READER, user_data, ptr::null())
+        };
+        HeifError::from_heif_error(err)?;
+        self.source = Source::Reader(reader_box);
+        Ok(())
+    }
+
+    /// Create a new context from the reader.
+    pub fn read_from_reader(reader: Box<dyn Reader + 'a>) -> Result<HeifContext<'a>> {
+        let mut context = HeifContext::new()?;
+        context.read_reader(reader)?;
+        Ok(context)
+    }
+
     /// Create a new context from bytes.
     ///
     /// The provided memory buffer is not copied.

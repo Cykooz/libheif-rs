@@ -18,6 +18,8 @@ enumn = "0.1.14"
 four-cc = "0.4"
 libc = "0.2.175"
 libheif-sys = "5.0"
+# Optional dependencies
+image = { version = "0.25.8", optional = true }
 
 
 [features]
@@ -28,11 +30,13 @@ v1_19 = ["v1_18", "libheif-sys/v1_19"]
 v1_20 = ["v1_19", "libheif-sys/v1_20"]
 latest = ["v1_20"]
 embedded-libheif = ["libheif-sys/embedded-libheif"]
+# This feature allows register decoding hook for `image` crate.
+image = ["dep:image"]
 
 
 [dev-dependencies]
 kamadak-exif = "0.6.1"
-tempfile = "3.22"
+tempfile = "3.23"
 
 
 [package.metadata.docs.rs]
@@ -51,7 +55,7 @@ codegen-units = 1
 
 [package.metadata.vcpkg]
 git = "https://github.com/microsoft/vcpkg"
-tag = "2025.08.27"
+tag = "2025.09.17"
 dependencies = ["libheif[aom]"]
 
 

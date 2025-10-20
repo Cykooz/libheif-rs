@@ -1,5 +1,14 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added module `integration::image` that allows registering decoder hooks
+  for the `image` crate ([#34](https://github.com/Cykooz/libheif-rs/issues/34)).
+
+  You must enable `image` feature to use this module.
+
 ## [2.4.0] - 2025-09-11
 
 ### Changes

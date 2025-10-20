@@ -59,6 +59,27 @@ cargo vcpkg -v build
 packages from scratch. It merges package requirements specified in
 the `Cargo.toml` of crates in the dependency tree.
 
+## Integration with `image` crate
+
+You can enable `image` feature to use functions from `integration` module
+to register decoder hooks for the `image` crate.
+
+```rust, no_run
+use image::{ColorType, ImageReader};
+use libheif_rs::integration::image::register_all_decoding_hook;
+
+fn main() {
+    register_all_decoding_hook();
+
+    let reader = ImageReader::open("data/test.heif").unwrap();
+    let image = reader.decode().unwrap();
+
+    assert_eq!(image.width(), 1652);
+    assert_eq!(image.height(), 1791);
+    assert!(matches!(image.color(), ColorType::Rgb8));
+}
+```
+
 ## Examples
 
 ### Read HEIF file

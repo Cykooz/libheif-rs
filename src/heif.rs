@@ -12,11 +12,11 @@ use crate::{
 };
 
 /// Guard structure used for `libheif` initialization, working with plugins,
-/// getting encoders, decode images and etc.
+/// getting encoders, decode images, etc.
 ///
 /// You may use one instance of this structure for all parts of your code.
 /// Methods of the structure use static variables inside `libheif`.
-/// So any changes what they will make in internals of `libheif`
+/// So any changes that they make in internals of `libheif`
 /// will have side effect to all instances of the structure.
 ///
 /// For example, if you load some plugins by one `LibHeif` instance,
