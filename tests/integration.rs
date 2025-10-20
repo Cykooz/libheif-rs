@@ -14,7 +14,5 @@ mod image_integration_tests {
         assert_eq!(image.width(), 1652);
         assert_eq!(image.height(), 1791);
         assert!(matches!(image.color(), ColorType::Rgb8));
-
-        image.save("/home/cykooz/test.png").unwrap();
     }
 }

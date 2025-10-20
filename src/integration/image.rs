@@ -152,6 +152,7 @@ fn get_color_type(image_handle: &ImageHandle) -> ImageResult<ColorType> {
             let bit_depth = image_handle.luma_bits_per_pixel();
             (false, bit_depth > 8)
         }
+        #[cfg(feature = "v1_19")]
         ColorSpace::NonVisual => {
             return Err(image_error("Container doesn't have image data."));
         }

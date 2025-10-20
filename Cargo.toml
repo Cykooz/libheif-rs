@@ -19,7 +19,7 @@ four-cc = "0.4"
 libc = "0.2.175"
 libheif-sys = "5.0"
 # Optional dependencies
-image = { version = "0.25.8", optional = true }
+image = { version = "0.25.8", optional = true, default-features = false }
 
 
 [features]
