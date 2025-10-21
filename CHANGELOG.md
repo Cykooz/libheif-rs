@@ -1,6 +1,6 @@
 # Change Log
 
-## [Unreleased] - ReleaseDate
+## [2.5.1] - 2025-10-21
 
 ### Fixes
 
