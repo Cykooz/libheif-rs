@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Fixes
+
+- Fixed generating documentation on `docs.rs`.
+
 ## [2.5.0] - 2025-10-20
 
 ### Added

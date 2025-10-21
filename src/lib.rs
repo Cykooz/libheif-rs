@@ -1,6 +1,6 @@
-// only enables the `doc_auto_cfg` feature when
+// only enables the `doc_cfg` feature when
 // the `docsrs` configuration attribute is defined
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![doc = include_str!("../README.md")]
 extern crate core;
 
