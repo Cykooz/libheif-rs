@@ -1,5 +1,9 @@
 # Change Log
 
+### Fixes
+
+- Fixed integration with the `image` crate ([#35](https://github.com/Cykooz/libheif-rs/issues/35)).
+
 ## [2.5.1] - 2025-10-21
 
 ### Fixes

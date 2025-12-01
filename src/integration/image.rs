@@ -9,40 +9,52 @@ use crate::{ColorSpace, HeifContext, HeifError, ImageHandle, LibHeif, RgbChroma,
 
 macro_rules! magick {
     ($v1:literal, $v2:literal, $v3:literal, $v4:literal) => {
-        &[
-            0, 0, 0, 0, b'f', b't', b'y', b'p', 0, 0, 0, 0, $v1, $v2, $v3, $v4,
+        [
+            // As a major brand
+            &[
+                0, 0, 0, 0, b'f', b't', b'y', b'p', $v1, $v2, $v3, $v4, 0, 0, 0, 0,
+            ],
+            // As a minor brand
+            &[
+                0, 0, 0, 0, b'f', b't', b'y', b'p', 0, 0, 0, 0, $v1, $v2, $v3, $v4,
+            ],
         ]
     };
 }
 
+static MASKS: [&[u8]; 2] = [
+    &[
+        0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0,
+    ],
+    &[
+        0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff,
+    ],
+];
+
 /// HEVC image (`heic`) brand.
 ///
 /// Image conforms to HEVC (H.265) Main or Main Still profile.
-static HEIC_BRAND: &[u8] = magick!(b'h', b'e', b'i', b'c');
+static HEIC_BRAND: [&[u8]; 2] = magick!(b'h', b'e', b'i', b'c');
 /// HEVC image (`heix`) brand.
 ///
 /// Image conforms to HEVC (H.265) Main 10 profile.
-static HEIX_BRAND: &[u8] = magick!(b'h', b'e', b'i', b'x');
+static HEIX_BRAND: [&[u8]; 2] = magick!(b'h', b'e', b'i', b'x');
 /// AV1 image (`avif`) brand.
-static AVIF_BRAND: &[u8] = magick!(b'a', b'v', b'i', b'f');
+static AVIF_BRAND: [&[u8]; 2] = magick!(b'a', b'v', b'i', b'f');
 /// JPEG image sequence (`jpgs`) brand.
-static JPGS_BRAND: &[u8] = magick!(b'j', b'p', b'g', b's');
+static JPGS_BRAND: [&[u8]; 2] = magick!(b'j', b'p', b'g', b's');
 /// JPEG 2000 image (`j2ki`) brand.
-static J2KI_BRAND: &[u8] = magick!(b'j', b'2', b'k', b'i');
+static J2KI_BRAND: [&[u8]; 2] = magick!(b'j', b'2', b'k', b'i');
 /// HEIF image structural brand (`mif1`).
 ///
 /// This does not imply a specific coding algorithm.
-static MIF1_BRAND: &[u8] = magick!(b'm', b'i', b'f', b'1');
+static MIF1_BRAND: [&[u8]; 2] = magick!(b'm', b'i', b'f', b'1');
 /// HEIF image structural brand (`mif2`).
 ///
 /// This does not imply a specific coding algorithm. `mif2` extends
 /// the requirements of `mif1` to include the `rref` and `iscl` item
 /// properties.
-static MIF2_BRAND: &[u8] = magick!(b'm', b'i', b'f', b'2');
-
-static MASK: Option<&'static [u8]> = Some(&[
-    0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0xff, 0xff, 0xff, 0xff,
-]);
+static MIF2_BRAND: [&[u8]; 2] = magick!(b'm', b'i', b'f', b'2');
 
 /// Registers the decoder with the `image` crate for heif-files.
 pub fn register_heif_decoding_hook() -> bool {
@@ -51,8 +63,9 @@ pub fn register_heif_decoding_hook() -> bool {
         Box::new(|r| Ok(Box::new(HeifDecoder::new(r)?))),
     );
     if registered {
-        for brand in [MIF1_BRAND, MIF2_BRAND, JPGS_BRAND, J2KI_BRAND] {
-            image::hooks::register_format_detection_hook("heif".into(), brand, MASK);
+        for brands in [MIF1_BRAND, MIF2_BRAND, JPGS_BRAND, J2KI_BRAND] {
+            image::hooks::register_format_detection_hook("heif".into(), brands[0], Some(MASKS[0]));
+            image::hooks::register_format_detection_hook("heif".into(), brands[1], Some(MASKS[1]));
         }
     }
     registered
@@ -65,8 +78,9 @@ pub fn register_heic_decoding_hook() -> bool {
         Box::new(|r| Ok(Box::new(HeifDecoder::new(r)?))),
     );
     if registered {
-        for brand in [HEIC_BRAND, HEIX_BRAND] {
-            image::hooks::register_format_detection_hook("heic".into(), brand, MASK);
+        for brands in [HEIC_BRAND, HEIX_BRAND] {
+            image::hooks::register_format_detection_hook("heic".into(), brands[0], Some(MASKS[0]));
+            image::hooks::register_format_detection_hook("heic".into(), brands[1], Some(MASKS[1]));
         }
     }
     registered
@@ -79,7 +93,8 @@ pub fn register_avif_decoding_hook() -> bool {
         Box::new(|r| Ok(Box::new(HeifDecoder::new(r)?))),
     );
     if registered {
-        image::hooks::register_format_detection_hook("avif".into(), AVIF_BRAND, MASK);
+        image::hooks::register_format_detection_hook("avif".into(), AVIF_BRAND[0], Some(MASKS[0]));
+        image::hooks::register_format_detection_hook("avif".into(), AVIF_BRAND[1], Some(MASKS[1]));
     }
     registered
 }
