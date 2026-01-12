@@ -1,5 +1,11 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Fixes
+
+- Fixed test ``test_raw_color_profile_of_image_handle``.
+
 ## [2.5.2] - 2025-12-01
 
 ### Fixes

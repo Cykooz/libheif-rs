@@ -284,6 +284,7 @@ fn test_check_file_type() {
 
 #[test]
 fn test_raw_color_profile_of_image_handle() -> Result<()> {
+    let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
 
@@ -292,7 +293,19 @@ fn test_raw_color_profile_of_image_handle() -> Result<()> {
     assert_eq!(raw_profile.data.len(), 536);
 
     let nclx_profile = handle.color_profile_nclx();
-    assert!(nclx_profile.is_none());
+    if version(&lib_heif) < 121 {
+        assert!(nclx_profile.is_none());
+    } else {
+        assert!(nclx_profile.is_some());
+        let nclx_profile = nclx_profile.unwrap();
+        assert_eq!(nclx_profile.profile_type(), color_profile_types::NCLX);
+        assert_eq!(nclx_profile.color_primaries(), ColorPrimaries::Unspecified);
+        assert_eq!(
+            nclx_profile.transfer_characteristics(),
+            TransferCharacteristics::Unspecified
+        );
+        assert_eq!(nclx_profile.full_range_flag(), 1)
+    }
     Ok(())
 }
 
