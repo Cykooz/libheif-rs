@@ -1,7 +1,6 @@
 use std::mem::MaybeUninit;
 use std::os::raw::c_int;
-use std::ptr;
-use std::slice;
+use std::{ptr, slice};
 
 use libheif_sys as lh;
 
@@ -143,6 +142,7 @@ impl Image {
         })
     }
 
+    #[allow(clippy::mut_from_ref)]
     fn plane_mut(&self, channel: Channel) -> Option<Plane<&mut [u8]>> {
         let mut stride: i32 = 1;
         let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };

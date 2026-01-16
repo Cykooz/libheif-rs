@@ -31,6 +31,8 @@ pub enum HeifErrorCode {
     /// Operation has been canceled.
     #[cfg(feature = "v1_19")]
     Canceled = lh::heif_error_code_heif_error_Canceled as _,
+    #[cfg(feature = "v1_20")]
+    EndOfSequence = lh::heif_error_code_heif_error_End_of_sequence as _,
     ContextCreateFailed,
     /// This value is used when library `libheif` returns unknown value of error code.
     Unknown,
@@ -150,6 +152,10 @@ pub enum HeifErrorSubCode {
     #[cfg(feature = "v1_19")]
     UnsupportedEssentialProperty =
         lh::heif_suberror_code_heif_suberror_Unsupported_essential_property as _,
+    #[cfg(feature = "v1_20")]
+    NoMoovBox = lh::heif_suberror_code_heif_suberror_No_moov_box as _,
+    #[cfg(feature = "v1_21")]
+    UnsupportedTrackType = lh::heif_suberror_code_heif_suberror_Unsupported_track_type as _,
     /// This value is used when library `libheif` returns unknown value of error sub-code.
     Unknown,
 }

@@ -9,8 +9,7 @@ use libheif_sys as lh;
 
 use crate::utils::cstr_to_str;
 use crate::{
-    ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorConversionOptions, HeifError,
-    HeifErrorCode, HeifErrorSubCode, ImageOrientation, Result,
+    ColorConversionOptions, HeifError, HeifErrorCode, HeifErrorSubCode, ImageOrientation, Result,
 };
 
 static ENCODER_MUTEX: Mutex<()> = Mutex::new(());
@@ -339,28 +338,12 @@ impl EncodingOptions {
 
     pub fn color_conversion_options(&self) -> ColorConversionOptions {
         let lh_options = self.inner_ref().color_conversion_options;
-        ColorConversionOptions {
-            preferred_chroma_downsampling_algorithm: ChromaDownsamplingAlgorithm::n(
-                lh_options.preferred_chroma_downsampling_algorithm,
-            )
-            .unwrap_or(ChromaDownsamplingAlgorithm::Average),
-            preferred_chroma_upsampling_algorithm: ChromaUpsamplingAlgorithm::n(
-                lh_options.preferred_chroma_upsampling_algorithm,
-            )
-            .unwrap_or(ChromaUpsamplingAlgorithm::Bilinear),
-            only_use_preferred_chroma_algorithm: lh_options.only_use_preferred_chroma_algorithm
-                != 0,
-        }
+        ColorConversionOptions::from_cc_options(&lh_options)
     }
 
     pub fn set_color_conversion_options(&mut self, options: ColorConversionOptions) {
         let lh_options = &mut self.inner_mut().color_conversion_options;
-        lh_options.preferred_chroma_downsampling_algorithm =
-            options.preferred_chroma_downsampling_algorithm as _;
-        lh_options.preferred_chroma_upsampling_algorithm =
-            options.preferred_chroma_upsampling_algorithm as _;
-        lh_options.only_use_preferred_chroma_algorithm =
-            options.only_use_preferred_chroma_algorithm as _;
+        options.fill_cc_options(lh_options);
     }
 }
 

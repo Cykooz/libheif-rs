@@ -121,4 +121,54 @@ impl SecurityLimits {
     pub fn set_max_children_per_box(&mut self, v: u32) {
         self.inner.max_children_per_box = v
     }
+
+    #[cfg(feature = "v1_20")]
+    pub fn max_total_memory(&self) -> u64 {
+        self.inner.max_total_memory
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn set_max_total_memory(&mut self, v: u64) {
+        self.inner.max_total_memory = v
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn max_sample_description_box_entries(&self) -> u32 {
+        self.inner.max_sample_description_box_entries
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn set_max_sample_description_box_entries(&mut self, v: u32) {
+        self.inner.max_sample_description_box_entries = v
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn max_sample_group_description_box_entries(&self) -> u32 {
+        self.inner.max_sample_group_description_box_entries
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn set_max_sample_group_description_box_entries(&mut self, v: u32) {
+        self.inner.max_sample_group_description_box_entries = v
+    }
+
+    #[cfg(feature = "v1_21")]
+    pub fn max_sequence_frames(&self) -> u32 {
+        self.inner.max_sequence_frames
+    }
+
+    #[cfg(feature = "v1_21")]
+    pub fn set_max_sequence_frames(&mut self, v: u32) {
+        self.inner.max_sequence_frames = v
+    }
+
+    #[cfg(feature = "v1_21")]
+    pub fn max_number_of_file_brands(&self) -> u32 {
+        self.inner.max_number_of_file_brands
+    }
+
+    #[cfg(feature = "v1_21")]
+    pub fn set_max_number_of_file_brands(&mut self, v: u32) {
+        self.inner.max_number_of_file_brands = v
+    }
 }

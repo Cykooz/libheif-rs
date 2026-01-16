@@ -3,10 +3,11 @@ use std::io::{BufReader, Read, Seek, SeekFrom};
 
 use exif::parse_exif;
 use libheif_rs::{
-    check_file_type, color_profile_types, AuxiliaryImagesFilter, Chroma,
+    check_file_type, color_profile_types, AlphaCompositionMode, AuxiliaryImagesFilter, Chroma,
     ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile,
-    ColorSpace, CompressionFormat, DecodingOptions, FileTypeResult, HeifContext, ImageHandle,
-    ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader, TransferCharacteristics,
+    ColorProfileNCLX, ColorSpace, CompressionFormat, DecodingOptions, FileTypeResult, HeifContext,
+    ImageHandle, ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader,
+    TransferCharacteristics,
 };
 
 fn version(lib_heif: &LibHeif) -> u16 {
@@ -436,9 +437,53 @@ fn test_decoding_options() -> Result<()> {
     );
     assert!(!color_options.only_use_preferred_chroma_algorithm);
 
-    dec_options.set_decoder_id(Some("heif")).unwrap();
+    dec_options.set_decoder_id(Some("heif"))?;
     assert_eq!(dec_options.decoder_id(), Some("heif"));
 
+    #[cfg(feature = "v1_20")]
+    {
+        use libheif_rs::AlphaCompositionMode;
+
+        let alpha_mode = dec_options.alpha_composition_mode();
+        assert_eq!(alpha_mode, AlphaCompositionMode::None);
+
+        let expected_mode = AlphaCompositionMode::SolidColor {
+            background_rgb: [0, 1, 2],
+        };
+        dec_options.set_alpha_composition_mode(expected_mode);
+        let alpha_mode = dec_options.alpha_composition_mode();
+        assert_eq!(alpha_mode, expected_mode);
+
+        let expected_mode = AlphaCompositionMode::Checkerboard {
+            background_rgb: [3, 4, 5],
+            secondary_background_rgb: [6, 7, 8],
+            square_size: 24,
+        };
+        dec_options.set_alpha_composition_mode(expected_mode);
+        let alpha_mode = dec_options.alpha_composition_mode();
+        assert_eq!(alpha_mode, expected_mode);
+    }
+
+    #[cfg(feature = "v1_21")]
+    {
+        assert!(!dec_options.ignore_sequence_edit_list());
+        dec_options.set_ignore_sequence_edit_list(true);
+        assert!(dec_options.ignore_sequence_edit_list());
+
+        assert!(dec_options.output_image_nclx_profile().is_none());
+        dec_options.set_output_image_nclx_profile(Some(ColorProfileNCLX::new().unwrap()));
+        assert!(dec_options.output_image_nclx_profile().is_some());
+        dec_options.set_output_image_nclx_profile(None);
+        assert!(dec_options.output_image_nclx_profile().is_none());
+
+        assert_eq!(dec_options.num_library_threads(), 0);
+        dec_options.set_num_library_threads(2);
+        assert_eq!(dec_options.num_library_threads(), 2);
+
+        assert_eq!(dec_options.num_codec_threads(), 0);
+        dec_options.set_num_codec_threads(2);
+        assert_eq!(dec_options.num_codec_threads(), 2);
+    }
     Ok(())
 }
 

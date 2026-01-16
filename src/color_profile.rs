@@ -122,6 +122,7 @@ impl ColorProfile for ColorProfileRaw {
     }
 }
 
+#[derive(Debug)]
 pub struct ColorProfileNCLX {
     pub(crate) inner: *mut lh::heif_color_profile_nclx,
 }

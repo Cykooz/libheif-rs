@@ -2,6 +2,47 @@
 
 ## [Unreleased] - ReleaseDate
 
+### Added
+
+- Added a new feature `v1_21`.
+- For `ColorConversionOptions` was added method `new` and
+  implemented `Default` trait.
+- Added new values of `HeifErrorCode` enum (`v1_20`):
+    - `EndOfSequence`
+- Added new values of `HeifErrorSubCode` enum:
+    - `NoMoovBox` (`v1_20`)
+    - `UnsupportedTrackType` (`v1_21`)
+- Added new enum `AlphaCompositionMode` (`v1_20`).
+- Added new methods of `DecodingOptions` (`v1_20`).
+    - `alpha_composition_mode`
+    - `set_alpha_composition_mode`
+- Added new methods of `DecodingOptions` (`v1_21`).
+    - `ignore_sequence_edit_list`
+    - `set_ignore_sequence_edit_list`
+    - `output_image_nclx_profile`
+    - `set_output_image_nclx_profile`
+    - `num_library_threads`
+    - `set_num_library_threads`
+    - `num_codec_threads`
+    - `set_num_codec_threads`
+- Added new methods of `SecurityLimits` (`v1_20`):
+    - `max_total_memory`
+    - `set_max_total_memory`
+    - `max_sample_description_box_entries`
+    - `set_max_sample_description_box_entries`
+    - `max_sample_group_description_box_entries`
+    - `set_max_sample_group_description_box_entries`
+- Added new methods of `SecurityLimits` (`v1_21`):
+    - `max_sequence_frames`
+    - `set_max_sequence_frames`
+    - `max_number_of_file_brands`
+    - `set_max_number_of_file_brands`
+
+### Changes
+
+- `libheif-sys` updated to version 5.1.0+1.21.1.
+- `vcpkg` updated to version 2025.12.12.
+
 ### Fixes
 
 - Fixed test ``test_raw_color_profile_of_image_handle``.

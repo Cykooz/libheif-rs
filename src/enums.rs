@@ -184,3 +184,97 @@ pub enum ChromaUpsamplingAlgorithm {
         lh::heif_chroma_upsampling_algorithm_heif_chroma_upsampling_nearest_neighbor as _,
     Bilinear = lh::heif_chroma_upsampling_algorithm_heif_chroma_upsampling_bilinear as _,
 }
+
+#[cfg(feature = "v1_20")]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, Default)]
+#[non_exhaustive]
+pub enum AlphaCompositionMode {
+    #[default]
+    None,
+    SolidColor {
+        background_rgb: [u16; 3],
+    },
+    Checkerboard {
+        background_rgb: [u16; 3],
+        secondary_background_rgb: [u16; 3],
+        square_size: u16,
+    },
+}
+
+#[cfg(feature = "v1_20")]
+impl AlphaCompositionMode {
+    pub(crate) fn from_libheif(
+        cc_options_ext: *const lh::heif_color_conversion_options_ext,
+    ) -> Self {
+        let cc_options_ext = unsafe { cc_options_ext.as_ref() };
+        let Some(cc_options_ext) = cc_options_ext else {
+            return Self::None;
+        };
+        match cc_options_ext.alpha_composition_mode {
+            lh::heif_alpha_composition_mode_heif_alpha_composition_mode_none => {
+                AlphaCompositionMode::None
+            }
+            lh::heif_alpha_composition_mode_heif_alpha_composition_mode_solid_color => {
+                AlphaCompositionMode::SolidColor {
+                    background_rgb: [
+                        cc_options_ext.background_red,
+                        cc_options_ext.background_green,
+                        cc_options_ext.background_blue,
+                    ],
+                }
+            }
+            lh::heif_alpha_composition_mode_heif_alpha_composition_mode_checkerboard => {
+                AlphaCompositionMode::Checkerboard {
+                    background_rgb: [
+                        cc_options_ext.background_red,
+                        cc_options_ext.background_green,
+                        cc_options_ext.background_blue,
+                    ],
+                    secondary_background_rgb: [
+                        cc_options_ext.secondary_background_red,
+                        cc_options_ext.secondary_background_green,
+                        cc_options_ext.secondary_background_blue,
+                    ],
+                    square_size: cc_options_ext.checkerboard_square_size,
+                }
+            }
+            _ => AlphaCompositionMode::None,
+        }
+    }
+
+    pub(crate) fn fill_libheif_cc_options_ext(
+        &self,
+        cc_options_ext_ptr: *mut lh::heif_color_conversion_options_ext,
+    ) {
+        if let Some(cc_options_ext) = unsafe { cc_options_ext_ptr.as_mut() } {
+            match self {
+                AlphaCompositionMode::None => {
+                    cc_options_ext.alpha_composition_mode =
+                        lh::heif_alpha_composition_mode_heif_alpha_composition_mode_none;
+                }
+                AlphaCompositionMode::SolidColor { background_rgb } => {
+                    cc_options_ext.alpha_composition_mode =
+                        lh::heif_alpha_composition_mode_heif_alpha_composition_mode_solid_color;
+                    cc_options_ext.background_red = background_rgb[0];
+                    cc_options_ext.background_green = background_rgb[1];
+                    cc_options_ext.background_blue = background_rgb[2];
+                }
+                AlphaCompositionMode::Checkerboard {
+                    background_rgb,
+                    secondary_background_rgb,
+                    square_size,
+                } => {
+                    cc_options_ext.alpha_composition_mode =
+                        lh::heif_alpha_composition_mode_heif_alpha_composition_mode_checkerboard;
+                    cc_options_ext.background_red = background_rgb[0];
+                    cc_options_ext.background_green = background_rgb[1];
+                    cc_options_ext.background_blue = background_rgb[2];
+                    cc_options_ext.secondary_background_red = secondary_background_rgb[0];
+                    cc_options_ext.secondary_background_green = secondary_background_rgb[1];
+                    cc_options_ext.secondary_background_blue = secondary_background_rgb[2];
+                    cc_options_ext.checkerboard_square_size = *square_size;
+                }
+            }
+        }
+    }
+}
