@@ -64,6 +64,11 @@ jobs:
           cargo check -p libheif-rs --features embedded-libheif,image,v1_20
           cargo test --features embedded-libheif,image,v1_20
 
+      - name: Run tests for v1.21
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,image,v1_21
+          cargo test --features embedded-libheif,image,v1_21          
+
   run_tests_on_windows:
     name: Run `cargo check/test` on Windows
     runs-on: windows-latest
@@ -108,3 +113,8 @@ jobs:
         run: |
           cargo check -p libheif-rs --features embedded-libheif,image,v1_20
           cargo test --features embedded-libheif,image,v1_20
+
+      - name: Run tests for v1.21
+        run: |
+          cargo check -p libheif-rs --features embedded-libheif,image,v1_21
+          cargo test --features embedded-libheif,image,v1_21

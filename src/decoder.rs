@@ -6,17 +6,16 @@ use std::sync::Mutex;
 use libheif_sys as lh;
 
 use crate::utils::{cstr_to_str, str_to_cstring};
-use crate::{
-    AlphaCompositionMode, ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorProfileNCLX,
-    HeifError,
-};
-
+#[cfg(feature = "v1_20")]
+use crate::AlphaCompositionMode;
+use crate::{ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorProfileNCLX, HeifError};
 static DECODER_MUTEX: Mutex<()> = Mutex::new(());
 
 #[derive(Debug)]
 pub struct DecodingOptions {
     inner: ptr::NonNull<lh::heif_decoding_options>,
     decoder_id: Option<CString>,
+    #[allow(dead_code)]
     output_image_nclx_profile: Option<ColorProfileNCLX>,
 }
 
@@ -33,12 +32,17 @@ impl DecodingOptions {
 
 impl Drop for DecodingOptions {
     fn drop(&mut self) {
-        let inner_mut = self.inner_mut();
-        if !inner_mut.color_conversion_options_ext.is_null() {
-            unsafe {
-                lh::heif_color_conversion_options_ext_free(inner_mut.color_conversion_options_ext)
-            };
-            inner_mut.color_conversion_options_ext = ptr::null_mut();
+        #[cfg(feature = "v1_20")]
+        {
+            let inner_mut = self.inner_mut();
+            if !inner_mut.color_conversion_options_ext.is_null() {
+                unsafe {
+                    lh::heif_color_conversion_options_ext_free(
+                        inner_mut.color_conversion_options_ext,
+                    )
+                };
+                inner_mut.color_conversion_options_ext = ptr::null_mut();
+            }
         }
         unsafe {
             lh::heif_decoding_options_free(self.inner.as_ptr());
@@ -224,13 +228,17 @@ pub struct ColorConversionOptions {
 
 impl Default for ColorConversionOptions {
     fn default() -> Self {
+        #[allow(unused_mut)]
         let mut cc_options = lh::heif_color_conversion_options {
             version: 1,
             preferred_chroma_downsampling_algorithm: 0,
             preferred_chroma_upsampling_algorithm: 0,
             only_use_preferred_chroma_algorithm: 0,
         };
-        unsafe { lh::heif_color_conversion_options_set_defaults(&mut cc_options) };
+        #[cfg(feature = "v1_19")]
+        unsafe {
+            lh::heif_color_conversion_options_set_defaults(&mut cc_options)
+        };
         Self::from_cc_options(&cc_options)
     }
 }

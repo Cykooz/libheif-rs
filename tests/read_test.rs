@@ -3,11 +3,10 @@ use std::io::{BufReader, Read, Seek, SeekFrom};
 
 use exif::parse_exif;
 use libheif_rs::{
-    check_file_type, color_profile_types, AlphaCompositionMode, AuxiliaryImagesFilter, Chroma,
+    check_file_type, color_profile_types, AuxiliaryImagesFilter, Chroma,
     ChromaDownsamplingAlgorithm, ChromaUpsamplingAlgorithm, ColorPrimaries, ColorProfile,
-    ColorProfileNCLX, ColorSpace, CompressionFormat, DecodingOptions, FileTypeResult, HeifContext,
-    ImageHandle, ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader,
-    TransferCharacteristics,
+    ColorSpace, CompressionFormat, DecodingOptions, FileTypeResult, HeifContext, ImageHandle,
+    ItemId, LibHeif, MatrixCoefficients, Result, RgbChroma, StreamReader, TransferCharacteristics,
 };
 
 fn version(lib_heif: &LibHeif) -> u16 {
@@ -466,6 +465,8 @@ fn test_decoding_options() -> Result<()> {
 
     #[cfg(feature = "v1_21")]
     {
+        use libheif_rs::ColorProfileNCLX;
+
         assert!(!dec_options.ignore_sequence_edit_list());
         dec_options.set_ignore_sequence_edit_list(true);
         assert!(dec_options.ignore_sequence_edit_list());
