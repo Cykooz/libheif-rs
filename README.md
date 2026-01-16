@@ -1,5 +1,9 @@
 # libheif-rs
 
+[![github](https://img.shields.io/badge/github-Cykooz%2Flibheif--rs-8da0cb)](https://github.com/Cykooz/libheif-rs)
+[![crates.io](https://img.shields.io/crates/v/libheif-rs?logo=rust)](https://crates.io/crates/libheif-rs)
+[![docs.rs](https://img.shields.io/docsrs/libheif-rs?logo=docs.rs&color=66c2a5)](https://docs.rs/libheif-rs)
+
 Safe wrapper around the [libheif-sys](https://github.com/Cykooz/libheif-sys)
 crate for parsing heif/heic files.
 

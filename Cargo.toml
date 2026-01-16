@@ -8,8 +8,8 @@ description = "Safe wrapper around the libheif-sys crate for parsing heif/heic f
 readme = "README.md"
 keywords = ["heic", "heif", "libheif"]
 license = "MIT"
-repository = "https://github.com/cykooz/libheif-rs"
-documentation = "https://docs.rs/crate/libheif-rs"
+repository = "https://github.com/Cykooz/libheif-rs"
+documentation = "https://docs.rs/libheif-rs"
 
 
 [dependencies]
