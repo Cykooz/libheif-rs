@@ -17,7 +17,7 @@ cfg-if = "1.0"
 enumn = "0.1.14"
 four-cc = "0.4"
 libc = "0.2.180"
-libheif-sys = "5.1"
+libheif-sys = "5.1.1"
 # Optional dependencies
 image = { version = "0.25.9", optional = true, default-features = false }
 

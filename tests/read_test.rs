@@ -284,62 +284,12 @@ fn test_check_file_type() {
 
 #[test]
 fn test_raw_color_profile_of_image_handle() -> Result<()> {
-    let lib_heif = LibHeif::new();
     let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
 
     let raw_profile = handle.color_profile_raw().unwrap();
     assert_eq!(raw_profile.profile_type(), color_profile_types::PROF);
     assert_eq!(raw_profile.data.len(), 536);
-
-    let nclx_profile = handle.color_profile_nclx();
-    if version(&lib_heif) < 121 {
-        assert!(nclx_profile.is_none());
-    } else {
-        assert!(nclx_profile.is_some());
-        let nclx_profile = nclx_profile.unwrap();
-        assert_eq!(nclx_profile.profile_type(), color_profile_types::NCLX);
-        assert_eq!(nclx_profile.color_primaries(), ColorPrimaries::Unspecified);
-        assert_eq!(
-            nclx_profile.transfer_characteristics(),
-            TransferCharacteristics::Unspecified
-        );
-        assert_eq!(nclx_profile.full_range_flag(), 1)
-    }
-    Ok(())
-}
-
-#[test]
-fn test_nclx_color_profile_of_image_handle() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/test_nclx.heif")?;
-    let handle = ctx.primary_image_handle()?;
-
-    let raw_profile = handle.color_profile_raw();
-    assert!(raw_profile.is_none());
-
-    let nclx_profile = handle.color_profile_nclx().unwrap();
-    assert_eq!(nclx_profile.profile_type(), color_profile_types::NCLX);
-    assert_eq!(
-        nclx_profile.color_primaries(),
-        ColorPrimaries::ITU_R_BT_2020_2_and_2100_0
-    );
-    assert_eq!(
-        nclx_profile.transfer_characteristics(),
-        TransferCharacteristics::ITU_R_BT_2100_0_PQ
-    );
-    assert_eq!(
-        nclx_profile.matrix_coefficients(),
-        MatrixCoefficients::RGB_GBR
-    );
-    assert_eq!(nclx_profile.full_range_flag(), 1);
-    assert_eq!(nclx_profile.color_primary_red_x(), 0.708);
-    assert_eq!(nclx_profile.color_primary_red_y(), 0.292);
-    assert_eq!(nclx_profile.color_primary_green_x(), 0.17);
-    assert_eq!(nclx_profile.color_primary_green_y(), 0.797);
-    assert_eq!(nclx_profile.color_primary_blue_x(), 0.131);
-    assert_eq!(nclx_profile.color_primary_blue_y(), 0.046);
-    assert_eq!(nclx_profile.color_primary_white_x(), 0.3127);
-    assert_eq!(nclx_profile.color_primary_white_y(), 0.329);
     Ok(())
 }
 
@@ -349,39 +299,86 @@ fn test_raw_color_profile_of_image() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/test.heif")?;
     let handle = ctx.primary_image_handle()?;
     let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
-    assert!(image.color_profile_raw().is_some());
-    let libheif_version = lib_heif.version();
-    if libheif_version[0] == 1 && libheif_version[1] < 17 {
-        assert!(image.color_profile_nclx().is_none());
-    } else {
-        assert!(image.color_profile_nclx().is_some());
-        let nclx_profile = image.color_profile_nclx().unwrap();
-        if version(&lib_heif) > 118 {
-            assert_eq!(nclx_profile.color_primaries(), ColorPrimaries::Unspecified);
-            assert_eq!(
-                nclx_profile.transfer_characteristics(),
-                TransferCharacteristics::Unspecified,
-            );
-            assert_eq!(
-                nclx_profile.matrix_coefficients(),
-                MatrixCoefficients::Unspecified
-            );
-        } else {
-            // Hmm, unspecified profile
-            assert_eq!(
-                nclx_profile.color_primaries(),
-                ColorPrimaries::ITU_R_BT_709_5
-            );
-            assert_eq!(
-                nclx_profile.transfer_characteristics(),
-                TransferCharacteristics::IEC_61966_2_1
-            );
-            assert_eq!(
-                nclx_profile.matrix_coefficients(),
-                MatrixCoefficients::ITU_R_BT_601_6
-            );
-        }
-    }
+
+    let raw_profile = image.color_profile_raw().unwrap();
+    assert_eq!(raw_profile.profile_type(), color_profile_types::PROF);
+    assert_eq!(raw_profile.data.len(), 536);
+    Ok(())
+}
+
+#[cfg(feature = "v1_21")]
+#[test]
+fn test_nclx_color_profile_of_handle_and_image() -> Result<()> {
+    let lib_heif = LibHeif::new();
+    let ctx = HeifContext::read_from_file("./data/test_nclx.heif")?;
+    let handle = ctx.primary_image_handle()?;
+    assert!(handle.color_profile_raw().is_none());
+    let handle_nclx_profile = handle.color_profile_nclx().unwrap();
+
+    let image = lib_heif.decode(&handle, ColorSpace::Undefined, None)?;
+    assert!(image.color_profile_raw().is_none());
+    let image_nclx_profile = image.color_profile_nclx().unwrap();
+
+    assert_eq!(
+        handle_nclx_profile.profile_type(),
+        color_profile_types::NCLX
+    );
+    assert_eq!(image_nclx_profile.profile_type(), color_profile_types::NCLX);
+
+    assert_eq!(
+        handle_nclx_profile.color_primaries(),
+        ColorPrimaries::ITU_R_BT_2020_2_and_2100_0
+    );
+    assert_eq!(
+        image_nclx_profile.color_primaries(),
+        ColorPrimaries::ITU_R_BT_709_5
+    );
+
+    assert_eq!(
+        handle_nclx_profile.transfer_characteristics(),
+        TransferCharacteristics::ITU_R_BT_2100_0_PQ
+    );
+    assert_eq!(
+        image_nclx_profile.transfer_characteristics(),
+        TransferCharacteristics::IEC_61966_2_1
+    );
+
+    assert_eq!(
+        handle_nclx_profile.matrix_coefficients(),
+        MatrixCoefficients::RGB_GBR
+    );
+    assert_eq!(
+        image_nclx_profile.matrix_coefficients(),
+        MatrixCoefficients::ITU_R_BT_601_6
+    );
+
+    assert_eq!(handle_nclx_profile.full_range_flag(), 1);
+    assert_eq!(image_nclx_profile.full_range_flag(), 1);
+
+    assert_eq!(handle_nclx_profile.color_primary_red_x(), 0.708);
+    assert_eq!(image_nclx_profile.color_primary_red_x(), 0.64);
+
+    assert_eq!(handle_nclx_profile.color_primary_red_y(), 0.292);
+    assert_eq!(image_nclx_profile.color_primary_red_y(), 0.33);
+
+    assert_eq!(handle_nclx_profile.color_primary_green_x(), 0.17);
+    assert_eq!(image_nclx_profile.color_primary_green_x(), 0.3);
+
+    assert_eq!(handle_nclx_profile.color_primary_green_y(), 0.797);
+    assert_eq!(image_nclx_profile.color_primary_green_y(), 0.6);
+
+    assert_eq!(handle_nclx_profile.color_primary_blue_x(), 0.131);
+    assert_eq!(image_nclx_profile.color_primary_blue_x(), 0.15);
+
+    assert_eq!(handle_nclx_profile.color_primary_blue_y(), 0.046);
+    assert_eq!(image_nclx_profile.color_primary_blue_y(), 0.06);
+
+    assert_eq!(handle_nclx_profile.color_primary_white_x(), 0.3127);
+    assert_eq!(image_nclx_profile.color_primary_white_x(), 0.3127);
+
+    assert_eq!(handle_nclx_profile.color_primary_white_y(), 0.329);
+    assert_eq!(image_nclx_profile.color_primary_white_y(), 0.329);
+
     Ok(())
 }
 

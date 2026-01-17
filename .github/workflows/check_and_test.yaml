@@ -44,10 +44,10 @@ jobs:
         with:
           cache-on-failure: "true"
 
-      - name: Run tests for v1.17
+      - name: Run tests for system libheif v1.17
         run: |
-          cargo check -p libheif-rs --no-default-features --features embedded-libheif,image,v1_17
-          cargo test --no-default-features --features embedded-libheif,image,v1_17
+          cargo check -p libheif-rs --no-default-features --features image,v1_17
+          cargo test --no-default-features --features image,v1_17
 
       - name: Run tests for v1.18
         run: |
