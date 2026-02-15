@@ -13,8 +13,11 @@ use crate::utils::str_to_cstring;
 use crate::SecurityLimits;
 use crate::{
     Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image, ImageHandle,
-    ItemId, Result,
+    ItemId, Result
 };
+
+#[cfg(feature = "v1_20")]
+use crate::sequences::Track;
 
 #[allow(dead_code)]
 enum Source<'a> {
@@ -427,6 +430,46 @@ impl<'a> HeifContext<'a> {
         let err = unsafe { lh::heif_context_set_security_limits(self.inner, limits.as_inner()) };
         HeifError::from_heif_error(err)
     }
+
+    #[cfg(feature = "v1_20")]
+    pub fn has_sequence(&self) -> bool {
+        unsafe { lh::heif_context_has_sequence(self.inner) != 0 }
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn sequence_timescale(&self) -> u32 {
+        unsafe { lh::heif_context_get_sequence_timescale(self.inner) }
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn sequence_duration(&self) -> u64 {
+        unsafe { lh::heif_context_get_sequence_duration(self.inner) }
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn track_ids(&self) -> Vec<u32> {
+        let num_tracks: usize = unsafe { lh::heif_context_number_of_sequence_tracks(self.inner) as _ };
+        let mut track_ids = vec![0u32; num_tracks];
+
+        unsafe {
+            lh::heif_context_get_track_ids(self.inner, track_ids.as_mut_ptr() as *mut [u32; 0]);
+        }
+
+        track_ids
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn track(&self, id: u32) -> Option<Track> {
+        unsafe {
+            let heif_track = lh::heif_context_get_track(self.inner, id);
+            if heif_track.is_null() {
+                None
+            } else {
+                Some(Track::from_heif_track(heif_track))
+            }
+        }
+    }
+
 }
 
 impl Drop for HeifContext<'_> {

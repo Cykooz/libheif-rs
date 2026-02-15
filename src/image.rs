@@ -371,6 +371,17 @@ impl Image {
             lh::heif_image_set_pixel_aspect_ratio(self.inner, aspect_h, aspect_v);
         }
     }
+
+    #[cfg(feature = "v1_20")]
+    pub fn duration(&self) -> u32 {
+        unsafe { lh::heif_image_get_duration(self.inner) }
+    }
+
+    #[cfg(feature = "v1_20")]
+    pub fn set_duration(&self, duration: u32) {
+        unsafe { lh::heif_image_set_duration(self.inner, duration) }
+    }
+
 }
 
 impl Drop for Image {
