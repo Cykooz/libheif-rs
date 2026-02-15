@@ -119,9 +119,22 @@ impl Image {
         (value >= 0).then_some(value as _)
     }
 
-    fn plane(&self, channel: Channel) -> Option<Plane<&[u8]>> {
+    #[cfg(feature = "v1_20")]
+    fn plane_inner(&self, channel: Channel) -> (*const u8, usize) {
+        let mut stride: usize = 1;
+        let data = unsafe { lh::heif_image_get_plane_readonly2(self.inner, channel as _, &mut stride) };
+        (data, stride)
+    }
+
+    #[cfg(not(feature = "v1_20"))]
+    fn plane_inner(&self, channel: Channel) -> (*const u8, usize) {
         let mut stride: i32 = 1;
-        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        let data = unsafe { lh::heif_image_get_plane_readonly(self.inner, channel as _, &mut stride) };
+        (data, stride as _)
+    }
+
+    fn plane(&self, channel: Channel) -> Option<Plane<&[u8]>> {
+        let (data, stride) = self.plane_inner(channel);
         if data.is_null() {
             return None;
         }
@@ -130,7 +143,7 @@ impl Image {
         let height = self.channel_height(channel).unwrap_or_default();
         let bits_per_pixel = self.bits_per_pixel(channel).unwrap_or_default();
         let storage_bits_per_pixel = self.storage_bits_per_pixel(channel).unwrap_or_default();
-        let size = height as usize * stride as usize;
+        let size = height as usize * stride;
         let bytes = unsafe { slice::from_raw_parts(data, size) };
         Some(Plane {
             data: bytes,
@@ -138,14 +151,27 @@ impl Image {
             storage_bits_per_pixel,
             width,
             height,
-            stride: stride as _,
+            stride: stride,
         })
+    }
+
+    #[cfg(feature = "v1_20")]
+    fn plane_mut_inner(&self, channel: Channel) -> (*mut u8, usize) {
+        let mut stride: usize = 1;
+        let data = unsafe { lh::heif_image_get_plane2(self.inner, channel as _, &mut stride) };
+        (data, stride)
+    }
+
+    #[cfg(not(feature = "v1_20"))]
+    fn plane_mut_inner(&self, channel: Channel) -> (*mut u8, usize) {
+        let mut stride: i32 = 1;
+        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        (data, stride as _)
     }
 
     #[allow(clippy::mut_from_ref)]
     fn plane_mut(&self, channel: Channel) -> Option<Plane<&mut [u8]>> {
-        let mut stride: i32 = 1;
-        let data = unsafe { lh::heif_image_get_plane(self.inner, channel as _, &mut stride) };
+        let (data, stride): (*mut u8, usize) = self.plane_mut_inner(channel);
         if data.is_null() {
             return None;
         }
@@ -154,7 +180,7 @@ impl Image {
         let height = self.channel_height(channel).unwrap_or_default();
         let bits_per_pixel = self.bits_per_pixel(channel).unwrap_or_default();
         let storage_bits_per_pixel = self.storage_bits_per_pixel(channel).unwrap_or_default();
-        let size = height as usize * stride as usize;
+        let size = height as usize * stride;
         let bytes = unsafe { slice::from_raw_parts_mut(data, size) };
         Some(Plane {
             data: bytes,
@@ -162,7 +188,7 @@ impl Image {
             storage_bits_per_pixel,
             width,
             height,
-            stride: stride as _,
+            stride: stride,
         })
     }
 
