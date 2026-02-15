@@ -273,8 +273,8 @@ mod v1_18 {
     #[test]
     fn test_encode_grid() -> Result<()> {
         let lib_heif = LibHeif::new();
-        let sequence_ctx = HeifContext::read_from_file("./data/sequence.heif")?;
-        let handles = sequence_ctx.top_level_image_handles();
+        let collection_ctx = HeifContext::read_from_file("./data/collection.heif")?;
+        let handles = collection_ctx.top_level_image_handles();
         assert_eq!(handles.len(), 4);
 
         let mut tiles = Vec::with_capacity(4);

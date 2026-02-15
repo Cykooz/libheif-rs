@@ -252,8 +252,8 @@ fn top_decode_heic() -> Result<()> {
 }
 
 #[test]
-fn sequence_of_images() -> Result<()> {
-    let ctx = HeifContext::read_from_file("./data/sequence.heif")?;
+fn image_collection() -> Result<()> {
+    let ctx = HeifContext::read_from_file("./data/collection.heif")?;
     assert_eq!(ctx.number_of_top_level_images(), 4);
     let mut image_ids: Vec<ItemId> = vec![0; 5];
     let count = ctx.top_level_image_ids(&mut image_ids);
