@@ -1,5 +1,13 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+## Changed
+
+- `libheif-sys` updated to version 5.2.0+1.21.2.
+- Updated version of `vcpkg`. Enabled optional codecs (x264, h264-decoder, jpeg)
+  that will be installed from `vcpkg`.
+
 ## [2.6.1] - 2026-01-17
 
 ### Changes

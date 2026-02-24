@@ -17,7 +17,7 @@ cfg-if = "1.0"
 enumn = "0.1.14"
 four-cc = "0.4"
 libc = "0.2.180"
-libheif-sys = "5.1.1"
+libheif-sys = "5.2"
 # Optional dependencies
 image = { version = "0.25.9", optional = true, default-features = false }
 
@@ -37,7 +37,7 @@ image = ["dep:image"]
 
 [dev-dependencies]
 kamadak-exif = "0.6.1"
-tempfile = "3.24"
+tempfile = "3.26"
 
 
 [package.metadata.docs.rs]
@@ -56,8 +56,8 @@ codegen-units = 1
 
 [package.metadata.vcpkg]
 git = "https://github.com/microsoft/vcpkg"
-tag = "2025.12.12"
-dependencies = ["libheif[aom]"]
+tag = "2026.01.16"
+dependencies = ["libheif[hevc,aom,x264,h264-decoder,jpeg]"]
 
 
 [package.metadata.vcpkg.target]
