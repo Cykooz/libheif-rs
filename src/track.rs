@@ -1,16 +1,15 @@
-use four_cc::FourCC;
-use libheif_sys as lh;
 use std::ptr;
 
-use crate::{
-    ColorSpace, HeifError, Result, DecodingOptions, Image
-};
+use four_cc::FourCC;
+use libheif_sys as lh;
+
 use crate::decoder::get_decoding_options_ptr;
+use crate::{ColorSpace, DecodingOptions, HeifError, Image, Result};
 
 pub type TrackType = FourCC;
 
 pub mod track_types {
-    use super::{TrackType, FourCC};
+    use super::{FourCC, TrackType};
 
     pub const VIDEO: TrackType = FourCC(*b"vide");
     pub const IMAGE_SEQUENCE: TrackType = FourCC(*b"pict");
@@ -34,11 +33,19 @@ impl Track {
         Track { inner: track }
     }
 
+    /// Get the ID of the track.
+    ///
+    /// The track ID will never be 0.
     pub fn id(&self) -> u32 {
         unsafe { lh::heif_track_get_id(self.inner) }
     }
 
-    pub fn track_handler_type(&self) -> TrackType {
+    /// Get the four-cc track handler type.
+    ///
+    /// Typical codes are "vide" for video sequences, "pict" for image sequences,
+    /// "meta" for metadata tracks.
+    /// These are defined in [`track_types`] module, but files may also contain other types.
+    pub fn handler_type(&self) -> TrackType {
         let c_track_type = unsafe { lh::heif_track_get_track_handler_type(self.inner) };
         TrackType::from(c_track_type as u32)
     }
@@ -48,10 +55,16 @@ impl Track {
         unsafe { lh::heif_track_has_alpha_channel(self.inner) != 0 }
     }
 
+    /// Get the timescale (clock ticks per second) for this track.
+    ///
+    /// Note that this can be different from the timescale used at sequence level.
     pub fn timescale(&self) -> u32 {
         unsafe { lh::heif_track_get_timescale(self.inner) }
     }
 
+    /// Get the image resolution of the track.
+    ///
+    /// If the track is no visual track, an error is returned.
     pub fn image_resolution(&self) -> Result<ImageResolution> {
         let mut res = ImageResolution::default();
 
@@ -63,10 +76,23 @@ impl Track {
         Ok(res)
     }
 
+    /// Decode the next image in the sequence track.
+    ///
+    /// If there is no more image in the sequence,
+    /// error with code [HeifErrorCode::EndOfSequence](crate::HeifErrorCode::EndOfSequence)
+    /// will be returned.
+    /// The parameters `color_space` and `decoding_options` are similar to
+    /// [LibHeif::decode()](crate::LibHeif::decode).
+    /// If you want to let `libheif` decide the output colorspace and chroma,
+    /// set `color_space` parameter to [ColorSpace::Undefined].
+    /// Usually, `libheif` will return the image in the input colorspace,
+    /// but it may also modify it for example when it has to rotate the image.
+    /// If you want to get the image in a specific colorspace/chroma format,
+    /// you can specify this and `libheif` will convert the image to match this format.
     pub fn decode_next_image(
         &self,
         color_space: ColorSpace,
-        decoding_options: Option<DecodingOptions>
+        decoding_options: Option<DecodingOptions>,
     ) -> Result<Image> {
         let mut c_image: *mut lh::heif_image = ptr::null_mut();
         let err = unsafe {
@@ -81,7 +107,6 @@ impl Track {
         HeifError::from_heif_error(err)?;
         Ok(Image::from_heif_image(c_image))
     }
-
 }
 
 impl Drop for Track {

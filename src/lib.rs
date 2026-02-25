@@ -17,9 +17,9 @@ pub use metadata::ImageMetadata;
 pub use reader::{Reader, StreamReader};
 #[cfg(feature = "v1_19")]
 pub use security_limits::*;
-pub use utils::check_file_type;
 #[cfg(feature = "v1_20")]
-pub use sequences::track_types;
+pub use track::*;
+pub use utils::check_file_type;
 mod color_profile;
 mod context;
 mod decoder;
@@ -37,6 +37,6 @@ mod reader;
 pub mod regions;
 #[cfg(feature = "v1_19")]
 mod security_limits;
-mod utils;
 #[cfg(feature = "v1_20")]
-mod sequences;
+mod track;
+mod utils;

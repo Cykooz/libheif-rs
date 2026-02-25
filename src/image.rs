@@ -122,14 +122,16 @@ impl Image {
     #[cfg(feature = "v1_20")]
     fn plane_inner(&self, channel: Channel) -> (*const u8, usize) {
         let mut stride: usize = 1;
-        let data = unsafe { lh::heif_image_get_plane_readonly2(self.inner, channel as _, &mut stride) };
+        let data =
+            unsafe { lh::heif_image_get_plane_readonly2(self.inner, channel as _, &mut stride) };
         (data, stride)
     }
 
     #[cfg(not(feature = "v1_20"))]
     fn plane_inner(&self, channel: Channel) -> (*const u8, usize) {
         let mut stride: i32 = 1;
-        let data = unsafe { lh::heif_image_get_plane_readonly(self.inner, channel as _, &mut stride) };
+        let data =
+            unsafe { lh::heif_image_get_plane_readonly(self.inner, channel as _, &mut stride) };
         (data, stride as _)
     }
 
@@ -151,7 +153,7 @@ impl Image {
             storage_bits_per_pixel,
             width,
             height,
-            stride: stride,
+            stride,
         })
     }
 
@@ -188,7 +190,7 @@ impl Image {
             storage_bits_per_pixel,
             width,
             height,
-            stride: stride,
+            stride,
         })
     }
 
@@ -381,7 +383,6 @@ impl Image {
     pub fn set_duration(&self, duration: u32) {
         unsafe { lh::heif_image_set_duration(self.inner, duration) }
     }
-
 }
 
 impl Drop for Image {

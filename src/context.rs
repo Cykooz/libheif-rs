@@ -11,13 +11,12 @@ use crate::reader::{Reader, HEIF_READER};
 use crate::utils::str_to_cstring;
 #[cfg(feature = "v1_19")]
 use crate::SecurityLimits;
+#[cfg(feature = "v1_20")]
+use crate::Track;
 use crate::{
     Encoder, EncodingOptions, HeifError, HeifErrorCode, HeifErrorSubCode, Image, ImageHandle,
-    ItemId, Result
+    ItemId, Result,
 };
-
-#[cfg(feature = "v1_20")]
-use crate::sequences::Track;
 
 #[allow(dead_code)]
 enum Source<'a> {
@@ -167,10 +166,20 @@ impl<'a> HeifContext<'a> {
         HeifError::from_heif_error(err)
     }
 
+    /// Number of top-level images in the HEIF file.
+    ///
+    /// This does not include the thumbnails or the tile images that
+    /// are composed to an image grid.
+    /// You can get access to the thumbnails via the main image handle.
+    #[deprecated(since = "2.7.0", note = "use 'image_ids' method instead.")]
     pub fn number_of_top_level_images(&self) -> usize {
         unsafe { lh::heif_context_get_number_of_top_level_images(self.inner) as _ }
     }
 
+    /// Fills in image IDs into the user-supplied preallocated array 'ID_array'.
+    ///
+    /// Method returns the total number of IDs filled into the array.
+    #[deprecated(since = "2.7.0", note = "use 'image_ids' method instead.")]
     pub fn top_level_image_ids(&self, item_ids: &mut [ItemId]) -> usize {
         if item_ids.is_empty() {
             0
@@ -185,6 +194,22 @@ impl<'a> HeifContext<'a> {
         }
     }
 
+    /// Returns a vector with top level image IDs.
+    pub fn image_ids(&self) -> Vec<ItemId> {
+        let count = unsafe { lh::heif_context_get_number_of_top_level_images(self.inner) as usize };
+        let mut item_ids = vec![0; count];
+        let real_count = unsafe {
+            lh::heif_context_get_list_of_top_level_image_IDs(
+                self.inner,
+                item_ids.as_mut_ptr(),
+                count as _,
+            ) as usize
+        };
+        item_ids.truncate(real_count);
+        item_ids
+    }
+
+    /// Get the image handle for a known image ID.
     pub fn image_handle(&self, item_id: ItemId) -> Result<ImageHandle> {
         let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
         let err = unsafe { lh::heif_context_get_image_handle(self.inner, item_id, &mut handle) };
@@ -192,6 +217,10 @@ impl<'a> HeifContext<'a> {
         Ok(ImageHandle::new(handle))
     }
 
+    /// Get a handle to the primary image of the HEIF file.
+    ///
+    /// This is the image that should be displayed primarily
+    /// when there are several images in the file.
     pub fn primary_image_handle(&self) -> Result<ImageHandle> {
         let mut handle: *mut lh::heif_image_handle = ptr::null_mut();
         let err = unsafe { lh::heif_context_get_primary_image_handle(self.inner, &mut handle) };
@@ -199,17 +228,9 @@ impl<'a> HeifContext<'a> {
         Ok(ImageHandle::new(handle))
     }
 
+    /// Returns a vector with top level image handles.
     pub fn top_level_image_handles(&self) -> Vec<ImageHandle> {
-        let max_count = self.number_of_top_level_images();
-        let mut item_ids = Vec::with_capacity(max_count);
-        unsafe {
-            let count = lh::heif_context_get_list_of_top_level_image_IDs(
-                self.inner,
-                item_ids.as_mut_ptr(),
-                max_count as _,
-            ) as usize;
-            item_ids.set_len(count);
-        }
+        let item_ids = self.image_ids();
         let mut handles = Vec::with_capacity(item_ids.len());
         for item_id in item_ids {
             if let Ok(handle) = self.image_handle(item_id) {
@@ -220,6 +241,7 @@ impl<'a> HeifContext<'a> {
     }
 
     /// Compress the input image.
+    ///
     /// The first image added to the context is also automatically set as the primary image, but
     /// you can change the primary image later with [`HeifContext::set_primary_image`] method.
     pub fn encode_image(
@@ -243,6 +265,7 @@ impl<'a> HeifContext<'a> {
     }
 
     /// Encode the `image` as a scaled down thumbnail image.
+    ///
     /// The image is scaled down to fit into a square area of width `bbox_size`.
     /// If the input image is already so small that it fits into this bounding
     /// box, no thumbnail image is encoded and `Ok(None)` is returned.
@@ -338,9 +361,10 @@ impl<'a> HeifContext<'a> {
         }
     }
 
-    /// Add generic, proprietary metadata to an image. You have to specify
-    /// an `item_type` that will identify your metadata. `content_type` can be
-    /// an additional type.
+    /// Add generic, proprietary metadata to an image.
+    ///
+    /// You have to specify an `item_type` that will identify your metadata.
+    /// `content_type` can be an additional type.
     ///
     /// For example, this function can be used to add IPTC metadata
     /// (IIM stream, not XMP) to an image. Although not standard, we propose
@@ -431,24 +455,36 @@ impl<'a> HeifContext<'a> {
         HeifError::from_heif_error(err)
     }
 
+    /// Check whether there is an image sequence in the HEIF file.
     #[cfg(feature = "v1_20")]
     pub fn has_sequence(&self) -> bool {
         unsafe { lh::heif_context_has_sequence(self.inner) != 0 }
     }
 
+    /// Get the timescale (clock ticks per second) for timing values in the sequence.
+    ///
+    /// Each track may have its independent timescale.
+    ///
+    /// Returns 0 if there is no sequence in the file.
     #[cfg(feature = "v1_20")]
     pub fn sequence_timescale(&self) -> u32 {
         unsafe { lh::heif_context_get_sequence_timescale(self.inner) }
     }
 
+    /// Get the total duration of the sequence in timescale clock ticks.
+    ///
+    /// Use [sequence_timescale] method to get the clock ticks per second.
+    ///
+    /// Returns 0 if there is no sequence in the file.
     #[cfg(feature = "v1_20")]
     pub fn sequence_duration(&self) -> u64 {
         unsafe { lh::heif_context_get_sequence_duration(self.inner) }
     }
 
+    /// Returns a vector with IDs for each of the tracks stored in the HEIF file.
     #[cfg(feature = "v1_20")]
     pub fn track_ids(&self) -> Vec<u32> {
-        let num_tracks: usize = unsafe { lh::heif_context_number_of_sequence_tracks(self.inner) as _ };
+        let num_tracks = unsafe { lh::heif_context_number_of_sequence_tracks(self.inner) as usize };
         let mut track_ids = vec![0u32; num_tracks];
 
         unsafe {
@@ -458,6 +494,14 @@ impl<'a> HeifContext<'a> {
         track_ids
     }
 
+    /// Get the [Track] object for the given track ID.
+    ///
+    /// If you pass id=0, the first visual track will be returned.
+    /// If there is no track with the given ID or if 0 is passed and
+    /// there is no visual track, `None` will be returned.
+    ///
+    /// Tracks never have a zero ID.
+    /// This is why we can use this as a special value to find the first visual track.
     #[cfg(feature = "v1_20")]
     pub fn track(&self, id: u32) -> Option<Track> {
         unsafe {
@@ -469,7 +513,6 @@ impl<'a> HeifContext<'a> {
             }
         }
     }
-
 }
 
 impl Drop for HeifContext<'_> {

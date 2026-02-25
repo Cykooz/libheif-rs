@@ -2,7 +2,18 @@
 
 ## [Unreleased] - ReleaseDate
 
-## Changed
+### Added
+
+- Exposed parts of the sequences API from `libheif` v1.20+ ([#38](https://github.com/Cykooz/libheif-rs/pull/38)):
+    - Added `HeifContext` methods:
+        - `has_sequence`
+        - `sequence_timescale`
+        - `sequence_duration`
+        - `track_ids`
+        - `track`
+    - Added struct `Track`.
+
+### Changed
 
 - `libheif-sys` updated to version 5.2.0+1.21.2.
 - Updated version of `vcpkg`. Enabled optional codecs (x264, h264-decoder, jpeg)
