@@ -25,8 +25,8 @@
 
 ### Changed
 
-- `libheif-sys` updated to version 5.3.1+1.23.1.
 - **BREAKING**: Enum `ColorSpace` was made `non_exhaustive`.
+- `libheif-sys` updated to version 5.3.1+1.23.1.
 - `ColorSpace::NonVisual` is deprecated if `v1_23` feature is enabled. Use
   `ColorSpace::Custom` instead.
 - Updated version of `vcpkg`.
