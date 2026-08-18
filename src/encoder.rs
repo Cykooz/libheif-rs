@@ -168,7 +168,7 @@ impl<'a> Encoder<'a> {
         self.parameters_types.keys().cloned().collect()
     }
 
-    /// Get value of encoder's parameter.
+    /// Get value of the encoder's parameter.
     pub fn parameter(&self, name: &str) -> Result<Option<EncoderParameterValue>> {
         match self.parameters_types.get(name) {
             Some(param_type) => {
@@ -179,7 +179,7 @@ impl<'a> Encoder<'a> {
         }
     }
 
-    /// Set value of encoder's parameter.
+    /// Set the value of the encoder's parameter.
     pub fn set_parameter_value(&self, name: &str, value: EncoderParameterValue) -> Result<()> {
         let c_param_name = CString::new(name).unwrap();
         let err = match value {

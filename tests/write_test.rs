@@ -13,7 +13,7 @@ fn create_and_encode_image() -> Result<()> {
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
     let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
-    encoder.set_quality(EncoderQuality::LossLess)?;
+    encoder.set_quality(EncoderQuality::Lossy(85))?;
     let encoding_options: EncodingOptions = Default::default();
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
 
@@ -51,11 +51,10 @@ fn create_and_encode_monochrome_image() -> Result<()> {
     let data_a = plane_a.data;
 
     for y in 0..height {
-        let mut row_start = stride * y as usize;
-        for x in 0..width {
+        let row_start = stride * y as usize;
+        for (x, row_start) in (0..width).zip(row_start..) {
             let color = ((x + y) % 255) as u8;
             data_a[row_start] = color;
-            row_start += 1;
         }
     }
 
@@ -63,7 +62,7 @@ fn create_and_encode_monochrome_image() -> Result<()> {
     let mut context = HeifContext::new()?;
     let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
 
-    encoder.set_quality(EncoderQuality::LossLess)?;
+    encoder.set_quality(EncoderQuality::Lossy(85))?;
     let encoding_options = EncodingOptions::new()?;
 
     context.encode_image(&image, &mut encoder, Some(encoding_options))?;
