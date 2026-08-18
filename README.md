@@ -15,8 +15,8 @@ crate for parsing heif/heic files.
 
 ## Minimal supported libheif version
 
-Minimal supported version of `libheif` library is 1.17.
-But there are some functions in the crate that require a newer version of
+Minimal supported version of `libheif` library is 1.17. But there are some
+functions in the crate that require a newer version of
 `libheif` library.
 
 You may specify a minimal version of `libheif` library that is required for you.
@@ -30,9 +30,9 @@ Example:
 libheif-rs = { version = "2.6", default-features = false, features = ["v1_17"] }
 ```
 
-There is also the `latest` feature. It always corresponds to
-the maximal supported by the crate version of `libheif` API.
-This feature is enabled by default.
+There is also the `latest` feature. It always corresponds to the maximal
+supported by the crate version of `libheif` API. This feature is enabled by
+default.
 
 ### Linux
 
@@ -43,8 +43,8 @@ embedded into `libheif-sys` crate sources and then link it statically.
 
 <div class="warning">
 
-Note: Static linked version of `libheif` doesn't have statically linked
-it dependencies, such as `libde256`, `libaom` and other.
+Note: Static linked version of `libheif` doesn't have statically linked it
+dependencies, such as `libde256`, `libaom` and other.
 
 </div>
 
@@ -60,14 +60,14 @@ to install `libheif` with help of `cargo` command:
 cargo vcpkg -v build
 ```
 
-`cargo-vcpkg` can fetch and build a `vcpkg` installation of required
-packages from scratch. It merges package requirements specified in
-the `Cargo.toml` of crates in the dependency tree.
+`cargo-vcpkg` can fetch and build a `vcpkg` installation of required packages
+from scratch. It merges package requirements specified in the `Cargo.toml` of
+crates in the dependency tree.
 
 ## Integration with `image` crate
 
-You can enable `image` feature to use functions from `integration` module
-to register decoder hooks for the `image` crate.
+You can enable `image` feature to use functions from `integration` module to
+register decoder hooks for the `image` crate.
 
 ```rust, no_run
 use image::{ColorType, ImageReader};
@@ -187,7 +187,7 @@ fn main() -> Result<()> {
     let mut encoder = lib_heif.encoder_for_format(
         CompressionFormat::Av1,
     )?;
-    encoder.set_quality(EncoderQuality::LossLess)?;
+    encoder.set_quality(EncoderQuality::Lossy(85))?;
     context.encode_image(&image, &mut encoder, None)?;
 
     let tmp_file = NamedTempFile::new().unwrap();
