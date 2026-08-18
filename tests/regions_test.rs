@@ -16,7 +16,7 @@ mod v1_18 {
         let lib_heif = LibHeif::new();
         let mut ctx = HeifContext::new()?;
         let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
-        encoder.set_quality(EncoderQuality::LossLess)?;
+        encoder.set_quality(EncoderQuality::Lossy(85))?;
         let encoding_options: EncodingOptions = Default::default();
         let mut handle = ctx.encode_image(&image, &mut encoder, Some(encoding_options))?;
         assert_eq!(handle.width(), width);

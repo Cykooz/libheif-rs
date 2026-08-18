@@ -211,10 +211,10 @@ fn test_encoder_av1() -> Result<()> {
         Some(EncoderParameterValue::Bool(false))
     );
 
-    encoder.set_quality(EncoderQuality::LossLess)?;
+    encoder.set_quality(EncoderQuality::Lossy(85))?;
     assert_eq!(
         encoder.parameter("lossless")?,
-        Some(EncoderParameterValue::Bool(true))
+        Some(EncoderParameterValue::Bool(false))
     );
     Ok(())
 }
@@ -266,7 +266,7 @@ mod v1_18 {
         }
 
         let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
-        encoder.set_quality(EncoderQuality::LossLess)?;
+        encoder.set_quality(EncoderQuality::Lossy(85))?;
         let encoding_options: EncodingOptions = Default::default();
 
         let mut grid_ctx = HeifContext::new()?;
