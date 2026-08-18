@@ -156,7 +156,12 @@ pub enum HeifErrorSubCode {
     NoMoovBox = lh::heif_suberror_code_heif_suberror_No_moov_box as _,
     #[cfg(feature = "v1_21")]
     UnsupportedTrackType = lh::heif_suberror_code_heif_suberror_Unsupported_track_type as _,
-    /// This value is used when library `libheif` returns unknown value of error sub-code.
+    #[cfg(feature = "v1_23")]
+    /// The colr (NCLX) box and the codec bitstream VUI/color signaling disagree.
+    /// Per ISO/IEC 14496-12 and ISO/IEC 23000-22 (MIAF) the colr box takes precedence,
+    /// but the conflict is reported as a warning.
+    NclxColrVuiMismatch = lh::heif_suberror_code_heif_suberror_NCLX_colr_VUI_mismatch as _,
+    /// This value is used when library `libheif` returns an unknown value of error sub-code.
     Unknown,
 }
 

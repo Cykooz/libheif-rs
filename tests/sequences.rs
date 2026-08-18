@@ -1,4 +1,4 @@
-use libheif_rs::{ColorSpace, HeifContext, Result, RgbChroma};
+use libheif_rs::{ColorSpace, HeifContext, Result};
 
 #[cfg(feature = "v1_20")]
 mod v1_20 {

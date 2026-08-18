@@ -171,4 +171,24 @@ impl SecurityLimits {
     pub fn set_max_number_of_file_brands(&mut self, v: u32) {
         self.inner.max_number_of_file_brands = v
     }
+
+    #[cfg(feature = "v1_23")]
+    pub fn max_bad_pixels(&self) -> u32 {
+        self.inner.max_bad_pixels
+    }
+
+    #[cfg(feature = "v1_23")]
+    pub fn set_max_bad_pixels(&mut self, v: u32) {
+        self.inner.max_bad_pixels = v
+    }
+
+    #[cfg(feature = "v1_23")]
+    pub fn max_iso23001_17_pixel_size_bytes(&self) -> u32 {
+        self.inner.max_iso23001_17_pixel_size_bytes
+    }
+
+    #[cfg(feature = "v1_23")]
+    pub fn set_max_iso23001_17_pixel_size_bytes(&mut self, v: u32) {
+        self.inner.max_iso23001_17_pixel_size_bytes = v
+    }
 }

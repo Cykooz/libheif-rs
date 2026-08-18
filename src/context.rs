@@ -243,7 +243,7 @@ impl<'a> HeifContext<'a> {
     /// Compress the input image.
     ///
     /// The first image added to the context is also automatically set as the primary image, but
-    /// you can change the primary image later with [`HeifContext::set_primary_image`] method.
+    /// you can change the primary image later with the [`HeifContext::set_primary_image`] method.
     pub fn encode_image(
         &mut self,
         image: &Image,

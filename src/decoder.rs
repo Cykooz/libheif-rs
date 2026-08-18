@@ -204,6 +204,56 @@ impl DecodingOptions {
         let inner = self.inner_mut();
         inner.num_codec_threads = v.min(i32::MAX as u32) as _;
     }
+
+    #[cfg(feature = "v1_23")]
+    /// If enabled, `libheif` will attempt to work around known broken-input quirks
+    /// (e.g. Sony HIF files where the NCLX colr box disagrees with the HEVC VUI
+    /// on the YCbCr range flag).
+    ///
+    /// Default: `false` (strict spec-conformant behavior).
+    pub fn autocorrect_broken_input(&self) -> bool {
+        let inner = self.inner_ref();
+        inner.autocorrect_broken_input > 0
+    }
+
+    #[cfg(feature = "v1_23")]
+    pub fn set_autocorrect_broken_input(&mut self, v: bool) {
+        let inner = self.inner_mut();
+        inner.autocorrect_broken_input = if v { 1 } else { 0 };
+    }
+
+    #[cfg(feature = "v1_23")]
+    /// Controls the meaning of `output_image_nclx_profile == None`.
+    ///
+    /// When `false` (default), a None `output_image_nclx_profile` means
+    /// "convert the decoded image to sRGB" (BT.709 primaries, sRGB transfer,
+    /// BT.601 matrix, full-range).
+    /// For HDR inputs (e.g. BT.2100 PQ) this silently discards the original
+    /// color volume.
+    ///
+    /// When `true`, a None `output_image_nclx_profile` means "keep the input
+    /// image's NCLX".
+    /// The decoded image carries the input file's primaries / transfer / matrix / range,
+    /// and no extra color-space conversion is performed solely because
+    /// the output NCLX was unspecified.
+    /// If a YCbCr<->RGB colorspace conversion fires for another reason,
+    /// the input NCLX is used to drive that conversion (so the result is
+    /// tagged consistently with the source).
+    ///
+    /// Although this flag is off by default to preserve historical behavior,
+    /// new code that wants to preserve HDR through decoding should generally
+    /// enable it.
+    /// Setting `output_image_nclx_profile` to a non-None value overrides this flag.
+    pub fn output_image_nclx_profile_passthrough(&self) -> bool {
+        let inner = self.inner_ref();
+        inner.output_image_nclx_profile_passthrough > 0
+    }
+
+    #[cfg(feature = "v1_23")]
+    pub fn set_output_image_nclx_profile_passthrough(&mut self, v: bool) {
+        let inner = self.inner_mut();
+        inner.output_image_nclx_profile_passthrough = if v { 1 } else { 0 };
+    }
 }
 
 /// This function makes sure the decoding options

@@ -1,4 +1,4 @@
-mod write_test;
+mod utils;
 
 #[cfg(feature = "v1_18")]
 mod v1_18 {
@@ -12,7 +12,7 @@ mod v1_18 {
     fn write_and_read_regions() -> Result<()> {
         let width = 640;
         let height = 480;
-        let image = write_test::create_image(width, height)?;
+        let image = utils::create_image(width, height)?;
         let lib_heif = LibHeif::new();
         let mut ctx = HeifContext::new()?;
         let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;

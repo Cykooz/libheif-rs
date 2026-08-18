@@ -1,10 +1,42 @@
 # Change Log
 
+## [Unreleased] - ReleaseDate
+
+### Added
+
+- Added a new feature `v1_23`.
+- Added new values of `ColorSpace` enum (`v1_23`):
+    - `Custom`
+    - `FilterArray`
+- Added new values of `Channel` enum (`v1_23`):
+    - `Unknown`
+- Added new values of `HeifErrorSubCode` enum (`v1_23`):
+    - `NclxColrVuiMismatch`
+- Added new methods of `DecodingOptions` (`v1_23`).
+    - `autocorrect_broken_input`
+    - `set_autocorrect_broken_input`
+    - `output_image_nclx_profile_passthrough`
+    - `set_output_image_nclx_profile_passthrough`
+- Added new methods of `SecurityLimits` (`v1_23`).
+    - `max_bad_pixels`
+    - `set_max_bad_pixels`
+    - `max_iso23001_17_pixel_size_bytes`
+    - `set_max_iso23001_17_pixel_size_bytes`
+
+### Changed
+
+- `libheif-sys` updated to version 5.3.1+1.23.1.
+- **BREAKING**: Enum `ColorSpace` was made `non_exhaustive`.
+- `ColorSpace::NonVisual` is deprecated if `v1_23` feature is enabled. Use
+  `ColorSpace::Custom` instead.
+- Updated version of `vcpkg`.
+
 ## [2.7.0] - 2026-02-25
 
 ### Added
 
-- Exposed parts of the sequences API from `libheif` v1.20+ ([#38](https://github.com/Cykooz/libheif-rs/pull/38)):
+- Exposed parts of the sequences API from `libheif` v1.20+
+  ([#38](https://github.com/Cykooz/libheif-rs/pull/38)):
     - Added `HeifContext` methods:
         - `has_sequence`
         - `sequence_timescale`
@@ -34,8 +66,8 @@
 ### Added
 
 - Added a new feature `v1_21`.
-- For `ColorConversionOptions` was added method `new` and
-  implemented `Default` trait.
+- For `ColorConversionOptions` was added method `new` and implemented `Default`
+  trait.
 - Added new values of `HeifErrorCode` enum (`v1_20`):
     - `EndOfSequence`
 - Added new values of `HeifErrorSubCode` enum:
@@ -80,7 +112,8 @@
 
 ### Fixes
 
-- Fixed integration with the `image` crate ([#35](https://github.com/Cykooz/libheif-rs/issues/35)).
+- Fixed integration with the `image` crate
+  ([#35](https://github.com/Cykooz/libheif-rs/issues/35)).
 
 ## [2.5.1] - 2025-10-21
 
@@ -92,8 +125,8 @@
 
 ### Added
 
-- Added module `integration::image` that allows registering decoder hooks
-  for the `image` crate ([#34](https://github.com/Cykooz/libheif-rs/issues/34)).
+- Added module `integration::image` that allows registering decoder hooks for
+  the `image` crate ([#34](https://github.com/Cykooz/libheif-rs/issues/34)).
 
   You must enable `image` feature to use this module.
 
@@ -136,8 +169,10 @@
 - Added a new feature `v1_19`.
 - Added structure `SecurityLimits` (feature `v1_19` is required)
   ([#32](https://github.com/Cykooz/libheif-rs/issues/32)).
-- Added methods `HeifContext::security_limits()` and `HeifContext::set_security_limits()`
-  (feature `v1_19` is required) ([#32](https://github.com/Cykooz/libheif-rs/issues/32)).
+- Added methods `HeifContext::security_limits()` and
+  `HeifContext::set_security_limits()`
+  (feature `v1_19` is required)
+  ([#32](https://github.com/Cykooz/libheif-rs/issues/32)).
 - Added new values of `HeifErrorCode` enum (`v1_19`):
     - `Canceled`
 - Added new values of `HeifErrorSubCode` enum (`v1_19`):
@@ -161,10 +196,11 @@
 
 ### Added
 
-- Added features `v1_17` and `v1_18` to choose a minimal
-  version of supported `libheif`.
-- Added feature `embedded-libheif` to compile and then link statically
-  the embedded sources of `libheif` from the `libheif-sys` crate.
+- Added features `v1_17` and `v1_18` to choose a minimal version of supported
+  `libheif`.
+- Added feature `embedded-libheif` to compile and then link statically the
+  embedded sources of `libheif` from the
+  `libheif-sys` crate.
 
 ### Changes
 
@@ -243,8 +279,8 @@
 
 ### Fixed
 
-- Fix null error message from `libheif` v1.17: `heif_writer` should
-  return `heif_error` with non-null pointer to message
+- Fix null error message from `libheif` v1.17: `heif_writer` should return
+  `heif_error` with non-null pointer to message
   ([#18](https://github.com/Cykooz/libheif-rs/pull/18)).
 
 ## [0.22.0] - 2023-09-12
@@ -253,8 +289,8 @@
 
 - Added method `assign_thumbnail` for `HeifContext` structure.
 - **BREAKING**: Added default feature `use-bindgen` to control that type of
-  binding will be used by `libheif-sys` crate (pre-generated or
-  generated on the fly by `bindgen`)
+  binding will be used by `libheif-sys` crate (pre-generated or generated on the
+  fly by `bindgen`)
 
 ### Fixed
 
@@ -317,8 +353,9 @@
 
 ### Fixed
 
-- **BREAKING**: Added lifetime for `HeifContext` structure to
-  exclude "use after free" in case it is created from `&[u8]`
+- **BREAKING**: Added lifetime for `HeifContext` structure to exclude "use after
+  free" in case it is created from
+  `&[u8]`
   ([#13](https://github.com/Cykooz/libheif-rs/issues/13)).
 
 ## [0.19.2] - 2023-03-22
@@ -338,11 +375,11 @@
 
 ### Added
 
-- Added `LibHeif` structure to initialise internals of `libheif`, load
-  plugins, get instances of encoders, decode `ImageHandle` into `Image`,
-  get version of linked `libheif`.
-- Added `EncoderDescriptor` structure that describe some properties of
-  encoder and may be used to get `Encoder` instance from `LibHeif`.
+- Added `LibHeif` structure to initialise internals of `libheif`, load plugins,
+  get instances of encoders, decode
+  `ImageHandle` into `Image`, get version of linked `libheif`.
+- Added `EncoderDescriptor` structure that describe some properties of encoder
+  and may be used to get `Encoder` instance from `LibHeif`.
 - Added `EncodingOptions::new()` method.
 
 ### Changed
@@ -368,7 +405,8 @@
 - **BREAKING**: Changed type of argument `type_filer` of methods
   ``ImageHandle::number_of_metadata_blocks()`` and
   ``ImageHandle::metadata_block_ids()``. Now it must be something that
-  implements `Into<FourCC>`. For example - `b"Exif"`.
+  implements `Into<FourCC>`. For example -
+  `b"Exif"`.
 - **BREAKING**: Changed order of arguments of method
   ``ImageHandle::metadata_block_ids()``.
 
@@ -376,29 +414,32 @@
 
 ### Added
 
-- Added methods `Image::width()` and `Image::height()` for receiving
-  width and height of the main image channel (Y in YCbCr, or any in RGB).
-- Added method `Image::storage_bits_per_pixel()`. This method returns the
-  number of bits used for storage of each pixel.
+- Added methods `Image::width()` and `Image::height()` for receiving width and
+  height of the main image channel (Y in YCbCr, or any in RGB).
+- Added method `Image::storage_bits_per_pixel()`. This method returns the number
+  of bits used for storage of each pixel.
 - Added methods `Image::set_color_profile_raw()` and
   `Image::set_color_profile_nclx()`.
 - Added field `storage_bits_per_pixel` into structure `Plane`.
 - Added method `ColorProfileRaw::new()`.
-- Methods `new` and `set_color_primaries` were added into structure `ColorProfileNCLX`.
+- Methods `new` and `set_color_primaries` were added into structure
+  `ColorProfileNCLX`.
 
 ### Changed
 
 - **BREAKING**: Old methods `Image::width(channel)` and `Image::height(channel)`
   were renamed into `Image::channel_width(channel)`
-  and `Image::channel_height(channel)`. The return type of these methods
-  was changed from `Result<u32>` to `Option<u32>`.
-- **BREAKING**: The return type of method `Image::bits_per_pixel()` was
-  changed from `Result<u8>` to `Option<u8>`.
+  and `Image::channel_height(channel)`. The return type of these methods was
+  changed from `Result<u32>` to
+  `Option<u32>`.
+- **BREAKING**: The return type of method `Image::bits_per_pixel()` was changed
+  from `Result<u8>` to `Option<u8>`.
 - **BREAKING**: Method `Image::bits_per_pixel()` now returns the number of bits
-  used for representing the pixel value, which might be smaller than
-  the number of bits used in memory.
+  used for representing the pixel value, which might be smaller than the number
+  of bits used in memory.
 - **BREAKING**: Fixed typo in name of field `Plane::bits_pre_pixel`. This field
-  was renamed into `Plane::bits_per_pixel`.
+  was renamed into
+  `Plane::bits_per_pixel`.
 - Structures `Plane` and `Planes` were exposed in public interface of the crate.
 
 ## [0.16.0] - 2023-02-16
@@ -412,12 +453,14 @@
   `Unknown`.
 - Struct `Encoder` exposed in public interface of the crate.
 - Added enum `ImageOrientation`.
-- Added methods `Encoder::image_orientation()` and `Encoder::set_image_orientation()`.
+- Added methods `Encoder::image_orientation()` and
+  `Encoder::set_image_orientation()`.
 - Added struct `DecodingOptions`.
 - Added type `ColorProfleType`.
 - Added structs `ColorProfileRaw` and `ColorProfileNCLX`.
 - Added methods `Image::color_profile_raw()` and `Image::color_profile_nclx()`.
-- Added methods `ImageHandle::color_profile_raw()` and `ImageHandle::color_profile_nclx()`.
+- Added methods `ImageHandle::color_profile_raw()` and
+  `ImageHandle::color_profile_nclx()`.
 
 ### Breaking changes
 
@@ -446,7 +489,8 @@
   `ImageHandle::depth_image_ids()`, `ImageHandle::thumbnail_ids()`,
   `ImageHandle::metadata_block_ids()`.
 - Deprecated some methods:
-  `ImageHandle::list_of_depth_image_ids()`, `ImageHandle::list_of_thumbnail_ids()`,
+  `ImageHandle::list_of_depth_image_ids()`,
+  `ImageHandle::list_of_thumbnail_ids()`,
   `ImageHandle::list_of_metadata_block_ids()`.
 - Added new methods for getting top level images from `HeifContext`:
   `HeifContext::top_level_image_ids()`, `HeifContext::image_handle()`.
@@ -471,8 +515,8 @@
 
 ### Breaking changes
 
-- All fields of `EncodingOptions` struct are made private. Added
-  corresponding methods for access to these fields.
+- All fields of `EncodingOptions` struct are made private. Added corresponding
+  methods for access to these fields.
 - Method `HeifContext::encode_image()` now returns `Result<ImageHandle>`.
 
 ## [0.11.0] - 2020-09-26
@@ -516,8 +560,8 @@
 
 ## [0.7.0] - 2019-08-28
 
-- Separate enums `ColorSpace` and `Chroma` replaced by one
-  complex enum `ColorSpace`.
+- Separate enums `ColorSpace` and `Chroma` replaced by one complex enum
+  `ColorSpace`.
 - `libheif-sys` updated to version 1.5.
 
 ## [0.6.0] - 2019-07-17
@@ -530,8 +574,8 @@
 
 ## [0.4.0] - 2019-06-28
 
-- Added method `HeifContext::read_from_reader()` to create context
-  form any object that implements the `Reader` trait.
+- Added method `HeifContext::read_from_reader()` to create context form any
+  object that implements the `Reader` trait.
 
 ## [0.3.0] - 2019-06-25
 
@@ -546,8 +590,8 @@
 
 - Changed URL of the crate documentation.
 - Added small example of usage into README.md.
-- Changed some enum values and name of methods to comply with the Rust
-  naming conventions.
+- Changed some enum values and name of methods to comply with the Rust naming
+  conventions.
 - Methods `Encoder::set_lossless()` and `Encoder::set_lossy_quality()`
   replaced by `Encoder::set_quality()`.
 - Added methods `Image::planes()` and `Image::planes_mut()`.

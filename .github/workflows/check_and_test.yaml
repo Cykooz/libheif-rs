@@ -17,7 +17,7 @@ jobs:
     name: Run `cargo check/test` on Ubuntu
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: root suid tar
         run: sudo chown root:sudo /bin/tar && sudo chmod u+s /bin/tar
@@ -69,11 +69,16 @@ jobs:
           cargo check -p libheif-rs --no-default-features --features embedded-libheif,image,v1_21
           cargo test --no-default-features --features embedded-libheif,image,v1_21          
 
+      - name: Run tests for v1.23
+        run: |
+          cargo check -p libheif-rs --no-default-features --features embedded-libheif,image,v1_23
+          cargo test --no-default-features --features embedded-libheif,image,v1_23              
+
   run_tests_on_windows:
     name: Run `cargo check/test` on Windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Cache rust artifacts
         uses: Swatinem/rust-cache@v2
@@ -118,3 +123,8 @@ jobs:
         run: |
           cargo check -p libheif-rs --no-default-features --features embedded-libheif,image,v1_21
           cargo test --no-default-features --features embedded-libheif,image,v1_21
+
+      - name: Run tests for v1.23
+        run: |
+          cargo check -p libheif-rs --no-default-features --features embedded-libheif,image,v1_23
+          cargo test --no-default-features --features embedded-libheif,image,v1_23

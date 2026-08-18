@@ -1,5 +1,3 @@
-mod write_test;
-
 #[cfg(feature = "v1_19")]
 mod v1_19 {
     use libheif_rs::{HeifContext, Result, SecurityLimits};

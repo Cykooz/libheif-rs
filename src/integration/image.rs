@@ -168,7 +168,16 @@ fn get_color_type(image_handle: &ImageHandle) -> ImageResult<ColorType> {
             (false, bit_depth > 8)
         }
         #[cfg(feature = "v1_19")]
+        #[cfg_attr(feature = "v1_23", allow(deprecated))]
         ColorSpace::NonVisual => {
+            return Err(image_error("Container doesn't have image data."));
+        }
+        #[cfg(feature = "v1_23")]
+        ColorSpace::Custom => {
+            return Err(image_error("Container doesn't have image data."));
+        }
+        #[cfg(feature = "v1_23")]
+        ColorSpace::FilterArray => {
             return Err(image_error("Container doesn't have image data."));
         }
     };

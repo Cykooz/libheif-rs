@@ -80,7 +80,7 @@ impl<'a> Encoder<'a> {
         Ok(Self {
             inner: c_encoder,
             parameters_types,
-            phantom: PhantomData::default(),
+            phantom: PhantomData,
         })
     }
 }
@@ -94,8 +94,8 @@ impl<'a> Drop for Encoder<'a> {
 impl<'a> Encoder<'a> {
     /// Name of encoder.
     pub fn name(&self) -> String {
-        // Name of encoder in `libheif` is mutable static array of chars.
-        // So we must use mutex to get access this array.
+        // The name of the encoder in `libheif` is a mutable static array of chars.
+        // So we must use mutex to access this array.
         let _lock = ENCODER_MUTEX.lock();
         let res = unsafe { lh::heif_encoder_get_name(self.inner) };
         cstr_to_str(res).unwrap_or("").to_owned()

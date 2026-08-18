@@ -254,12 +254,10 @@ fn top_decode_heic() -> Result<()> {
 #[test]
 fn image_collection() -> Result<()> {
     let ctx = HeifContext::read_from_file("./data/collection.heif")?;
-    assert_eq!(ctx.number_of_top_level_images(), 4);
-    let mut image_ids: Vec<ItemId> = vec![0; 5];
-    let count = ctx.top_level_image_ids(&mut image_ids);
-    assert_eq!(count, 4);
+    let image_ids = ctx.image_ids();
+    assert_eq!(image_ids.len(), 4);
 
-    for &image_id in image_ids[0..4].iter() {
+    for &image_id in image_ids.iter() {
         let handle = ctx.image_handle(image_id)?;
         assert_eq!(handle.width(), 480);
         assert_eq!(handle.height(), 360);

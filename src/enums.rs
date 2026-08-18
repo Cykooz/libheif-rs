@@ -20,14 +20,32 @@ pub enum RgbChroma {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum ColorSpace {
     Undefined,
     YCbCr(Chroma),
     Rgb(RgbChroma),
     Monochrome,
-    /// Indicates that this image has no visual channels.
     #[cfg(feature = "v1_19")]
+    /// Indicates that this image has a special, custom arrangement of components.
+    /// For example, it can have several monochrome channels or
+    /// just a depth component with no color image.
+    /// Images of this type are always planar.
+    #[cfg_attr(
+        feature = "v1_23",
+        deprecated(since = "2.8.0", note = "use [ColorSpace::Custom] instead.")
+    )]
     NonVisual,
+    #[cfg(feature = "v1_23")]
+    /// Indicates that this image has a special, custom arrangement of components.
+    /// For example, it can have several monochrome channels or
+    /// just a depth component with no color image.
+    /// Images of this type are always planar.
+    Custom,
+    #[cfg(feature = "v1_23")]
+    /// Images of this type are filter-array (CFA / Bayer) mosaics.
+    /// The single mosaicked plane is described as Monochrome.
+    FilterArray,
 }
 
 impl ColorSpace {
@@ -66,8 +84,12 @@ impl ColorSpace {
                 }
                 _ => None,
             },
-            #[cfg(feature = "v1_19")]
+            #[cfg(all(feature = "v1_19", not(feature = "v1_23")))]
             lh::heif_colorspace_heif_colorspace_nonvisual => Some(ColorSpace::NonVisual),
+            #[cfg(feature = "v1_23")]
+            lh::heif_colorspace_heif_colorspace_custom => Some(ColorSpace::Custom),
+            #[cfg(feature = "v1_23")]
+            lh::heif_colorspace_heif_colorspace_filter_array => Some(ColorSpace::FilterArray),
             _ => None,
         }
     }
@@ -78,8 +100,15 @@ impl ColorSpace {
             ColorSpace::Rgb(_) => lh::heif_colorspace_heif_colorspace_RGB,
             ColorSpace::Monochrome => lh::heif_colorspace_heif_colorspace_monochrome,
             ColorSpace::Undefined => lh::heif_colorspace_heif_colorspace_undefined,
-            #[cfg(feature = "v1_19")]
+            #[cfg(all(feature = "v1_19", not(feature = "v1_23")))]
             ColorSpace::NonVisual => lh::heif_colorspace_heif_colorspace_nonvisual,
+            #[cfg(feature = "v1_23")]
+            #[allow(deprecated)]
+            ColorSpace::NonVisual => lh::heif_colorspace_heif_colorspace_custom,
+            #[cfg(feature = "v1_23")]
+            ColorSpace::Custom => lh::heif_colorspace_heif_colorspace_custom,
+            #[cfg(feature = "v1_23")]
+            ColorSpace::FilterArray => lh::heif_colorspace_heif_colorspace_filter_array,
         }
     }
 
@@ -100,9 +129,19 @@ impl ColorSpace {
                 RgbChroma::HdrRgbaLe => lh::heif_chroma_heif_chroma_interleaved_RRGGBBAA_LE,
             },
             ColorSpace::Undefined => lh::heif_chroma_heif_chroma_undefined,
+            #[cfg(not(feature = "v1_23"))]
             ColorSpace::Monochrome => lh::heif_chroma_heif_chroma_monochrome,
-            #[cfg(feature = "v1_19")]
+            #[cfg(feature = "v1_23")]
+            ColorSpace::Monochrome => lh::heif_chroma_heif_chroma_planar,
+            #[cfg(all(feature = "v1_19", not(feature = "v1_23")))]
             ColorSpace::NonVisual => lh::heif_chroma_heif_chroma_undefined,
+            #[cfg(feature = "v1_23")]
+            #[allow(deprecated)]
+            ColorSpace::NonVisual => lh::heif_chroma_heif_chroma_planar,
+            #[cfg(feature = "v1_23")]
+            ColorSpace::Custom => lh::heif_chroma_heif_chroma_planar,
+            #[cfg(feature = "v1_23")]
+            ColorSpace::FilterArray => lh::heif_chroma_heif_chroma_planar,
         }
     }
 }
@@ -124,6 +163,8 @@ pub enum Channel {
     Depth = lh::heif_channel_heif_channel_depth as _,
     #[cfg(feature = "v1_19")]
     Disparity = lh::heif_channel_heif_channel_disparity as _,
+    #[cfg(feature = "v1_23")]
+    Unknown = lh::heif_channel_heif_channel_unknown as _,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]

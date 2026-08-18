@@ -3,34 +3,13 @@ use libheif_rs::{
     EncoderParameterValue, EncoderQuality, EncodingOptions, HeifContext, Image, ImageOrientation,
     LibHeif, Result, RgbChroma,
 };
-
-pub fn create_image(width: u32, height: u32) -> Result<Image> {
-    let mut image = Image::new(width, height, ColorSpace::Rgb(RgbChroma::Rgb))?;
-    image.create_plane(Channel::Interleaved, width, height, 24)?;
-
-    let planes = image.planes_mut();
-    let plane = planes.interleaved.unwrap();
-    let stride = plane.stride;
-    let data = plane.data;
-
-    for y in 0..height {
-        let mut row_start = stride * y as usize;
-        for x in 0..width {
-            let color = x * y;
-            data[row_start] = ((color & 0x00_ff_00_00) >> 16) as u8;
-            data[row_start + 1] = ((color & 0x00_00_ff_00) >> 8) as u8;
-            data[row_start + 2] = (color & 0x00_00_00_ff) as u8;
-            row_start += 3;
-        }
-    }
-    Ok(image)
-}
+mod utils;
 
 #[test]
 fn create_and_encode_image() -> Result<()> {
     let width = 640;
     let height = 480;
-    let image = create_image(width, height)?;
+    let image = utils::create_image(width, height)?;
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
     let mut encoder = lib_heif.encoder_for_format(CompressionFormat::Av1)?;
@@ -97,7 +76,7 @@ fn create_and_encode_monochrome_image() -> Result<()> {
 fn set_encoder_param() -> Result<()> {
     let width = 640;
     let height = 480;
-    let image = create_image(width, height)?;
+    let image = utils::create_image(width, height)?;
 
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
@@ -129,7 +108,7 @@ fn set_encoder_param() -> Result<()> {
 fn add_metadata() -> Result<()> {
     let width = 640;
     let height = 480;
-    let image = create_image(width, height)?;
+    let image = utils::create_image(width, height)?;
 
     let lib_heif = LibHeif::new();
     let mut context = HeifContext::new()?;
@@ -267,8 +246,9 @@ fn test_encoding_options() -> Result<()> {
 
 #[cfg(feature = "v1_18")]
 mod v1_18 {
-    use super::*;
     use std::num::NonZeroU16;
+
+    use super::*;
 
     #[test]
     fn test_encode_grid() -> Result<()> {
